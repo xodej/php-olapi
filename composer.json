@@ -1,0 +1,31 @@
+{
+  "name": "xodej/php-olapi",
+  "description": "Jedox OLAP HTTP API wrapper written in PHP",
+  "keywords": ["jedox", "olap", "http", "api", "wrapper", "php"],
+  "homepage": "http://github.com/xodej/php-olapi",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Johannes Mueller",
+      "email": "circus2@web.de",
+      "role": "Developer"
+    }
+  ],
+  "require": {
+    "php": ">=7.3.0",
+    "ext-curl": "*",
+    "ext-dom": "*",
+    "ext-openssl": "*",
+    "ext-shmop": "*",
+    "ext-simplexml": "*",
+    "guzzlehttp/guzzle": "~6.3.3"
+  },
+  "suggest": {
+  },
+  "autoload": {
+    "psr-4": {
+      "Xodej\\": "src/"
+    }
+  }
+}
