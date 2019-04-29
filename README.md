@@ -25,13 +25,12 @@ require_once __DIR__ . '/vendor/autoload.php';
 use Xodej\Olapi\Connection;
 
 // connection parameters
-$host = 'http://127.0.0.1';
-$port =  7777;
+$host = 'http://127.0.0.1:7777';
 $user = 'admin';
 $pass = 'admin';
 
 // initialize a connection to Jedox OLAP
-$conn = new Connection($host, $port, $user, $pass);
+$conn = new Connection($host, $user, $pass);
 
 // fetch cube Balance from database Biker
 $cube = $conn->getCube('Biker/Balance');
