@@ -12,14 +12,17 @@ class DimensionStore extends Store
     /**
      * DimensionStore constructor.
      *
-     * @param array  $input
-     * @param int    $flags
-     * @param string $iterator_class
+     * @param array       $input
+     * @param int|null    $flags
+     * @param string|null $iterator_class
      *
      * @throws \Exception
      */
-    public function __construct($input = [], int $flags = 0, string $iterator_class = 'ArrayIterator')
+    public function __construct($input = [], ?int $flags = null, ?string $iterator_class = null)
     {
+        $flags = $flags ?? 0;
+        $iterator_class = $iterator_class ?? 'ArrayIterator';
+
         if (!empty($input)) {
             throw new \InvalidArgumentException('non-empty array not allowed');
         }

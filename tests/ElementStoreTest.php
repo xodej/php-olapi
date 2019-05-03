@@ -1,6 +1,6 @@
 <?php
 declare(strict_types=1);
-namespace Xodej\Test;
+namespace Xodej\Olapi\Test;
 
 use Xodej\Olapi\Connection;
 use Xodej\Olapi\Element;

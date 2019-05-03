@@ -1,6 +1,6 @@
 <?php
 declare(strict_types=1);
-namespace Xodej\Test;
+namespace Xodej\Olapi\Test;
 
 include __DIR__.'/../vendor/autoload.php';
 
@@ -12,7 +12,7 @@ use PHPUnit\Framework\TestCase;
  * @internal
  * @coversNothing
  */
-class OlapiTestCase extends TestCase
+abstract class OlapiTestCase extends TestCase
 {
     public const OLAP_HOST_WITH_PORT = 'http://127.0.0.1:7777';
 
