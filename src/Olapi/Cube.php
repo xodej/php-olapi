@@ -364,7 +364,7 @@ class Cube implements IBase
         return $this->getConnection()
             ->request(self::API_RULE_CREATE, $params)
             ->getArrayCopy()
-        ;
+            ;
     }
 
     /**
@@ -602,7 +602,7 @@ class Cube implements IBase
                 static function (int $dimension_order, string $element_id) use ($dimensions, $database): string {
                     return $database->getDimensionById((int) $dimensions[$dimension_order])
                         ->getElementNameFromId((int) $element_id)
-                    ;
+                        ;
                 },
                 \array_keys($elements_path),
                 $elements_path
@@ -620,6 +620,83 @@ class Cube implements IBase
         \rewind($ret_stream);
 
         return $ret_stream;
+    }
+
+    /**
+     * @param array|null $request_parameters
+     * @param bool|null $show_headers
+     * @param bool|null $replace_special_chars
+     * @return \Generator
+     * @throws \ErrorException
+     * @throws \Exception
+     */
+    public function exportRowProcessor(
+        ?array $request_parameters = null,
+        ?bool $show_headers = null,
+        ?bool $replace_special_chars = null
+    ): \Generator {
+
+        $show_headers = $show_headers ?? true;
+        $replace_special_chars = $replace_special_chars ?? false;
+
+        $database = $this->getDatabase();
+        $dimensions = $this->listDimensions();
+
+        // path parameter must be omitted for the first run
+        $coord_path = null;
+
+        // incrementally fetch data from server
+        do {
+            // fetch data
+            $result = $this->doRawRequest($request_parameters, $coord_path);
+            $data_stream = $result->__stream__;
+            $coord_path = $result->__lastpath__;
+
+            if (!\is_resource($data_stream)) {
+                throw new \ErrorException('failed to open data stream');
+            }
+
+            // write header if required
+            if ($show_headers) {
+                $header = [];
+                foreach ($dimensions as $dim_index => $dim_id) {
+                    $header[] = $database->getDimensionNameFromId($dim_id);
+                }
+                $header[] = '#VALUE';
+                $show_headers = false; // show headers just once
+
+                yield $header;
+            }
+
+            /** @var array $data_row */
+            while (false !== ($data_row = \fgetcsv($data_stream, 0, ';', '"', '"'))) {
+                if (null === $data_row) {
+                    continue;
+                }
+
+                // split element IDs
+                $elements_path = \explode(',', $data_row[3]);
+
+                // map each element path ID to an element name
+                $coordinates = \array_map(
+                    static function (int $dimension_order, string $element_id) use ($dimensions, $database): string {
+                        return $database->getDimensionById((int) $dimensions[$dimension_order])
+                            ->getElementNameFromId((int) $element_id)
+                            ;
+                    },
+                    \array_keys($elements_path),
+                    $elements_path
+                );
+
+                // adding #VALUE column
+                if ($replace_special_chars) {
+                    $data_row[2] = \str_replace(["\t", "\r", "\n"], [' ', '', ' '], $data_row[2]);
+                }
+
+                $coordinates[] = $data_row[2];
+                yield $coordinates;
+            }
+        } while (!$result->__complete__); // start next cycle
     }
 
     /**
@@ -1060,7 +1137,7 @@ class Cube implements IBase
         return $this->getConnection()
             ->getDatabaseById($this->getDatabase()->getOlapObjectId())
             ->getCubeById($this->getOlapObjectId())
-        ;
+            ;
     }
 
     /**
@@ -1221,92 +1298,140 @@ class Cube implements IBase
         // path parameter must be omitted for the first run
         $coord_path = null;
 
-        // if given area is an area object, fetch as array
-        if (isset($request_parameters['area']) && $request_parameters['area'] instanceof Area) {
-            $request_parameters['area'] = $request_parameters['area']->getArea();
-        }
-
         // incrementally fetch data from server
         do {
-            // set up the request parameter for the API call
-            $req_params = [
-                'query' => [
-                    'database' => $this->getDatabase()->getOlapObjectId(),
-                    'cube' => $this->getOlapObjectId(),
-                    'blocksize' => (int) ($request_parameters['blocksize'] ?? 10000),
-                    // @todo Cube::export() - path
-                    'area' => $request_parameters['area'] ??
-                        \implode(',', \array_fill(0, \count($this->listDimensions()), '*')),
-                    // @todo Cube::export() - condition
-                    'use_rules' => (int) ($request_parameters['use_rules'] ?? 0),
-                    'base_only' => (int) ($request_parameters['base_only'] ?? 1),
-                    'skip_empty' => (int) ($request_parameters['skip_empty'] ?? 1),
-                    'type' => (int) ($request_parameters['type'] ?? 0),
-                    // @todo Cube::export() - properties
-                    'show_rule' => (int) ($request_parameters['show_rule'] ?? 0),
-                ],
-            ];
-
-            if (isset($request_parameters['condition'])) {
-                $req_params['query']['condition'] = $request_parameters['condition'];
-            }
-
-            if (isset($request_parameters['properties'])) {
-                $req_params['query']['properties'] = $request_parameters['properties'];
-            }
-
-            // use the path as offset only for
-            // subsequent runs not the first run
-            if (null !== $coord_path) {
-                $req_params['query']['path'] = $coord_path;
-            }
-
-            // make the API call and fetch the response as stream resource
-            $stream = $this->getConnection()->requestRaw(self::API_CELL_EXPORT, $req_params);
-
-            if (null === $stream) {
-                throw new \ErrorException('HTTP request to OLAP resulted in error');
-            }
-
-            \rewind($stream);
-
-            /**
-             * little hack to omit writing last line of Jedox output
-             * since this is represents the progress but not actual data
-             * write process lags one cycle.
-             */
-            $write_flag = false;
-            $fore_last_row = null;
-            $last_row = null;
-            while (false !== ($data_row = \fgets($stream, 10000))) {
-                // lag one cycle
-                if ($write_flag && null !== $last_row) {
-                    \fwrite($ret_stream, $last_row);
-                }
-                $write_flag = true; // next cycle write the data from former cycle
-                $fore_last_row = $last_row; // fore last row holds the path parameter = offset for the next cycle
-                $last_row = $data_row;
-            }
-            \fclose($stream); // close response stream
-
-            // split last line (progress) into parts to check if already read % == total % --> 100% export
-            $progress = \str_getcsv($last_row ?? '', ';', '"', '"');
-
-            if (null !== $fore_last_row) {
-                // take path as offset for next cycle from the forelast row
-                $coord_path = \str_getcsv($fore_last_row ?? '', ';', '"', '"')[3];
-            }
-
-            // debug / log progress
-            if ($this->isDebugMode()) {
-                \file_put_contents('php://stderr', 'progress: '.(($progress[0] / $progress[1]) * 100).'%'.\PHP_EOL);
-            }
-        } while ($progress[0] !== $progress[1]); // start next cycle
+            $result = $this->doRawRequest($request_parameters, $coord_path);
+            \stream_copy_to_stream($result->__stream__, $ret_stream);
+            // \fseek($ret_stream, 0, SEEK_END);
+            $coord_path = $result->__lastpath__;
+        } while (!$result->__complete__); // start next cycle
 
         // output complete data set as stream resource
         \rewind($ret_stream);
 
         return $ret_stream;
+    }
+
+    /**
+     * @param null|array $request_parameters
+     * @param null|string $coord_path
+     *
+     * @throws \ErrorException
+     * @throws \Exception
+     *
+     * @return \stdClass
+     */
+    protected function doRawRequest(?array $request_parameters = null, string $coord_path = null): object
+    {
+        // init the return stream with 10MB in memory size
+        // if exceeds 10MB it's swapped into file on disk
+        $ret_stream = \fopen('php://temp/maxmemory:10485760', 'wb+');
+
+        if (false === $ret_stream) {
+            throw new \ErrorException('failed to open temp stream');
+        }
+
+        // if given area is an area object, fetch as array
+        if (isset($request_parameters['area']) && $request_parameters['area'] instanceof Area) {
+            $request_parameters['area'] = $request_parameters['area']->getArea();
+        }
+
+        // set up the request parameter for the API call
+        $req_params = [
+            'query' => [
+                'database' => $this->getDatabase()->getOlapObjectId(),
+                'cube' => $this->getOlapObjectId(),
+                'blocksize' => (int) ($request_parameters['blocksize'] ?? 10000),
+                // @todo Cube::export() - path
+                'area' => $request_parameters['area'] ??
+                    \implode(',', \array_fill(0, \count($this->listDimensions()), '*')),
+                // @todo Cube::export() - condition
+                'use_rules' => (int) ($request_parameters['use_rules'] ?? 0),
+                'base_only' => (int) ($request_parameters['base_only'] ?? 1),
+                'skip_empty' => (int) ($request_parameters['skip_empty'] ?? 1),
+                'type' => (int) ($request_parameters['type'] ?? 0),
+                // @todo Cube::export() - properties
+                'show_rule' => (int) ($request_parameters['show_rule'] ?? 0),
+            ],
+        ];
+
+        if (isset($request_parameters['condition'])) {
+            $req_params['query']['condition'] = $request_parameters['condition'];
+        }
+
+        if (isset($request_parameters['properties'])) {
+            $req_params['query']['properties'] = $request_parameters['properties'];
+        }
+
+        // use the path as offset only for
+        // subsequent runs not the first run
+        if (null !== $coord_path) {
+            $req_params['query']['path'] = $coord_path;
+        }
+
+        // make the API call and fetch the response as stream resource
+        $stream = $this->getConnection()->requestRaw(self::API_CELL_EXPORT, $req_params);
+
+        if (null === $stream) {
+            throw new \ErrorException('HTTP request to OLAP resulted in error');
+        }
+
+        \rewind($stream);
+
+        /**
+         * little hack to omit writing last line of Jedox output
+         * since this is represents the progress but not actual data
+         * write process lags one cycle.
+         */
+        $write_flag = false;
+        $fore_last_row = null;
+        $last_row = null;
+        while (false !== ($data_row = \fgets($stream))) {
+            // lag one cycle
+            if ($write_flag && null !== $last_row) {
+                \fwrite($ret_stream, $last_row);
+            }
+            $write_flag = true; // next cycle write the data from former cycle
+            $fore_last_row = $last_row; // fore last row holds the path parameter = offset for the next cycle
+            $last_row = $data_row;
+        }
+        \fclose($stream); // close response stream
+
+        // split last line (progress) into parts to check if already read % == total % --> 100% export
+        $progress = \str_getcsv($last_row ?? '', ';', '"', '"');
+
+        if (null !== $fore_last_row) {
+            // take path as offset for next cycle from the forelast row
+            $coord_path = \str_getcsv($fore_last_row ?? '', ';', '"', '"')[3];
+        }
+
+        // debug / log progress
+        if ($this->isDebugMode()) {
+            \file_put_contents('php://stderr', 'progress: '.(($progress[0] / $progress[1]) * 100).'%'.\PHP_EOL);
+        }
+
+        // output complete data set as stream resource
+        \rewind($ret_stream);
+
+        $ret_obj = new class{
+            public $__stream__;
+            public $__lastpath__;
+            public $__progress__;
+            public $__complete__;
+
+            public function __destruct() {
+                if (null !== $this->__stream__) {
+                    \fclose($this->__stream__);
+                }
+            }
+        };
+
+        $ret_obj->__stream__ = $ret_stream;
+        $ret_obj->__lastpath__ = $coord_path;
+        $ret_obj->__progress__ = ($progress[0] / $progress[1]) * 100;
+        $ret_obj->__complete__ = ($progress[0] === $progress[1]);
+
+        return $ret_obj;
     }
 
     /**
