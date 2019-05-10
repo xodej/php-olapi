@@ -1265,8 +1265,19 @@ class Cube implements IBase
         return (bool) ($response[0] ?? false);
     }
 
-    public function startCache(): void
+    /**
+     * @param bool|null $ignore_state
+     */
+    public function startCache(?bool $ignore_state = null): void
     {
+        // do not clear cache etc. if state is ignored
+        // just switch to cache mode
+        $ignore_state  = $ignore_state ?? false;
+        if ($ignore_state) {
+            $this->inCacheMode = true;
+            return;
+        }
+
         $this->cache = [];
         // if persist value cache is active
         // prevent cache cleanup
