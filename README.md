@@ -2,10 +2,10 @@
 
 ## a pure PHP lib for communicating with a Jedox OLAP (using HTTP API)
 
-This repository is **unstable**. Please be careful when updating your app.
-Some APIs/methods might break or change. If you use the library for
-professional work you should either fork the version you develop with or
-refer to a specific commit.
+This repository is **unstable**. Please be careful when updating your apps.
+Some APIs/methods might break or change heavily. If you use the library for
+professional work you should fork the version you develop with or specifically
+refer to the current commit.
 
 ## Installation
 
