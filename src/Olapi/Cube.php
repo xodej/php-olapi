@@ -536,13 +536,13 @@ class Cube implements IBase
         $index = -1;
         foreach ($this->cache as $path_hash => $value) {
             ++$index;
-            if ('1' !== $response[$index][1]) {
-                $this->cachedValues[$path_hash] = '#NA';
-
-                continue;
-            }
+            // if ('1' !== $response[$index][1]) {
+            //    $this->cachedValues[$path_hash] = '#NA';
+            //
+            //    continue;
+            // }
             $this->cachedValues[$path_hash] = ('2' === $response[$index][0] ?
-                $response[$index][2] : (float) $response[$index][2]);
+                (string) $response[$index][2] : (float) $response[$index][2]);
         }
 
         $this->cache = [];
@@ -841,12 +841,12 @@ class Cube implements IBase
     {
         $response = $this->getValueAsStore($dims, $use_keys)[0] ?? [];
 
-        if ('1' !== $response[1]) {
-            return null;
-        }
+        // if ('1' !== $response[1]) {
+        //     return null;
+        // }
 
         // in case of type numeric type cast
-        return '2' === $response[0] ? $response[2] : (float) $response[2];
+        return '2' === $response[0] ? (string) $response[2] : (float) $response[2];
     }
 
     /**
