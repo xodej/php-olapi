@@ -32,6 +32,8 @@ class PicklistFilter extends Filter
     public const FLAG_INSERT_FRONT = 8;
     public const FLAG_DFILTER = 16;
     public const FLAG_IGNORE_MISSING = 32;
+    public const FLAG_FRONT_EXCLUSIVE = 64;
+
     /**
      * @var bool
      */
