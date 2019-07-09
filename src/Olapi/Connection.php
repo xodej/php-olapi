@@ -278,8 +278,11 @@ class Connection
      */
     public function generateScript(string $database_name, ?array $options = null): string
     {
+        $dimension_names = $options['name_dimensions'] ?? null;
+        $cube_names = $options['name_cubes'] ?? null;
+
         return $this->getDatabaseByName($database_name)
-            ->generateScript($options)
+            ->generateScript($dimension_names, $cube_names, $options)
         ;
     }
 

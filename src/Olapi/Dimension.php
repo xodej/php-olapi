@@ -22,7 +22,6 @@ class Dimension implements IBase
     public const API_DIMENSION_ELEMENTS = '/dimension/elements';
     public const API_DIMENSION_GENERATE_SCRIPT = '/dimension/generate_script';
     // public const API_DIMENSION_CUBES = '/dimension/cubes';
-    // public const API_DIMENSION_INFO = '/dimension/cubes';
     // public const API_DIMENSION_RENAME = '/dimension/rename';
     // public const API_DIMENSION_INFO = '/dimension/info';
     public const API_DIMENSION_DFILTER = '/dimension/dfilter';

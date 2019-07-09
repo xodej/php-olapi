@@ -107,23 +107,28 @@ class Area
     }
 
     /**
+     * @return array
+     */
+    protected function prepareArea(): array
+    {
+        $this->area = (array) $this->area;
+
+        $temp_area = [];
+        foreach ($this->area as $dimension => $values) {
+            $temp_area[$dimension] = \array_keys($values);
+        }
+
+        return $temp_area;
+    }
+
+    /**
      * @throws \Exception
      *
      * @return string
      */
     public function getArea(): string
     {
-        $temp_area = [];
-
-        $this->area = (array) $this->area;
-
-        foreach ($this->area as $dimension => $values) {
-            $temp_area[$dimension] = \array_keys($values);
-        }
-
-        $this->area = $temp_area;
-
-        return $this->cube->createArea($this->area);
+        return $this->cube->createArea($this->prepareArea());
     }
 
     /**
@@ -133,16 +138,6 @@ class Area
      */
     public function getAreaAsArray(): array
     {
-        $temp_area = [];
-
-        $this->area = (array) $this->area;
-
-        foreach ($this->area as $dimension => $values) {
-            $temp_area[$dimension] = \array_keys($values);
-        }
-
-        $this->area = $temp_area;
-
-        return $this->cube->createSubcube($this->area);
+        return $this->cube->createSubcube($this->prepareArea());
     }
 }
