@@ -9,13 +9,13 @@ namespace Xodej\Olapi\Filter;
  */
 class DataComparison
 {
-    public const COMPARE_OP_GT = 1; // >
-    public const COMPARE_OP_LT = 2; // <
-    public const COMPARE_OP_GTE = 4; // >=
-    public const COMPARE_OP_LTE = 8; // <=
-    public const COMPARE_OP_EQ = 16; // =
-    public const COMPARE_OP_NEQ = 32; // <>
-    public const COMPARE_OP_TRUE = 64; // true
+    public const OPERATOR_GT = 1; // >
+    public const OPERATOR_LT = 2; // <
+    public const OPERATOR_GTE = 4; // >=
+    public const OPERATOR_LTE = 8; // <=
+    public const OPERATOR_EQ = 16; // =
+    public const OPERATOR_NEQ = 32; // <>
+    public const OPERATOR_TRUE = 64; // true
 
     /**
      * @var string
@@ -30,7 +30,7 @@ class DataComparison
     /**
      * DataComparison constructor.
      *
-     * @param int $operator DataComparison::COMPARE_OP_XX constants
+     * @param int $operator DataComparison::OPERATOR_XX constants
      * @param $parameter
      */
     public function __construct(int $operator, $parameter)

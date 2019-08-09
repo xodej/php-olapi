@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Xodej\Olapi\Filter;
 
+use http\Exception\InvalidArgumentException;
+
 /**
  * Class SortFilter.
  */
@@ -104,6 +106,9 @@ class SortFilter extends Filter
      */
     public function setLevelType(int $levelType): void
     {
+        if ($levelType < 1 || $levelType > 4) {
+            throw new \InvalidArgumentException('SortFilter::setLevelType() only allows values between 1 and 4, got ' . $levelType);
+        }
         $this->levelType = $levelType;
     }
 
@@ -120,11 +125,11 @@ class SortFilter extends Filter
     }
 
     /**
-     * @param string $attribute
+     * @param string $attributeName
      */
-    public function useAttribute(string $attribute): void
+    public function useAttribute(string $attributeName): void
     {
-        $this->attribute = $attribute;
+        $this->attribute = $attributeName;
         $this->addFlag(self::FLAG_USE_ATTRIBUTE);
     }
 

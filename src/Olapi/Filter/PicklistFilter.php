@@ -35,17 +35,7 @@ class PicklistFilter extends Filter
     public const FLAG_FRONT_EXCLUSIVE = 64;
 
     /**
-     * @var bool
-     */
-    protected $manualSubsetSet;
-
-    /**
      * @var string[]
-     */
-    protected $manualSubset;
-
-    /**
-     * @var array
      */
     private $elements;
 
@@ -78,7 +68,7 @@ class PicklistFilter extends Filter
             throw new \ErrorException('unknown element name '.$element_name.' in dimension '.$this->getDimension()->getName());
         }
 
-        $this->elements[] = $this->getDimension()->getElementByName($element_name);
+        $this->elements[] = $element_name;
 
         return true;
     }
@@ -97,9 +87,14 @@ class PicklistFilter extends Filter
             throw new \ErrorException('unknown element ID '.$element_id.' in dimension '.$this->getDimension()->getName());
         }
 
-        $this->elements[] = $this->getDimension()->getElementById($element_id);
+        $this->elements[] = $this->getDimension()->getElementNameFromId($element_id);
 
         return true;
+    }
+
+    public function reset(): void
+    {
+        $this->elements = [];
     }
 
     /**
@@ -107,21 +102,17 @@ class PicklistFilter extends Filter
      */
     public function parse(): array
     {
+        // @todo PickListFilter - implement handling of manual subsets
+
         // no flags set - use default flag
         if (null === $this->getFlag()) {
             $this->setFlag(self::FLAG_INSERT_FRONT);
         }
 
-        $element_list = [];
-        foreach ($this->elements as $element) {
-            $element_list[] = $element->getName();
-        }
-        $element_list = \implode(':', $element_list);
-
         return [
             self::FILTER_ID,
             $this->getFlag(),
-            $element_list,
+            \implode(':', $this->elements),
         ];
     }
 }

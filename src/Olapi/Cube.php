@@ -1411,7 +1411,14 @@ class Cube implements IBase
         // split last line (progress) into parts to check if already read % == total % --> 100% export
         $progress = \str_getcsv($last_row ?? '', ';', '"', '"');
 
-        if (null !== $fore_last_row) {
+        // handle case where progress processing failed in CSV
+        if (!isset($progress[1])) {
+            $progress = (array) $progress;
+            $progress[0] = 1;
+            $progress[1] = 1;
+        }
+
+        if (null !== $fore_last_row && $progress[0] !== $progress[1]) {
             // take path as offset for next cycle from the forelast row
             $coord_path = \str_getcsv($fore_last_row ?? '', ';', '"', '"')[3];
         }
@@ -1483,5 +1490,13 @@ class Cube implements IBase
         }
 
         return \implode(',', $return);
+    }
+
+    /**
+     * @return int
+     */
+    public function GetDimensionCount(): int
+    {
+        return (int) $this->metaInfo[2];
     }
 }

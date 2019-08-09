@@ -8,6 +8,8 @@ use Xodej\Olapi\Area;
 use Xodej\Olapi\Cube;
 use Xodej\Olapi\Dimension;
 
+// @todo class DataFilter - features missing
+
 /**
  * Class DataFilter.
  */
@@ -166,7 +168,7 @@ class DataFilter extends Filter
         ];
 
         // add the amount of the following dimension columns
-        $return[] = \count($this->cube->getDimensions());  // coordinates count
+        $return[] = $this->cube->getDimensionCount();  // coordinates count
 
         if (null === $this->subcube) {
             // add one statement per Dimension
@@ -190,7 +192,7 @@ class DataFilter extends Filter
     }
 
     /**
-     * @param int          $operator $operator DataComparison::COMPARE_OP_XX constants
+     * @param int          $operator $operator DataComparison::OPERATOR_XX constants
      * @param float|string $value
      *
      * @throws \Exception
@@ -208,15 +210,16 @@ class DataFilter extends Filter
         $this->cmps[] = new DataComparison($operator, $value);
     }
 
-    public function resetComparisons(): void
+    public function reset(): void
     {
         $this->cmps = [];
+        $this->subcube = null;
     }
 
     /**
      * @param Area $area
      */
-    public function addArea(Area $area): void
+    public function setArea(Area $area): void
     {
         $this->subcube = $area;
     }

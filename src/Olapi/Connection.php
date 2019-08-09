@@ -85,7 +85,7 @@ class Connection
      */
     public function __construct(
         ?string $host_with_port = null,
-        string $username = null,
+        ?string $username = null,
         ?string $password = null,
         ?string $sid = null
     ) {
@@ -489,7 +489,7 @@ class Connection
     }
 
     /**
-     * @param null|array $options
+     * @param null|array{show_counters:int, show_enckey:int, show_user_info:int} $options
      *
      * @throws \ErrorException
      *
@@ -527,7 +527,7 @@ class Connection
     }
 
     /**
-     * @param null|array $options
+     * @param null|array{mode:string} $options
      *
      * @throws \ErrorException
      *
@@ -564,6 +564,8 @@ class Connection
         $data_filter->useStrings(false);
 
         $subset->setDataFilter($data_filter);
+
+        // @todo implement Connection::GetSessions()
     }
 
     /**
@@ -589,7 +591,7 @@ class Connection
         }
 
         if (null === $this->secret) {
-            throw new \Exception('missing secret information');
+            throw new \DomainException('missing secret information in Connection::getSuperConnection()');
         }
 
         $shmop_prefix = 'SSID$';
@@ -699,7 +701,7 @@ class Connection
 
     /**
      * @param null|bool  $cached
-     * @param null|array $options
+     * @param null|array{show_normal:int, show_system:int, show_user_info:int, show_permission:int} $options
      *
      * @throws \ErrorException
      *
@@ -942,7 +944,7 @@ class Connection
     }
 
     /**
-     * @param null|array $options
+     * @param null|array{mode:string} $options
      *
      * @throws \ErrorException
      *

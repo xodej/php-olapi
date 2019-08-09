@@ -996,9 +996,9 @@ class Dimension implements IBase
     /**
      * @return int
      */
-    public function getMaxDepth(): int
+    public function getMaxLevel(): int
     {
-        return (int) $this->metaInfo[5];
+        return (int) $this->metaInfo[3];
     }
 
     /**
@@ -1012,9 +1012,9 @@ class Dimension implements IBase
     /**
      * @return int
      */
-    public function getMaxLevel(): int
+    public function getMaxDepth(): int
     {
-        return (int) $this->metaInfo[3];
+        return (int) $this->metaInfo[5];
     }
 
     /**
@@ -1519,7 +1519,7 @@ class Dimension implements IBase
     /**
      * @param Store $elementList
      *
-     * @return array
+     * @return string[]
      */
     private function basifyElementList(Store $elementList): array
     {

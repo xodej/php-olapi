@@ -42,6 +42,11 @@ class TextFilter extends Filter
         $this->expressions[] = $expression;
     }
 
+    public function reset(): void
+    {
+        $this->expressions = [];
+    }
+
     /**
      * @return array
      */
