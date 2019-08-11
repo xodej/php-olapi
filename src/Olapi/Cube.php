@@ -1413,9 +1413,7 @@ class Cube implements IBase
 
         // handle case where progress processing failed in CSV
         if (!isset($progress[1])) {
-            $progress = (array) $progress;
-            $progress[0] = 1;
-            $progress[1] = 1;
+            $progress = [1, 1];
         }
 
         if (null !== $fore_last_row && $progress[0] !== $progress[1]) {
@@ -1425,7 +1423,7 @@ class Cube implements IBase
 
         // debug / log progress
         if ($this->isDebugMode()) {
-            \file_put_contents('php://stderr', 'progress: '.(($progress[0] / $progress[1]) * 100).'%'.\PHP_EOL);
+            \file_put_contents('php://stderr', \sprintf("progress: %0.1f%%\n", ($progress[0] / $progress[1]) * 100));
         }
 
         // output complete data set as stream resource
