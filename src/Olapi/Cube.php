@@ -623,19 +623,20 @@ class Cube implements IBase
     }
 
     /**
-     * @param array|null $request_parameters
-     * @param bool|null $show_headers
-     * @param bool|null $replace_special_chars
-     * @return \Generator
+     * @param null|array $request_parameters
+     * @param null|bool  $show_headers
+     * @param null|bool  $replace_special_chars
+     *
      * @throws \ErrorException
      * @throws \Exception
+     *
+     * @return \Generator
      */
     public function exportRowProcessor(
         ?array $request_parameters = null,
         ?bool $show_headers = null,
         ?bool $replace_special_chars = null
     ): \Generator {
-
         $show_headers = $show_headers ?? true;
         $replace_special_chars = $replace_special_chars ?? false;
 
@@ -1266,15 +1267,16 @@ class Cube implements IBase
     }
 
     /**
-     * @param bool|null $ignore_state
+     * @param null|bool $ignore_state
      */
     public function startCache(?bool $ignore_state = null): void
     {
         // do not clear cache etc. if state is ignored
         // just switch to cache mode
-        $ignore_state  = $ignore_state ?? false;
+        $ignore_state = $ignore_state ?? false;
         if ($ignore_state) {
             $this->inCacheMode = true;
+
             return;
         }
 
@@ -1324,7 +1326,15 @@ class Cube implements IBase
     }
 
     /**
-     * @param null|array $request_parameters
+     * @return int
+     */
+    public function GetDimensionCount(): int
+    {
+        return (int) $this->metaInfo[2];
+    }
+
+    /**
+     * @param null|array  $request_parameters
      * @param null|string $coord_path
      *
      * @throws \ErrorException
@@ -1355,7 +1365,7 @@ class Cube implements IBase
                 'blocksize' => (int) ($request_parameters['blocksize'] ?? 10000),
                 // @todo Cube::export() - path
                 'area' => $request_parameters['area'] ??
-                    \implode(',', \array_fill(0, \count($this->listDimensions()), '*')),
+                \implode(',', \array_fill(0, \count($this->listDimensions()), '*')),
                 // @todo Cube::export() - condition
                 'use_rules' => (int) ($request_parameters['use_rules'] ?? 0),
                 'base_only' => (int) ($request_parameters['base_only'] ?? 1),
@@ -1429,13 +1439,14 @@ class Cube implements IBase
         // output complete data set as stream resource
         \rewind($ret_stream);
 
-        $ret_obj = new class{
+        $ret_obj = new class() {
             public $__stream__;
             public $__lastpath__;
             public $__progress__;
             public $__complete__;
 
-            public function __destruct() {
+            public function __destruct()
+            {
                 if (null !== $this->__stream__) {
                     \fclose($this->__stream__);
                 }
@@ -1488,13 +1499,5 @@ class Cube implements IBase
         }
 
         return \implode(',', $return);
-    }
-
-    /**
-     * @return int
-     */
-    public function GetDimensionCount(): int
-    {
-        return (int) $this->metaInfo[2];
     }
 }
