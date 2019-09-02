@@ -890,13 +890,7 @@ class Dimension implements IBase
             return $this->getConnection()->request(self::API_DIMENSION_ELEMENTS, $params);
         }
 
-        return $this->getConnection()->request(self::API_ELEMENT_INFO, [
-            'query' => [
-                'database' => $this->getDatabase()->getOlapObjectId(),
-                'dimension' => $this->getOlapObjectId(),
-                'element' => $this->getElementIdFromName($element_name),
-            ],
-        ]);
+        return $this->fullTraverse($element_name);
     }
 
     /**
@@ -1397,8 +1391,6 @@ class Dimension implements IBase
      *
      * @param string     $element_name
      * @param null|int   $fetch_mode   (1 - base elements|2 - consolidated elements|3 - all = default)
-     * @param null|array $result
-     * @param null|int   $level
      *
      * @throws \Exception
      *
@@ -1406,26 +1398,46 @@ class Dimension implements IBase
      */
     public function traverse(
         string $element_name,
-        ?int $fetch_mode = null,
-        ?array $result = null,
-        ?int $level = null
+        ?int $fetch_mode = null
     ): array {
         $fetch_mode = $fetch_mode ?? 3;
-        $result = $result ?? [];
+
+        $store = $this->fullTraverse($element_name, $fetch_mode);
+
+        $return = [];
+        foreach ($store as $elem) {
+            $return[] = [
+                'id' => $elem[0],
+                'name' => $this->getElementNameFromId($elem[0]),
+                'type' => Element::getTypeNameFromTypeNumber((int) $elem[6]),
+            ];
+        }
+
+        return $return;
+    }
+
+    public function fullTraverse(
+        string $element_name,
+        ?int $fetch_mode = null,
+        ?Store $result = null,
+        ?int $level = null
+    ): Store {
+        $fetch_mode = $fetch_mode ?? 3;
+        $result = $result ?? new Store();
         $level = $level ?? 0;
 
         $element_record = $this->getElementListRecordByName($element_name);
 
-        $temp_element = [];
-        $temp_element['id'] = (int) $element_record[0];
-        $temp_element['name'] = $element_name;
-        $temp_element['type'] = Element::getTypeNameFromTypeNumber((int) $element_record[6]);
+        // don't run on already known elements
+        if (isset($result[(int) $element_record[0]])) {
+            return $result;
+        }
 
         // iterate over children of consolidated element
         if (Element::ELEMENT_TYPE_CONSOLIDATED === (int) $element_record[6]) {
             // collect if not "only Base elements"
             if (1 !== $fetch_mode) {
-                $result[] = $temp_element;
+                $result[(int) $element_record[0]] = $element_record;
             }
 
             // fetch children
@@ -1449,7 +1461,7 @@ class Dimension implements IBase
             // operate on children
             foreach ($children as $child_element_id) {
                 $child_element_name = $this->getElementNameFromId((int) $child_element_id);
-                $result = $this->traverse($child_element_name, $fetch_mode, $result, $level++);
+                $this->fullTraverse($child_element_name, $fetch_mode, $result, $level++);
             }
 
             return $result;
@@ -1457,7 +1469,7 @@ class Dimension implements IBase
 
         // collect if not "only consolidated elements"
         if (2 !== $fetch_mode) {
-            $result[] = $temp_element;
+            $result[] = $element_record;
         }
 
         return $result;

@@ -1156,7 +1156,7 @@ class Cube implements IBase
                 'database' => $this->getDatabase()->getOlapObjectId(),
                 'cube' => $this->getOlapObjectId(),
                 'lock' => $lock_id,
-                'steps' => $steps ?? '',
+                'steps' => (string) $steps,
             ],
         ]);
 
