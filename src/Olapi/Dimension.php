@@ -1391,6 +1391,7 @@ class Dimension implements IBase
      *
      * @param string     $element_name
      * @param null|int   $fetch_mode   (1 - base elements|2 - consolidated elements|3 - all = default)
+     * @param null|bool  $remove_duplicates
      *
      * @throws \Exception
      *
@@ -1398,17 +1399,19 @@ class Dimension implements IBase
      */
     public function traverse(
         string $element_name,
-        ?int $fetch_mode = null
+        ?int $fetch_mode = null,
+        ?bool $remove_duplicates = null
     ): array {
         $fetch_mode = $fetch_mode ?? 3;
+        $remove_duplicates = $remove_duplicates ?? true;
 
-        $store = $this->fullTraverse($element_name, $fetch_mode);
+        $store = $this->fullTraverse($element_name, $fetch_mode, null, null, $remove_duplicates);
 
         $return = [];
         foreach ($store as $elem) {
             $return[] = [
                 'id' => $elem[0],
-                'name' => $this->getElementNameFromId($elem[0]),
+                'name' => $this->getElementNameFromId((int) $elem[0]),
                 'type' => Element::getTypeNameFromTypeNumber((int) $elem[6]),
             ];
         }
@@ -1420,16 +1423,18 @@ class Dimension implements IBase
         string $element_name,
         ?int $fetch_mode = null,
         ?Store $result = null,
-        ?int $level = null
+        ?int $level = null,
+        ?bool $remove_duplicates = null
     ): Store {
         $fetch_mode = $fetch_mode ?? 3;
         $result = $result ?? new Store();
         $level = $level ?? 0;
+        $remove_duplicates = $remove_duplicates ?? true;
 
         $element_record = $this->getElementListRecordByName($element_name);
 
         // don't run on already known elements
-        if (isset($result[(int) $element_record[0]])) {
+        if ($remove_duplicates && isset($result[(int) $element_record[0]])) {
             return $result;
         }
 
@@ -1437,7 +1442,11 @@ class Dimension implements IBase
         if (Element::ELEMENT_TYPE_CONSOLIDATED === (int) $element_record[6]) {
             // collect if not "only Base elements"
             if (1 !== $fetch_mode) {
-                $result[(int) $element_record[0]] = $element_record;
+                if ($remove_duplicates) {
+                    $result[(int)$element_record[0]] = $element_record;
+                } else {
+                    $result[] = $element_record;
+                }
             }
 
             // fetch children
@@ -1461,7 +1470,7 @@ class Dimension implements IBase
             // operate on children
             foreach ($children as $child_element_id) {
                 $child_element_name = $this->getElementNameFromId((int) $child_element_id);
-                $this->fullTraverse($child_element_name, $fetch_mode, $result, $level++);
+                $this->fullTraverse($child_element_name, $fetch_mode, $result, $level++, $remove_duplicates);
             }
 
             return $result;
@@ -1469,7 +1478,11 @@ class Dimension implements IBase
 
         // collect if not "only consolidated elements"
         if (2 !== $fetch_mode) {
-            $result[] = $element_record;
+            if ($remove_duplicates) {
+                $result[(int)$element_record[0]] = $element_record;
+            } else {
+                $result[] = $element_record;
+            }
         }
 
         return $result;
