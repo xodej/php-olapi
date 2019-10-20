@@ -104,19 +104,23 @@ class Database implements IBase
     }
 
     /**
-     * @param string $dimension_name
+     * @param string     $dimension_name
+     * @param null|array $options
      *
      * @throws \Exception
      *
      * @return bool
      */
-    public function createDimension(string $dimension_name): bool
+    public function createDimension(string $dimension_name, ?array $options = null): bool
     {
+        $options = (array) $options;
+
         $response = $this->getConnection()->request(self::API_DIMENSION_CREATE, [
             'query' => [
                 'database' => $this->getOlapObjectId(),
                 'new_name' => $dimension_name,
-                'type' => 0, // default
+                'type' => (int) ($options['type'] ?? 0), // default 0
+                'mode' => (int) ($options['mode'] ?? 0), // default 0 (since Jedox 2019.3)
             ],
         ]);
 
