@@ -14,8 +14,8 @@ class SystemDatabase extends Database
     /**
      * SystemDatabase constructor.
      *
-     * @param Connection $conn
-     * @param array      $meta_info
+     * @param Connection $conn      connection object
+     * @param array      $meta_info array of database parameters
      *
      * @throws \Exception
      */
@@ -26,7 +26,9 @@ class SystemDatabase extends Database
     }
 
     /**
-     * @param string $user_name
+     * Returns user object from database
+     *
+     * @param string $user_name user name
      *
      * @throws \Exception
      *
@@ -41,8 +43,24 @@ class SystemDatabase extends Database
     }
 
     /**
-     * @param string      $user_name
-     * @param null|array  $group_names
+     * Returns array of all user names
+     *
+     * @throws \Exception
+     *
+     * @return string[]
+     */
+    public function getUsers(): array
+    {
+        return $this->getUserDimension()
+            ->getAllBaseElements()
+        ;
+    }
+
+    /**
+     * Creates user and adds groups to the user account
+     *
+     * @param string     $user_name   user name
+     * @param null|array $group_names array of group names
      *
      * @throws \Exception
      *
@@ -116,6 +134,18 @@ class SystemDatabase extends Database
     }
 
     /**
+     * @throws \Exception
+     *
+     * @return string[]
+     */
+    public function getGroups(): array
+    {
+        return $this->getGroupDimension()
+            ->getAllBaseElements()
+        ;
+    }
+
+    /**
      * @param string $group_name
      *
      * @throws \Exception
@@ -126,6 +156,27 @@ class SystemDatabase extends Database
     {
         return $this->getDimension('#_GROUP_')
             ->hasElementByName($group_name)
+        ;
+    }
+
+    /**
+     * @param string    $group_name
+     * @param null|bool $ignore_user
+     *
+     * @throws \Exception
+     *
+     * @return bool
+     */
+    public function deleteGroup(string $group_name, ?bool $ignore_user = null): bool
+    {
+        // check if users are tied to group
+        $ignore_user = $ignore_user ?? false;
+        if (!$ignore_user && 0 !== count($this->getGroup($group_name)->getUsers())) {
+            return false;
+        }
+
+        return $this->getDimension('#_GROUP_')
+            ->deleteElementByName($group_name)
         ;
     }
 
@@ -173,5 +224,102 @@ class SystemDatabase extends Database
             ->getCubeByName('#_USER_USER_PROPERTIES')
             ->setBulk($values, $paths)
         ;
+    }
+
+    /**
+     * @param string $role_name
+     *
+     * @throws \Exception
+     *
+     * @return Role
+     */
+    public function getRole(string $role_name): Role
+    {
+        /* @noinspection PhpIncompatibleReturnTypeInspection */ // @todo inspection
+        return $this->getRoleDimension()
+            ->getElementByName($role_name)
+            ;
+    }
+
+    /**
+     * @throws \Exception
+     *
+     * @return Dimension
+     */
+    public function getRoleDimension(): Dimension
+    {
+        return $this->getDimensionByName('#_ROLE_');
+    }
+
+    /**
+     * @param string $role_name
+     *
+     * @throws \Exception
+     *
+     * @return bool
+     */
+    public function hasRole(string $role_name): bool
+    {
+        return $this->getDimension('#_ROLE_')
+            ->hasElementByName($role_name)
+            ;
+    }
+
+    /**
+     * @param string        $group_name
+     * @param null|string[] $roles
+     *
+     * @throws \Exception
+     *
+     * @return Group
+     */
+    public function createGroup(string $group_name, ?array $roles = null): Group
+    {
+        if ($this->hasGroup($group_name)) {
+            throw new \InvalidArgumentException('failed to create group '.$group_name.': group already exist.');
+        }
+
+        $group_dim = $this->getGroupDimension();
+        $group_dim->addElement($group_name);
+
+        // hack to circumvent invalid state of current object
+        // throws Exception if group not exists
+        /** @var SystemDatabase $this_as_new_obj */
+        $this_as_new_obj = $this->reload();
+
+        return $this_as_new_obj->getGroup($group_name);
+    }
+
+    /**
+     * @param string        $role_name
+     * @param null|string[] $rights_permissions
+     *
+     * @throws \Exception
+     *
+     * @return Role
+     */
+    public function createRole(string $role_name, ?array $rights_permissions = null): Role
+    {
+        // do not create Role if it already exist
+        if ($this->hasRole($role_name)) {
+            throw new \InvalidArgumentException('failed to create role '.$role_name.': role already exist.');
+        }
+
+        if (!Role::isRightsPermissionsValid($rights_permissions)) {
+            throw new \InvalidArgumentException('given rights <-> permission data set not valid');
+        }
+
+        $role_dim = $this->getRoleDimension();
+        $role_dim->addElement($role_name);
+
+        // hack to circumvent invalid state of current object
+        // throws Exception if role not exists
+        /** @var SystemDatabase $this_as_new_obj */
+        $this_as_new_obj = $this->reload();
+
+        $ret_obj = $this_as_new_obj->getRole($role_name);
+        $ret_obj->setRightsPermissions($rights_permissions);
+
+        return $ret_obj;
     }
 }
