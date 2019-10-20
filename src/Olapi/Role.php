@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Xodej\Olapi;
 
 /**
- * Class Right.
+ * Class Role.
  */
-class Right
+class Role extends Element
 {
     public const RIGHT_USER = 'user';
     public const RIGHT_PASSWORD = 'password';
@@ -43,6 +43,15 @@ class Right
     public const RIGHT_STE_REPOSITORY = 'ste_repository';
     public const RIGHT_CELL_DATA_HOLD = 'cell data hold';
 
+    /**
+     * @var array{user: string, password: string, group: string, database: string, cube: string, dimension: string,
+     *                  dimension element: string, cell data: string, rights: string, system operations: string,
+     *                  event processor: string, sub-set view: string, user info: string, rule: string, ste_reports: string,
+     *                  ste_files: string, ste_palo: string, ste_users: string, ste_etl: string, ste_conns: string,
+     *                  drillthrough: string, ste_scheduler: string, ste_logs: string, ste_licenses: string,
+     *                  ste_mobile: string, ste_analyzer: string, ste_sessions: string, ste_settings: string, audit: string,
+     *                  ste_perf: string, ste_packages: string, ste_repository: string, cell data hold: string}
+     */
     protected static $rights = [
         self::RIGHT_USER => 'N',
         self::RIGHT_PASSWORD => 'N',
@@ -76,14 +85,17 @@ class Right
         self::RIGHT_STE_PERF => 'N',
         self::RIGHT_STE_PACKAGES => 'N',
         self::RIGHT_STE_REPOSITORY => 'N',
-        self::RIGHT_CELL_DATA_HOLD => 'N'
+        self::RIGHT_CELL_DATA_HOLD => 'N',
     ];
 
     /**
+     * checks if right exists.
+     *
      * @param string $right_name
+     *
      * @return bool
      */
-    public static function exists(string $right_name): bool
+    public static function rightExists(string $right_name): bool
     {
         return isset(self::$rights[$right_name]);
     }
@@ -94,5 +106,88 @@ class Right
     public static function defaultRights(): array
     {
         return self::$rights;
+    }
+
+    /**
+     * @param null|array $rights_permissions
+     *
+     * @return bool
+     */
+    public static function isRightsPermissionsValid(?array $rights_permissions = null): bool
+    {
+        $rights_permissions = (array) $rights_permissions;
+
+        foreach ($rights_permissions as $right => $permission) {
+            if (!is_string($right) || !self::rightExists($right)) {
+                return false;
+            }
+            if (!is_string($permission) || !preg_match('~^[SDWRN]$~i', $permission)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * @param null|array $rights_permissions
+     *
+     * @throws \Exception
+     *
+     * @return bool
+     */
+    public function setRightsPermissions(?array $rights_permissions = null): bool
+    {
+        $rights_permissions = (array) $rights_permissions;
+        if (!self::isRightsPermissionsValid($rights_permissions)) {
+            throw new \InvalidArgumentException('given rights <-> permission data set not valid');
+        }
+
+        // create an array of all clean right <=> permission sets
+        // taking into account user choices per rights object
+        // not given rights will be set with defaults from Role::defaultRights()
+        // also check for valid values: Splash, Delete, Write, Read, None
+        $right_object_paths = [];
+        $right_object_values = [];
+        foreach (Role::defaultRights() as $right => $default_permission) {
+            $permission = $rights_permissions[$right] ?? $default_permission;
+            if (is_string($permission) && preg_match('~^[SDWRN]$~i', $permission)) {
+                $right_object_paths[] = [$this->getName(), $right];
+                $right_object_values[] = strtoupper($permission);
+
+                continue;
+            }
+
+            $right_object_paths[] = [$this->getName(), $right];
+            $right_object_values[] = strtoupper($default_permission);
+        }
+
+        return $this->getConnection()
+            ->getSystemDatabase()
+            ->getCubeByName('#_ROLE_RIGHT_OBJECT')
+            ->setBulk($right_object_values, $right_object_paths)
+            ;
+    }
+
+    /**
+     * Adds role to a group // adds group to a role.
+     *
+     * @param string $group_name group name
+     *
+     * @throws \Exception
+     *
+     * @return bool
+     */
+    public function addGroup(string $group_name): bool
+    {
+        if (!$this->getConnection()->getSystemDatabase()->hasGroup($group_name)) {
+            throw new \InvalidArgumentException('failed to add group '.$group_name.' to role '.$this->getName().'. Group not found.');
+        }
+
+        return $this->getConnection()
+            ->getSystemDatabase()
+            ->getCubeByName('#_GROUP_ROLE')
+            ->setValue('1', [$group_name, $this->getName()])
+            ;
     }
 }
