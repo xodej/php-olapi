@@ -93,11 +93,9 @@ class User extends Element
             'area' => $cube_user_group->createArea(['#_USER_' => [$this->getName()]]),
         ], false);
 
-        $ret_groups = \array_map(static function ($v) {
+        return \array_map(static function ($v) {
             return $v[1];
         }, $user_groups);
-
-        return $ret_groups;
     }
 
     /**
