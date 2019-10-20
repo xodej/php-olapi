@@ -13,9 +13,9 @@ class Element implements IBase
     public const API_ELEMENT_REPLACE = '/element/replace';
     public const API_ELEMENT_REPLACE_BULK = '/element/replace_bulk';
 
-    public const ELEMENT_TYPE_NUMERIC = 1;
-    public const ELEMENT_TYPE_STRING = 2;
-    public const ELEMENT_TYPE_CONSOLIDATED = 4;
+    public const TYPE_NUMERIC = 1;
+    public const TYPE_STRING = 2;
+    public const TYPE_CONSOLIDATED = 4;
 
     /**
      * @var Dimension
@@ -58,7 +58,7 @@ class Element implements IBase
         return $this->modify(
             $children_ids,
             $weights,
-            self::ELEMENT_TYPE_CONSOLIDATED
+            self::TYPE_CONSOLIDATED
         );
     }
 
@@ -470,15 +470,15 @@ class Element implements IBase
     public static function getTypeNameFromTypeNumber(int $type): string
     {
         switch ($type) {
-            case self::ELEMENT_TYPE_NUMERIC:
+            case self::TYPE_NUMERIC:
                 return 'numeric';
 
                 break;
-            case self::ELEMENT_TYPE_STRING:
+            case self::TYPE_STRING:
                 return 'string';
 
                 break;
-            case self::ELEMENT_TYPE_CONSOLIDATED:
+            case self::TYPE_CONSOLIDATED:
                 return 'consolidated';
 
                 break;
@@ -600,7 +600,7 @@ class Element implements IBase
      */
     public function isBaseElement(): bool
     {
-        return !(self::ELEMENT_TYPE_CONSOLIDATED === (int) $this->metaInfo[6]);
+        return !(self::TYPE_CONSOLIDATED === (int) $this->metaInfo[6]);
     }
 
     /**
@@ -657,18 +657,18 @@ class Element implements IBase
 
         // it's a consolidated element but no children were given
         // set current children
-        if (null === $children && self::ELEMENT_TYPE_CONSOLIDATED === $element_type) {
+        if (null === $children && self::TYPE_CONSOLIDATED === $element_type) {
             $children = $this->getChildrenIds();
         }
 
         if (null !== $children) {
             if (null === $weights) {
-                $weights = \array_fill(0, \count($children), self::ELEMENT_TYPE_NUMERIC);
+                $weights = \array_fill(0, \count($children), self::TYPE_NUMERIC);
             }
 
             $params['query']['children'] = \implode(',', $children);
             $params['query']['weights'] = \implode(',', $weights);
-            $params['query']['type'] = self::ELEMENT_TYPE_CONSOLIDATED; // consolidated
+            $params['query']['type'] = self::TYPE_CONSOLIDATED; // consolidated
         }
 
         return $this->getDatabase()->getConnection()->request(self::API_ELEMENT_REPLACE, $params);
