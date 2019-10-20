@@ -805,7 +805,7 @@ class Cube implements IBase
         }
 
         // filter for pattern and/or active status
-        $response = \array_filter($response->getArrayCopy(), static function ($v) use ($pattern): bool {
+        $response = \array_filter($response->getArrayCopy(), static function (array $v) use ($pattern): bool {
             return 1 === \preg_match($pattern, $v[1]);
         });
 
@@ -1009,8 +1009,8 @@ class Cube implements IBase
     public function listDimensions(?bool $show_names = null): array
     {
         if (null === $this->cubeDimensionList) {
-            $this->cubeDimensionList = \array_map(static function ($v) {
-                return (int) $v;
+            $this->cubeDimensionList = \array_map(static function (int $v) {
+                return $v;
             }, \explode(',', $this->metaInfo[3]));
         }
 
@@ -1198,8 +1198,8 @@ class Cube implements IBase
                 'database' => $this->getDatabase()->getOlapObjectId(),
                 'cube' => $this->getOlapObjectId(),
                 'paths' => \implode(':', \array_map([$this, 'buildPathFromElements'], $dims_multi)),
-                'values' => \implode(':', \array_map(static function ($v) {
-                    return Util::strputcsv([$v]);
+                'values' => \implode(':', \array_map(static function (?string $v) {
+                    return Util::strputcsv([($v ?? '')]);
                 }, $values)),
             ],
         ];

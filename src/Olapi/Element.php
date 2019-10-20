@@ -240,8 +240,8 @@ class Element implements IBase
             return [];
         }
 
-        return \array_map(static function ($v) {
-            return (int) $v;
+        return \array_map(static function (int $v) {
+            return $v;
         }, \explode(',', $this->metaInfo[10]));
     }
 
@@ -409,8 +409,8 @@ class Element implements IBase
             return [];
         }
 
-        return \array_map(static function ($v) {
-            return (int) $v;
+        return \array_map(static function (int $v) {
+            return $v;
         }, \explode(',', $this->metaInfo[8]));
     }
 

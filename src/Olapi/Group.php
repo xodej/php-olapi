@@ -28,7 +28,7 @@ class Group extends Element
         ], false);
 
         return \array_map(
-            static function ($v) {
+            static function (array $v) {
                 return $v[0];
             },
             $user_groups

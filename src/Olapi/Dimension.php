@@ -379,8 +379,8 @@ class Dimension implements IBase
     public function deleteElementBulkByNames(array $element_names): bool
     {
         $this_obj = $this;
-        $element_ids = \array_map(static function ($e) use ($this_obj) {
-            return $this_obj->getElementIdFromName((string) $e);
+        $element_ids = \array_map(static function (string $e) use ($this_obj) {
+            return $this_obj->getElementIdFromName($e);
         }, $element_names);
 
         return $this->deleteElementBulkByIds($element_ids);
@@ -718,7 +718,7 @@ class Dimension implements IBase
             return $return;
         }
 
-        return \array_filter($return, static function ($e) use ($filter): bool {
+        return \array_filter($return, static function (string $e) use ($filter): bool {
             return 1 === \preg_match($filter, $e);
         });
     }
@@ -769,7 +769,7 @@ class Dimension implements IBase
             return $result;
         }
 
-        return \array_filter($result, static function ($e) use ($filter): bool {
+        return \array_filter($result, static function (string $e) use ($filter): bool {
             return 1 === \preg_match($filter, $e);
         });
     }
@@ -822,7 +822,7 @@ class Dimension implements IBase
     {
         $base_elements = $this->traverse($element_name, 1, false);
 
-        $base_elements = \array_map(static function ($v) {
+        $base_elements = \array_map(static function (array $v) {
             return $v['name'];
         }, $base_elements);
 
@@ -1187,7 +1187,7 @@ class Dimension implements IBase
     {
         $elem_list = $this->getElementListByDepth(-1, 0);
 
-        $elem_list = \array_map(static function ($e) {
+        $elem_list = \array_map(static function (array $e) {
             return $e['name'];
         }, $elem_list);
 
