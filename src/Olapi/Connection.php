@@ -812,17 +812,18 @@ class Connection
 
     /**
      * @param string $url
-     * @param array  $params
-     *
-     * @throws \ErrorException
-     * @throws \Exception
-     *
+     * @param array|null $params
      * @return Store
+     * @throws \ErrorException
      */
-    public function request(string $url, array $params): Store
+    public function request(string $url, ?array $params = null): Store
     {
         if (null === ($client = $this->getClient())) {
             throw new \ErrorException('HTTP client not initialized. Cancelled HTTP request.');
+        }
+
+        if (null === $params) {
+            $params = [];
         }
 
         $params['query']['sid'] = $this->getSessionId(); // add SESSIONID to request automatically
