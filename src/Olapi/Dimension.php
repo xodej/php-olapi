@@ -23,8 +23,23 @@ class Dimension implements IBase
     public const API_DIMENSION_GENERATE_SCRIPT = '/dimension/generate_script';
     // public const API_DIMENSION_CUBES = '/dimension/cubes';
     // public const API_DIMENSION_RENAME = '/dimension/rename';
-    // public const API_DIMENSION_INFO = '/dimension/info';
+    public const API_DIMENSION_INFO = '/dimension/info';
     public const API_DIMENSION_DFILTER = '/dimension/dfilter';
+
+    public const DFILTER_DATA_MIN = 1;
+    public const DFILTER_DATA_MAX = 2;
+    public const DFILTER_DATA_SUM = 4;
+    public const DFILTER_DATA_AVERAGE = 8;
+    public const DFILTER_DATA_ANY = 16;
+    public const DFILTER_DATA_ALL = 32;
+    public const DFILTER_DATA_STRING = 64;
+    public const DFILTER_ONLY_CONSOLIDATED = 128;
+    public const DFILTER_ONLY_LEAVES = 256;
+    public const DFILTER_UPPER_PERCENTAGE = 512;
+    public const DFILTER_LOWER_PERCENTAGE = 1024;
+    public const DFILTER_MID_PERCENTAGE = 2048;
+    public const DFILTER_TOP = 4096;
+    public const DFILTER_NORULES = 8192;
 
     /**
      * @var Database
@@ -49,8 +64,8 @@ class Dimension implements IBase
     /**
      * Dimension constructor.
      *
-     * @param Database $database
-     * @param array    $metaInfo
+     * @param Database $database database object
+     * @param array    $metaInfo array with meta information about the dimension
      *
      * @throws \Exception
      */
@@ -65,10 +80,12 @@ class Dimension implements IBase
     }
 
     /**
-     * @param string      $elementName
-     * @param null|string $parent_element
-     * @param null|int    $element_type
-     * @param null|float  $consolidation_factor
+     * Adds a new element to a dimension.
+     *
+     * @param string      $elementName          element name
+     * @param null|string $parent_element       parent element name
+     * @param null|int    $element_type         element type Element::TYPE_x
+     * @param null|float  $consolidation_factor consolidation factor
      *
      * @throws \Exception
      *
@@ -81,7 +98,7 @@ class Dimension implements IBase
         ?float $consolidation_factor = null
     ): array {
         // @todo Dimension::addElement()
-        $element_type = $element_type ?? Element::ELEMENT_TYPE_NUMERIC;
+        $element_type = $element_type ?? Element::TYPE_NUMERIC;
         $consolidation_factor = $consolidation_factor ?? 1.0;
 
         $response = $this->getConnection()->request(self::API_ELEMENT_CREATE, [
@@ -105,7 +122,9 @@ class Dimension implements IBase
     }
 
     /**
-     * @param string $element_name
+     * Append child element to parent node.
+     *
+     * @param string $element_name element name
      *
      * @throws \Exception
      *
@@ -166,7 +185,7 @@ class Dimension implements IBase
 
     /**
      * Clears a dimension by removing all elements within the dimension. The dimension itself remains,
-     * however all associated cubes are also cleared.
+     * all associated cubes are also cleared because of the deleted elements.
      *
      * @param null|int $type Optional - Clear only elements of specified type (1=NUMERIC, 2=STRING, 4=CONSOLIDATED)
      *
@@ -193,6 +212,8 @@ class Dimension implements IBase
     }
 
     /**
+     * Create new dimension.
+     *
      * @throws \Exception
      *
      * @return bool
@@ -203,10 +224,14 @@ class Dimension implements IBase
     }
 
     /**
-     * @param string        $element_name
-     * @param null|int      $element_type default 1 = numeric
-     * @param null|string[] $children
-     * @param null|float[]  $weights      default 1
+     * Create a new element.
+     *
+     * @param string        $element_name element name
+     * @param null|int      $element_type element type with default 1 = numeric
+     * @param null|string[] $children     array of child element names
+     * @param null|float[]  $weights      weights with default 1
+     *
+     * @example $d->createElement('New Element Name', ELEMENT::TYPE_NUMERIC, ['child1','child2','child3'], [0.5,-1,1]);
      *
      * @throws \Exception
      *
@@ -226,10 +251,12 @@ class Dimension implements IBase
     }
 
     /**
-     * createElements([['Element Name', 1, ['child1','child2','child3'], [0.5,-1,1]]])
+     * Create a set of elements
      * only existing children are allowed otherwise use /element/replace.
      *
-     * @param array $elements
+     * @param array $elements list of arrays defining new elements
+     *
+     * @example $d->createElements([['New Element Name', ELEMENT::TYPE_NUMERIC, ['child1','child2','child3'], [0.5,-1,1]], [..], ..]);
      *
      * @throws \Exception
      *
@@ -283,6 +310,8 @@ class Dimension implements IBase
     }
 
     /**
+     * Delete dimension, which impacts all cubes related to this dimension.
+     *
      * @throws \Exception
      *
      * @return bool
@@ -293,7 +322,9 @@ class Dimension implements IBase
     }
 
     /**
-     * @param string $element_name
+     * Deletes element from dimension.
+     *
+     * @param string $element_name element name
      *
      * @throws \Exception
      *
@@ -307,7 +338,9 @@ class Dimension implements IBase
     }
 
     /**
-     * @param int[] $element_ids
+     * Delete elements by element IDs.
+     *
+     * @param int[] $element_ids array of element IDs
      *
      * @throws \Exception
      *
@@ -335,7 +368,9 @@ class Dimension implements IBase
     }
 
     /**
-     * @param string[] $element_names
+     * Delete elements by element names.
+     *
+     * @param string[] $element_names array of element names
      *
      * @throws \Exception
      *
@@ -352,7 +387,9 @@ class Dimension implements IBase
     }
 
     /**
-     * @param int $element_id
+     * Delete element by element ID.
+     *
+     * @param int $element_id element id
      *
      * @throws \Exception
      *
@@ -376,7 +413,9 @@ class Dimension implements IBase
     }
 
     /**
-     * @param string $element_name
+     * Delete element by element name.
+     *
+     * @param string $element_name element name
      *
      * @throws \Exception
      *
@@ -392,20 +431,22 @@ class Dimension implements IBase
     }
 
     /**
-     * @param string      $cube_name | null
-     * @param null|Area   $area
-     * @param null|int    $mode
-     * @param null|string $condition
-     * @param null|float  $values
-     * @param null|array  $options
+     * Filter dimension elements by OLAP dfilter expression.
+     *
+     * @param string      $cube_name cube name
+     * @param null|int    $mode      one of the Dimension::DFILTER_X modes
+     * @param null|Area   $area      area object
+     * @param null|string $condition Condition on the value of numeric or string cells (default is no condition). A condition starts with >, >=, <, <=, ==, or != and is followed by a double or a string. Two condition can be combined by and, or, xor. If you specify a string value, the value has to be csv encoded. Do not forget to URL encode the complete condition string.
+     * @param null|float  $values    values for Top, Upper % and Lower % in this order
+     * @param null|array  $options   array of options
      *
      * @throws \Exception
      *
      * @return Store
      */
     public function dfilter(
+        string $cube_name,
         ?int $mode = null,
-        string $cube_name = null,
         ?Area $area = null,
         ?string $condition = null,
         ?float $values = null,
@@ -511,6 +552,8 @@ class Dimension implements IBase
     }
 
     /**
+     * Returns an array with all base elements of the dimension.
+     *
      * @throws \Exception
      *
      * @return array
@@ -521,7 +564,10 @@ class Dimension implements IBase
     }
 
     /**
-     * @param null|string $node
+     * Returns an array with consolidated elements below a certain element
+     * if no element name or null is given, all consolidated elements are returned.
+     *
+     * @param null|string $node element
      *
      * @throws \Exception
      *
@@ -533,6 +579,8 @@ class Dimension implements IBase
     }
 
     /**
+     * Returns a list of all elements of the dimension.
+     *
      * @throws \Exception
      *
      * @return Store
@@ -543,34 +591,46 @@ class Dimension implements IBase
     }
 
     /**
+     * Returns the dimensions attribute cube object.
+     *
      * @throws \Exception
      *
      * @return Cube
      */
     public function getAttributeCube(): Cube
     {
+        if (preg_match('~^#_~', $this->getName())) {
+            throw new \DomainException('Dimension::getAttributeCube() not supported by dimension '.$this->getName());
+        }
         $attribute_cube = '#_'.$this->getName();
 
         return $this->getDatabase()->getCubeByName($attribute_cube);
     }
 
     /**
+     * Returns a list of attributes used in the dimension.
+     *
      * @throws \Exception
      *
      * @return Store
      */
     public function getAttributeList(): Store
     {
-        $attribute_dimension_name = '#_'.$this->getName().'_';
-        $attribute_dimension = $this->getDatabase()->getDimensionByName($attribute_dimension_name);
+        if (preg_match('~^#_~', $this->getName())) {
+            throw new \DomainException('Dimension::AttributeList() not supported by dimension '.$this->getName());
+        }
 
-        return $attribute_dimension->getAllElements();
+        $attribute_dimension_name = '#_'.$this->getName().'_';
+
+        return $this->getDatabase()->getDimensionByName($attribute_dimension_name)->getAllElements();
     }
 
     /**
-     * @param null|string[] $element_names
-     * @param null|string[] $attribute_names
-     * @param null|bool     $show_headers
+     * Returns a list of attributes based on given elements and attributes.
+     *
+     * @param null|string[] $element_names   array of element names
+     * @param null|string[] $attribute_names array of attributes
+     * @param null|bool     $show_headers    show headers
      *
      * @throws \Exception
      *
@@ -583,6 +643,9 @@ class Dimension implements IBase
     ): ?array {
         if ('System' === $this->getDatabase()->getName()) {
             throw new \DomainException('System database does not support attributes.');
+        }
+        if (preg_match('~^#_~', $this->getName())) {
+            throw new \DomainException('Dimension::getAttributes() not supported by dimension '.$this->getName());
         }
 
         $show_headers = $show_headers ?? false;
@@ -633,14 +696,16 @@ class Dimension implements IBase
     }
 
     /**
-     * @param null|string $element_name
-     * @param null        $filter
+     * Returns array of base elements.
+     *
+     * @param null|string $element_name element name
+     * @param null|string $filter       regex-pattern to filter element names
      *
      * @throws \Exception
      *
      * @return array
      */
-    public function getBaseElementsOfNode(?string $element_name = null, $filter = null): array
+    public function getBaseElementsOfNode(?string $element_name = null, ?string $filter = null): array
     {
         // // debugging in case of error
         // if (!is_array($this->getElementsOfNode($node))) {
@@ -659,7 +724,9 @@ class Dimension implements IBase
     }
 
     /**
-     * @param string $element_name
+     * Returns an array of child elements of given element as objects.
+     *
+     * @param string $element_name element name
      *
      * @throws \Exception
      *
@@ -685,8 +752,10 @@ class Dimension implements IBase
     }
 
     /**
-     * @param null|string $node
-     * @param null|string $filter
+     * Returns array of consolidated elements.
+     *
+     * @param null|string $node   element name
+     * @param null|string $filter regex-pattern to filter element names
      *
      * @throws \Exception
      *
@@ -706,6 +775,8 @@ class Dimension implements IBase
     }
 
     /**
+     * Returns database object containing dimension.
+     *
      * @return Database
      */
     public function getDatabase(): Database
@@ -714,27 +785,42 @@ class Dimension implements IBase
     }
 
     /**
+     * @param null|bool $live
+     *
+     * @throws \Exception
+     *
      * @return string
      */
-    public function getDimensionToken(): string
+    public function getDimensionToken(?bool $live = null): string
     {
-        return (string) $this->metaInfo[10];
+        $live = (bool) $live;
+
+        if (!$live) {
+            return (string) $this->metaInfo[10];
+        }
+
+        $info = $this->info();
+        if (!isset($info[10])) {
+            throw new \Exception('failed Dimension::getDimensionsToken() - live call to OLAP failed');
+        }
+
+        return (string) $info[10];
     }
 
     /**
-     * @todo does not find duplicates
-     *
-     * @param string $element_name
+     * @param string $element_name element name
      *
      * @throws \Exception
      *
      * @return array
      *
-     * @see Dimension::testDoubleDescendants()
+     * @todo does not find duplicates
+     *
+     * @see Dimension::testDuplicateDescendants()
      */
-    public function getDoubleBaseElementsOfNode(string $element_name): array
+    public function getDuplicateBaseElementsOfNode(string $element_name): array
     {
-        $base_elements = $this->traverse($element_name, 1);
+        $base_elements = $this->traverse($element_name, 1, false);
 
         $base_elements = \array_map(static function ($v) {
             return $v['name'];
@@ -753,7 +839,9 @@ class Dimension implements IBase
     }
 
     /**
-     * @param string $element_name
+     * Returns element object by element name.
+     *
+     * @param string $element_name element name
      *
      * @throws \Exception
      *
@@ -767,7 +855,9 @@ class Dimension implements IBase
     }
 
     /**
-     * @param int $eId
+     * Returns element object by element ID.
+     *
+     * @param int $eId element ID
      *
      * @throws \Exception
      *
@@ -779,22 +869,36 @@ class Dimension implements IBase
             throw new \InvalidArgumentException('Unknown element id '.$eId.' given.');
         }
 
-        if ('#_USER_' === $this->getName() && 'System' === $this->getDatabase()->getName()) {
-            $this->elements[$eId] = new User($this, $this->getElementListRecordById($eId));
+        if (isset($this->elements[$eId])) {
+            return $this->elements[$eId];
         }
 
-        if ('#_GROUP_' === $this->getName() && 'System' === $this->getDatabase()->getName()) {
-            $this->elements[$eId] = new Group($this, $this->getElementListRecordById($eId));
+        // return special objects within system database
+        if ('System' === $this->getDatabase()->getName()) {
+            switch ($this->getName()) {
+                case '#_USER_':
+                    $this->elements[$eId] = new User($this, $this->getElementListRecordById($eId));
+
+                    return $this->elements[$eId];
+                case '#_GROUP_':
+                    $this->elements[$eId] = new Group($this, $this->getElementListRecordById($eId));
+
+                    return $this->elements[$eId];
+                case '#_ROLE_':
+                    $this->elements[$eId] = new Role($this, $this->getElementListRecordById($eId));
+
+                    return $this->elements[$eId];
+            }
         }
 
-        if (!isset($this->elements[$eId])) {
-            $this->elements[$eId] = new Element($this, $this->getElementListRecordById($eId));
-        }
+        $this->elements[$eId] = new Element($this, $this->getElementListRecordById($eId));
 
         return $this->elements[$eId];
     }
 
     /**
+     * Returns element object by element ID.
+     *
      * @param string $eName
      *
      * @throws \Exception
@@ -1012,6 +1116,8 @@ class Dimension implements IBase
     }
 
     /**
+     * Returns the name of the dimension.
+     *
      * @return string
      */
     public function getName(): string
@@ -1020,6 +1126,8 @@ class Dimension implements IBase
     }
 
     /**
+     * Returns Jedox OLAP internal object ID (integer).
+     *
      * @return int
      */
     public function getOlapObjectId(): int
@@ -1028,7 +1136,7 @@ class Dimension implements IBase
     }
 
     /**
-     * create a parent child list for given node.
+     * Create a parent child list for given node.
      *
      * @param null|array|string $nodes
      * @param null|int          $level
@@ -1058,7 +1166,7 @@ class Dimension implements IBase
                 ;
                 $result[][] = [(string) $element_record[1], (string) $element_child_record[1], (float) $conso_factor];
 
-                if (Element::ELEMENT_TYPE_CONSOLIDATED === (int) $element_child_record[6]) {
+                if (Element::TYPE_CONSOLIDATED === (int) $element_child_record[6]) {
                     $result[] = $this->getParentChildListOfNode($element_child_record[1], $level + 1);
 
                     continue;
@@ -1321,7 +1429,7 @@ class Dimension implements IBase
         ];
 
         if (!$delete) {
-            $params['query']['type'] = Element::ELEMENT_TYPE_NUMERIC;
+            $params['query']['type'] = Element::TYPE_NUMERIC;
         }
 
         $api_url = self::API_ELEMENT_REPLACE_BULK;
@@ -1356,21 +1464,23 @@ class Dimension implements IBase
     }
 
     /**
-     * @param string $element_name
+     * Returns an array{string} of duplicate elements of a node.
+     *
+     * @param string $element_name element name / node name
      *
      * @throws \Exception
      *
-     * @return array
+     * @return string[]
      */
-    public function testDoubleDescendants(string $element_name): array
+    public function testDuplicateDescendants(string $element_name): array
     {
-        $list_of_descendants = $this->traverse($element_name);
+        $list_of_descendants = $this->traverse($element_name, 3, false);
 
         $result = [];
         $doubles = [];
         foreach ($list_of_descendants as $descendant) {
             if (isset($result[$descendant['id']])) {
-                $doubles[] = $descendant;
+                $doubles[] = (string) $descendant;
 
                 continue;
             }
@@ -1381,7 +1491,7 @@ class Dimension implements IBase
     }
 
     /**
-     * simulated palo_list_ancestors() to get double
+     * Simulated palo_list_ancestors() to get double
      * base elements instead of a list of unique ancestors.
      *
      * Fetch modes
@@ -1389,9 +1499,9 @@ class Dimension implements IBase
      * 2 - consolidated only
      * 3 - fetch all (default)
      *
-     * @param string     $element_name
-     * @param null|int   $fetch_mode   (1 - base elements|2 - consolidated elements|3 - all = default)
-     * @param null|bool  $remove_duplicates
+     * @param string    $element_name      dimension element name or node name
+     * @param null|int  $fetch_mode        (1 - base elements|2 - consolidated elements|3 - all = default)
+     * @param null|bool $remove_duplicates remove duplicates (default=true)
      *
      * @throws \Exception
      *
@@ -1419,6 +1529,21 @@ class Dimension implements IBase
         return $return;
     }
 
+    /**
+     * As a user please use Dimension::traverse() instead.
+     *
+     * @param string     $element_name      dimension element name or node name
+     * @param null|int   $fetch_mode        (1 - base elements|2 - consolidated elements|3 - all = default)
+     * @param null|Store $result            internally used for the result set (users should always use null)
+     * @param null|int   $level             internally used for level of recursion (users should always use null)
+     * @param null|bool  $remove_duplicates remove duplicate nodes
+     *
+     * @see Dimension::traverse()
+     *
+     * @throws \Exception
+     *
+     * @return Store
+     */
     public function fullTraverse(
         string $element_name,
         ?int $fetch_mode = null,
@@ -1439,11 +1564,11 @@ class Dimension implements IBase
         }
 
         // iterate over children of consolidated element
-        if (Element::ELEMENT_TYPE_CONSOLIDATED === (int) $element_record[6]) {
+        if (Element::TYPE_CONSOLIDATED === (int) $element_record[6]) {
             // collect if not "only Base elements"
             if (1 !== $fetch_mode) {
                 if ($remove_duplicates) {
-                    $result[(int)$element_record[0]] = $element_record;
+                    $result[(int) $element_record[0]] = $element_record;
                 } else {
                     $result[] = $element_record;
                 }
@@ -1457,7 +1582,7 @@ class Dimension implements IBase
             $conso_elements = [];
             foreach ($children as $child_element_id) {
                 $element_record = $this->getElementListRecordById((int) $child_element_id);
-                if (Element::ELEMENT_TYPE_CONSOLIDATED === (int) $element_record[6]) {
+                if (Element::TYPE_CONSOLIDATED === (int) $element_record[6]) {
                     $conso_elements[] = $child_element_id;
 
                     continue;
@@ -1479,7 +1604,7 @@ class Dimension implements IBase
         // collect if not "only consolidated elements"
         if (2 !== $fetch_mode) {
             if ($remove_duplicates) {
-                $result[(int)$element_record[0]] = $element_record;
+                $result[(int) $element_record[0]] = $element_record;
             } else {
                 $result[] = $element_record;
             }
@@ -1497,6 +1622,16 @@ class Dimension implements IBase
     {
         // remove duplicate elements
         return \array_unique($listOfElementNames, \SORT_STRING);
+    }
+
+    /**
+     * @throws \Exception
+     *
+     * @return Store
+     */
+    public function info(): Store
+    {
+        return $this->getConnection()->request(self::API_DIMENSION_INFO);
     }
 
     /**
@@ -1542,19 +1677,23 @@ class Dimension implements IBase
     }
 
     /**
-     * @param Store $elementList
+     * Removes all non-base elements from a list of elements.
+     *
+     * @param Store $elementList list of dimension elements
+     *
+     * @internal
      *
      * @return string[]
      */
     private function basifyElementList(Store $elementList): array
     {
         // remove consolidated elements
-        $element_list = \array_filter($elementList->getArrayCopy(), static function ($e) {
-            return !(Element::ELEMENT_TYPE_CONSOLIDATED === (int) $e[6]);
+        $element_list = \array_filter($elementList->getArrayCopy(), static function (array $e) {
+            return !(Element::TYPE_CONSOLIDATED === (int) $e[6]);
         });
 
         // fetch only element names
-        $element_list = \array_map(static function ($e) {
+        $element_list = \array_map(static function (array $e) {
             return $e[1];
         }, $element_list);
 
@@ -1563,23 +1702,27 @@ class Dimension implements IBase
     }
 
     /**
-     * @param Store $elementList
+     * Removes all base elements from a list of elements.
+     *
+     * @param Store $elementList list of dimension elements
      *
      * @throws \Exception
      *
-     * @return array
+     * @internal
+     *
+     * @return string[]
      */
     private function consolifyElementList(Store $elementList): array
     {
         $element_list = $elementList->getArrayCopy();
 
         // remove Base elements
-        $element_list = \array_filter($element_list, static function ($e) {
-            return Element::ELEMENT_TYPE_CONSOLIDATED === (int) $e[6];
+        $element_list = \array_filter($element_list, static function (array $e) {
+            return Element::TYPE_CONSOLIDATED === (int) $e[6];
         });
 
         // fetch only element names
-        $element_list = \array_map(static function ($e) {
+        $element_list = \array_map(static function (array $e) {
             return $e[1];
         }, $element_list);
 
@@ -1588,9 +1731,11 @@ class Dimension implements IBase
     }
 
     /**
-     * @param Element $node
+     * @param Element $node element object
      *
      * @throws \Exception
+     *
+     * @internal
      *
      * @return string
      */
