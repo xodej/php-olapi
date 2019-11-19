@@ -10,10 +10,12 @@ namespace Xodej\Olapi;
 class Util
 {
     /**
-     * @param array       $data
-     * @param null|string $delimiter
-     * @param null|string $enclosure
-     * @param null|string $escapeChar
+     * Converts array to csv.
+     *
+     * @param mixed[]     $data       array of data
+     * @param null|string $delimiter  delimiter character (default=',')
+     * @param null|string $enclosure  enclosure character (default='"')
+     * @param null|string $escapeChar escape character (default='"')
      *
      * @return string
      */
@@ -43,13 +45,15 @@ class Util
     }
 
     /**
-     * @param \SimpleXMLElement $to
-     * @param \SimpleXMLElement $from
+     * Appending two simpleXML elements.
+     *
+     * @param \SimpleXMLElement $receiver simpleXML element
+     * @param \SimpleXMLElement $sender   simpleXML element
      */
-    public static function simplexml_append(\SimpleXMLElement $to, \SimpleXMLElement $from): void
+    public static function simpleXmlAppend(\SimpleXMLElement $receiver, \SimpleXMLElement $sender): void
     {
-        $to_dom = \dom_import_simplexml($to);
-        $from_dom = \dom_import_simplexml($from);
+        $to_dom = \dom_import_simplexml($receiver);
+        $from_dom = \dom_import_simplexml($sender);
 
         if (false !== $to_dom && false !== $from_dom) {
             $to_dom->appendChild($to_dom->ownerDocument->importNode($from_dom, true));
@@ -57,11 +61,13 @@ class Util
     }
 
     /**
-     * @param \SimpleXMLElement $sxe
+     * Beautifies simpleXML element with indentation.
+     *
+     * @param \SimpleXMLElement $sxe simpleXML element
      *
      * @return string
      */
-    public static function simplexml_beauty_xml(\SimpleXMLElement $sxe): string
+    public static function simpleXmlBeautify(\SimpleXMLElement $sxe): string
     {
         $document = new \DOMDocument('1.0', 'utf-8');
         $document->preserveWhiteSpace = false;

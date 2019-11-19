@@ -23,7 +23,7 @@ class Element implements IBase
     private $dimension;
 
     /**
-     * @var array
+     * @var string[]
      */
     private $metaInfo;
 
@@ -31,7 +31,7 @@ class Element implements IBase
      * Element constructor.
      *
      * @param Dimension $dimension
-     * @param array     $meta_info
+     * @param string[]  $meta_info
      */
     public function __construct(Dimension $dimension, array $meta_info)
     {
@@ -124,7 +124,7 @@ class Element implements IBase
     }
 
     /**
-     * deletes element from dimension.
+     * Deletes element from dimension.
      *
      * @throws \Exception
      *
@@ -139,7 +139,9 @@ class Element implements IBase
     }
 
     /**
-     * @param null|string[] $children
+     * Detaches children from element/node.
+     *
+     * @param null|string[] $children list of child element names to be detached(default=null, all)
      *
      * @throws \Exception
      *
@@ -156,8 +158,26 @@ class Element implements IBase
 
         $children_ids = [];
         foreach ($children as $child_name) {
-            $children_ids[] = $this->getDimension()->getElementIdFromName($child_name);
+            $children_ids[] = (string) $this->getDimension()->getElementIdFromName($child_name);
         }
+        $children_ids = \array_flip($children_ids);
+
+        $info = $this->getInfo();
+
+        $children = \explode(',', $info[10]);
+        $weights = \explode(',', $info[11]);
+
+        $new_children = [];
+        $new_weights = [];
+        for ($index = 0; $index < (int) $info[9]; ++$index) {
+            if (isset($children_ids[$children[$index]])) {
+                continue;
+            }
+            $new_children[] = $children[$index];
+            $new_weights[] = $weights[$index];
+        }
+
+        $this->modify($new_children, $new_weights);
 
         return true;
     }
@@ -178,7 +198,7 @@ class Element implements IBase
     /**
      * @throws \Exception
      *
-     * @return array
+     * @return array{array{name:string,type:string,identifier:int}}
      */
     public function getAncestors(): array
     {
@@ -463,7 +483,7 @@ class Element implements IBase
     }
 
     /**
-     * @param int $type
+     * @param int $type element type as number according to Jedox definition (TYPE_* constants)
      *
      * @return string
      */
@@ -561,6 +581,8 @@ class Element implements IBase
     }
 
     /**
+     * Returns true if element has children.
+     *
      * @return bool
      */
     public function hasChildren(): bool
@@ -569,6 +591,8 @@ class Element implements IBase
     }
 
     /**
+     * Returns true if element has parent(s).
+     *
      * @return bool
      */
     public function hasParents(): bool
@@ -577,6 +601,8 @@ class Element implements IBase
     }
 
     /**
+     * Returns true if element has sibling(s).
+     *
      * @throws \Exception
      *
      * @return bool
@@ -585,8 +611,10 @@ class Element implements IBase
     {
         $parents = $this->getParents();
         foreach ($parents as $parent) {
-            if ($parent->hasChildren()) {
-                return true;
+            foreach ($parent->getChildrenIds() as $child_id) {
+                if ($this->getOlapObjectId() !== $child_id) {
+                    return true;
+                }
             }
         }
 
@@ -594,7 +622,7 @@ class Element implements IBase
     }
 
     /**
-     * returns true if element is of type base.
+     * Returns true if object represents a base element.
      *
      * @return bool
      */
@@ -604,7 +632,7 @@ class Element implements IBase
     }
 
     /**
-     * returns true if element is of type consolidated.
+     * Returns true if object represents a consolidated element.
      *
      * @return bool
      */
@@ -614,6 +642,8 @@ class Element implements IBase
     }
 
     /**
+     * Returns true is debug modus is enabled.
+     *
      * @throws \Exception
      *
      * @return bool
@@ -624,9 +654,9 @@ class Element implements IBase
     }
 
     /**
-     * @param null|array $children
-     * @param null|array $weights
-     * @param null|int   $type
+     * @param null|int[]   $children array of child ids
+     * @param null|float[] $weights  list of children weights (default weight=1 for each child)
+     * @param null|int     $type     element type (Element::TYPE_X constants)
      *
      * @throws \Exception
      *
@@ -637,11 +667,7 @@ class Element implements IBase
         // @todo implement Element:modify()
 
         // shall work as /element/replace
-        $element_type = $type;
-
-        if (null === $element_type) {
-            $element_type = $this->getElementType(true);
-        }
+        $element_type = $type ?? $this->getElementType(true);
 
         $params = [
             'query' => [
@@ -663,7 +689,7 @@ class Element implements IBase
 
         if (null !== $children) {
             if (null === $weights) {
-                $weights = \array_fill(0, \count($children), self::TYPE_NUMERIC);
+                $weights = \array_fill(0, \count($children), 1);
             }
 
             $params['query']['children'] = \implode(',', $children);
@@ -675,19 +701,21 @@ class Element implements IBase
     }
 
     /**
-     * @param null|Element $fromParent
-     * @param null|Element $toParent
+     * Move element from one parent to another.
+     *
+     * @param null|Element $senderParent   sending parent node
+     * @param null|Element $receiverParent receiving parent node
      *
      * @throws \Exception
      */
-    public function move(?Element $fromParent = null, ?Element $toParent = null): void
+    public function move(?Element $senderParent = null, ?Element $receiverParent = null): void
     {
-        if (null !== $toParent) {
-            $toParent->addChild($this);
+        if (null !== $receiverParent) {
+            $receiverParent->addChild($this);
         }
 
-        if (null !== $fromParent) {
-            $fromParent->detachChildren([$this->getName()]);
+        if (null !== $senderParent) {
+            $senderParent->detachChildren([$this->getName()]);
         }
     }
 
@@ -706,6 +734,8 @@ class Element implements IBase
     }
 
     /**
+     * Unconsolidates hierarchy of the element (with $delete=true, elements will be deleted).
+     *
      * @param null|bool $delete false by default
      *
      * @throws \Exception

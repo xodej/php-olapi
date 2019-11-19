@@ -89,13 +89,17 @@ class Connection
         ?string $password = null,
         ?string $sid = null
     ) {
+        $ini_host = (string) \get_cfg_var('jedox.host');
+        $ini_user = (string) \get_cfg_var('jedox.user');
+        $ini_pass = (string) \get_cfg_var('jedox.pass');
+
         // Order:
         //    1. use given credentials, if not given
-        //    2. use credentials from php.ini --> jedox.XXX variables, if not existent
+        //    2. use credentials from php.ini --> jedox.xxxx variables, if not existent
         //    3. use defaults admin/admin etc.
-        $this->host = $host_with_port ?? ('' === \get_cfg_var('jedox.host') ? 'http://127.0.0.1:7777' : \get_cfg_var('jedox.host'));
-        $this->user = $username ?? ('' === \get_cfg_var('jedox.user') ? 'admin' : \get_cfg_var('jedox.user'));
-        $this->pass = $password ?? ('' === \get_cfg_var('jedox.pass') ? 'admin' : \get_cfg_var('jedox.pass'));
+        $this->host = $host_with_port ?? ('' === $ini_host ? 'http://127.0.0.1:7777' : $ini_host);
+        $this->user = $username ?? ('' === $ini_user ? 'admin' : $ini_user);
+        $this->pass = $password ?? ('' === $ini_pass ? 'admin' : $ini_pass);
 
         // @todo check if this needs to be done in a separate login
         if (null !== $sid) {

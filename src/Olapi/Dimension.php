@@ -167,7 +167,7 @@ class Dimension implements IBase
             foreach ($attributes as $attribute) {
                 $e_xml->addAttribute($attribute[0].'@'.$attribute[2], $attribute[3]);
             }
-            Util::simplexml_append($dim_sxe, $e_xml);
+            Util::simpleXmlAppend($dim_sxe, $e_xml);
         }
 
         return $dim_sxe;
@@ -180,7 +180,7 @@ class Dimension implements IBase
      */
     public function asXmlString(): string
     {
-        return Util::simplexml_beauty_xml($this->asXml());
+        return Util::simpleXmlBeautify($this->asXml());
     }
 
     /**

@@ -238,19 +238,19 @@ class Cube implements IBase
     /**
      * Copies a cell path or a calculated predictive value to an other cell path.
      *
-     * @param array      $path_from
-     * @param array      $path_to
+     * @param array      $path_sender
+     * @param array      $path_receiver
      * @param null|bool  $use_rules
      * @param null|mixed $value
      * @param null|array $options
      *
-     * @throws \Exception
-     *
      * @return bool
+     *@throws \Exception
+     *
      */
     public function copyValue(
-        array $path_from,
-        array $path_to,
+        array $path_sender,
+        array $path_receiver,
         ?bool $use_rules = null,
         $value = null,
         ?array $options = null
@@ -259,8 +259,8 @@ class Cube implements IBase
             'query' => [
                 'database' => $this->getDatabase()->getOlapObjectId(),
                 'cube' => $this->getOlapObjectId(),
-                'path' => $this->buildPathFromElements($path_from),
-                'path_to' => $this->buildPathFromElements($path_to),
+                'path' => $this->buildPathFromElements($path_sender),
+                'path_to' => $this->buildPathFromElements($path_receiver),
             ],
         ];
 
