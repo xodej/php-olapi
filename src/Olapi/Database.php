@@ -422,7 +422,7 @@ class Database implements IBase
                 $this->getDatabase()->getName());
         }
 
-        return $this->cubeList['olap_name'][$cube_name];
+        return $this->cubeList['olap_name'][\strtolower($cube_name)];
     }
 
     /**
@@ -569,7 +569,7 @@ class Database implements IBase
     public function getDimensionIdFromName(string $dimension_name): int
     {
         if ($this->hasDimensionByName($dimension_name)) {
-            return $this->dimensionList['olap_name'][$dimension_name];
+            return $this->dimensionList['olap_name'][\strtolower($dimension_name)];
         }
 
         throw new \ErrorException('dimension name '.$dimension_name.' not found in database '.
@@ -699,7 +699,7 @@ class Database implements IBase
      */
     public function hasCubeByName(string $cubeName): bool
     {
-        return isset($this->cubeList['olap_name'][$cubeName]);
+        return isset($this->cubeList['olap_name'][\strtolower($cubeName)]);
     }
 
     /**
@@ -731,7 +731,7 @@ class Database implements IBase
      */
     public function hasDimensionByName(string $dimensionName): bool
     {
-        return isset($this->dimensionList['olap_name'][$dimensionName]);
+        return isset($this->dimensionList['olap_name'][\strtolower($dimensionName)]);
     }
 
     /**
@@ -789,7 +789,7 @@ class Database implements IBase
 
         foreach ($cube_list as $cube_row) {
             $tmp_cube_list['olap_id'][(int) $cube_row[0]] = (array) $cube_row;
-            $tmp_cube_list['olap_name'][$cube_row[1]] = (int) $cube_row[0];
+            $tmp_cube_list['olap_name'][\strtolower($cube_row[1])] = (int) $cube_row[0];
         }
 
         $this->cubeList = $tmp_cube_list;
@@ -815,7 +815,7 @@ class Database implements IBase
 
         foreach ($dimension_list as $dimension_row) {
             $tmp_dim_list['olap_id'][(int) $dimension_row[0]] = (array) $dimension_row;
-            $tmp_dim_list['olap_name'][$dimension_row[1]] = (int) $dimension_row[0];
+            $tmp_dim_list['olap_name'][\strtolower($dimension_row[1])] = (int) $dimension_row[0];
         }
 
         $this->dimensionList = $tmp_dim_list;

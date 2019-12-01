@@ -215,8 +215,8 @@ class Connection
 
             $database_name = $this->getDatabaseNameFromId($database_id);
 
-            if (null !== $database_name && isset($this->databaseList['olap_name'][$database_name])) {
-                unset($this->databaseList['olap_name'][$database_name]);
+            if (null !== $database_name && isset($this->databaseList['olap_name'][\strtolower($database_name)])) {
+                unset($this->databaseList['olap_name'][\strtolower($database_name)]);
             }
         }
         // @todo Database::deleteDimension() - reload dimensions
@@ -422,8 +422,8 @@ class Connection
      */
     public function getDatabaseIdFromName(string $database_name): int
     {
-        if (isset($this->databaseList['olap_name'][$database_name])) {
-            return $this->databaseList['olap_name'][$database_name];
+        if (isset($this->databaseList['olap_name'][\strtolower($database_name)])) {
+            return $this->databaseList['olap_name'][\strtolower($database_name)];
         }
 
         throw new \DomainException('database '.$database_name.' not found');
@@ -692,7 +692,7 @@ class Connection
      */
     public function hasDatabaseByName(string $databaseName): bool
     {
-        return isset($this->databaseList['olap_name'][$databaseName]);
+        return isset($this->databaseList['olap_name'][\strtolower($databaseName)]);
     }
 
     /**
@@ -734,7 +734,7 @@ class Connection
 
         foreach ($database_list as $database_row) {
             $tmp_list['olap_id'][(int) $database_row[0]] = $database_row;
-            $tmp_list['olap_name'][$database_row[1]] = (int) $database_row[0];
+            $tmp_list['olap_name'][\strtolower($database_row[1])] = (int) $database_row[0];
         }
 
         // CompatibilityLayer support

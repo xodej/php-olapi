@@ -908,11 +908,11 @@ class Dimension implements IBase
      */
     public function getElementByName(string $eName): Element
     {
-        if (!isset($this->elementList['olap_name'][$eName])) {
+        if (!isset($this->elementList['olap_name'][\strtolower($eName)])) {
             throw new \ErrorException('unknown element '.$eName);
         }
 
-        $dim_el = $this->elementList['olap_name'][$eName];
+        $dim_el = $this->elementList['olap_name'][\strtolower($eName)];
 
         return $this->getElementById($dim_el);
     }
@@ -931,7 +931,7 @@ class Dimension implements IBase
                 $this->getName().' requested.');
         }
 
-        return $this->elementList['olap_name'][$element_name];
+        return $this->elementList['olap_name'][\strtolower($element_name)];
     }
 
     /**
@@ -1243,7 +1243,7 @@ class Dimension implements IBase
      */
     public function hasElementByName(string $element_name): bool
     {
-        return isset($this->elementList['olap_name'][$element_name]);
+        return isset($this->elementList['olap_name'][\strtolower($element_name)]);
     }
 
     /**
@@ -1305,7 +1305,7 @@ class Dimension implements IBase
 
         foreach ($element_list as $element_row) {
             $this->elementList['olap_id'][(int) $element_row[0]] = $element_row;
-            $this->elementList['olap_name'][$element_row[1]] = (int) $element_row[0];
+            $this->elementList['olap_name'][\strtolower($element_row[1])] = (int) $element_row[0];
         }
 
         return $this->elementList;
