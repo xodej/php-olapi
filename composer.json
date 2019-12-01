@@ -13,13 +13,13 @@
     }
   ],
   "require": {
-    "php": ">=7.3.0",
+    "php": ">=7.4.0",
     "ext-curl": "*",
     "ext-dom": "*",
     "ext-openssl": "*",
     "ext-shmop": "*",
     "ext-simplexml": "*",
-    "guzzlehttp/guzzle": "~6.3.3"
+    "guzzlehttp/guzzle": "~6.4.1"
   },
   "suggest": {
   },

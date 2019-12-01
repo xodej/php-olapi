@@ -391,8 +391,10 @@ class Element implements IBase
     }
 
     /**
-     * @param Dimension $dimension
-     * @param string    $element_name
+     * Returns an element object
+     *
+     * @param Dimension $dimension    dimension object
+     * @param string    $element_name element name
      *
      * @throws \ErrorException
      * @throws \Exception
@@ -405,6 +407,8 @@ class Element implements IBase
     }
 
     /**
+     * Returns name of the element
+     *
      * @return string
      */
     public function getName(): string
@@ -413,6 +417,8 @@ class Element implements IBase
     }
 
     /**
+     * Returns OLAP object ID
+     *
      * @return int
      */
     public function getOlapObjectId(): int
@@ -421,11 +427,13 @@ class Element implements IBase
     }
 
     /**
+     * Returns array of parent element IDs
+     *
      * @return int[]
      */
     public function getParentIds(): array
     {
-        if ('' === $this->metaInfo[8]) {
+        if ($this->metaInfo[8] === '') {
             return [];
         }
 
@@ -435,6 +443,8 @@ class Element implements IBase
     }
 
     /**
+     * Returns array of parent element objects
+     *
      * @throws \Exception
      *
      * @return Element[]
@@ -456,6 +466,8 @@ class Element implements IBase
     }
 
     /**
+     * Returns array of sibling element objects
+     *
      * @throws \Exception
      *
      * @return Element[]
