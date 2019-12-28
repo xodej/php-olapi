@@ -1,15 +1,20 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Xodej\Olapi\Test;
 
 use Xodej\Olapi\Connection;
 use Xodej\Olapi\Element;
 use Xodej\Olapi\ElementStore;
 
-include_once __DIR__ . '/OlapiTestCase.php';
+include_once __DIR__.'/OlapiTestCase.php';
 
 /**
- * Class ElementStoreTest
+ * Class ElementStoreTest.
+ *
+ * @internal
+ * @coversNothing
  */
 class ElementStoreTest extends OlapiTestCase
 {
@@ -26,10 +31,18 @@ class ElementStoreTest extends OlapiTestCase
     /**
      * @throws \Exception
      */
+    public static function tearDownAfterClass(): void
+    {
+        self::$connection->close();
+    }
+
+    /**
+     * @throws \Exception
+     */
     public function testPreSet(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        new ElementStore([1,2,3]);
+        new ElementStore([1, 2, 3]);
     }
 
     /**
@@ -70,7 +83,8 @@ class ElementStoreTest extends OlapiTestCase
         $element_admin = self::$connection
             ->getSystemDatabase()
             ->getUserDimension()
-            ->getElementByName('admin');
+            ->getElementByName('admin')
+        ;
 
         $store = new ElementStore();
         $store[] = $element_admin;
@@ -86,7 +100,8 @@ class ElementStoreTest extends OlapiTestCase
         $element_admin = self::$connection
             ->getSystemDatabase()
             ->getUserDimension()
-            ->getElementByName('admin');
+            ->getElementByName('admin')
+        ;
 
         $store = new ElementStore();
         $store[4] = $element_admin;
@@ -102,7 +117,8 @@ class ElementStoreTest extends OlapiTestCase
         $element_admin = self::$connection
             ->getSystemDatabase()
             ->getUserDimension()
-            ->getElementByName('admin');
+            ->getElementByName('admin')
+        ;
 
         $store = new ElementStore();
         $store->append($element_admin);
@@ -127,7 +143,8 @@ class ElementStoreTest extends OlapiTestCase
         $element_admin = self::$connection
             ->getSystemDatabase()
             ->getUserDimension()
-            ->getElementByName('admin');
+            ->getElementByName('admin')
+        ;
 
         $store = new ElementStore();
         $store->append($element_admin);
@@ -147,7 +164,8 @@ class ElementStoreTest extends OlapiTestCase
         $element_admin = self::$connection
             ->getSystemDatabase()
             ->getUserDimension()
-            ->getElementByName('admin');
+            ->getElementByName('admin')
+        ;
 
         $store = new ElementStore();
         $store->append($element_admin);
@@ -165,13 +183,5 @@ class ElementStoreTest extends OlapiTestCase
         self::assertIsArray($new_result);
         self::assertCount(2, $new_result);
         self::assertInstanceOf(Element::class, $new_result[0]);
-    }
-
-    /**
-     * @throws \Exception
-     */
-    public static function tearDownAfterClass(): void
-    {
-        self::$connection->close();
     }
 }

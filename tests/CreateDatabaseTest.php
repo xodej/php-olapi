@@ -1,15 +1,20 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Xodej\Olapi\Test;
 
-include_once __DIR__ . '/OlapiTestCase.php';
+include_once __DIR__.'/OlapiTestCase.php';
 
+use Xodej;
 use Xodej\Olapi\Connection;
 use Xodej\Olapi\User;
-use Xodej;
 
 /**
- * Class CreateDatabaseTest
+ * Class CreateDatabaseTest.
+ *
+ * @internal
+ * @coversNothing
  */
 class CreateDatabaseTest extends OlapiTestCase
 {
@@ -19,6 +24,21 @@ class CreateDatabaseTest extends OlapiTestCase
      * @throws \Exception
      */
     public static function setUpBeforeClass(): void
+    {
+        // delete test database if exist
+        $connection = new Connection(self::OLAP_HOST_WITH_PORT, self::OLAP_USER, self::OLAP_PASS);
+        if ($connection->hasDatabase(self::DATABASE)) {
+            $connection->deleteDatabase(self::DATABASE);
+        }
+        $connection->close();
+    }
+
+    /**
+     * @throws \ErrorException
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws \Exception
+     */
+    public static function tearDownAfterClass(): void
     {
         // delete test database if exist
         $connection = new Connection(self::OLAP_HOST_WITH_PORT, self::OLAP_USER, self::OLAP_PASS);
@@ -77,21 +97,6 @@ class CreateDatabaseTest extends OlapiTestCase
         $user = $connection->getUser();
         self::assertInstanceOf(User::class, $user);
         self::assertEquals('admin', $user->getName());
-        $connection->close();
-    }
-
-    /**
-     * @throws \ErrorException
-     * @throws \GuzzleHttp\Exception\GuzzleException
-     * @throws \Exception
-     */
-    public static function tearDownAfterClass(): void
-    {
-        // delete test database if exist
-        $connection = new Connection(self::OLAP_HOST_WITH_PORT, self::OLAP_USER, self::OLAP_PASS);
-        if ($connection->hasDatabase(self::DATABASE)) {
-            $connection->deleteDatabase(self::DATABASE);
-        }
         $connection->close();
     }
 }

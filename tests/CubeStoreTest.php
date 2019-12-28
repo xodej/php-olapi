@@ -1,15 +1,20 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Xodej\Olapi\Test;
 
 use Xodej\Olapi\Connection;
 use Xodej\Olapi\Cube;
 use Xodej\Olapi\CubeStore;
 
-include_once __DIR__ . '/OlapiTestCase.php';
+include_once __DIR__.'/OlapiTestCase.php';
 
 /**
- * Class CubeStoreTest
+ * Class CubeStoreTest.
+ *
+ * @internal
+ * @coversNothing
  */
 class CubeStoreTest extends OlapiTestCase
 {
@@ -30,10 +35,18 @@ class CubeStoreTest extends OlapiTestCase
     /**
      * @throws \Exception
      */
+    public static function tearDownAfterClass(): void
+    {
+        self::$connection->close();
+    }
+
+    /**
+     * @throws \Exception
+     */
     public function testPreSet(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        new CubeStore([1,2,3]);
+        new CubeStore([1, 2, 3]);
     }
 
     /**
@@ -73,7 +86,8 @@ class CubeStoreTest extends OlapiTestCase
     {
         $user_group_cube = self::$connection
             ->getSystemDatabase()
-            ->getCube('#_USER_GROUP');
+            ->getCube('#_USER_GROUP')
+        ;
 
         $store = new CubeStore();
         $store[] = $user_group_cube;
@@ -88,7 +102,8 @@ class CubeStoreTest extends OlapiTestCase
     {
         $user_group_cube = self::$connection
             ->getSystemDatabase()
-            ->getCube('#_USER_GROUP');
+            ->getCube('#_USER_GROUP')
+        ;
 
         $store = new CubeStore();
         $store[4] = $user_group_cube;
@@ -103,7 +118,8 @@ class CubeStoreTest extends OlapiTestCase
     {
         $user_group_cube = self::$connection
             ->getSystemDatabase()
-            ->getCube('#_USER_GROUP');
+            ->getCube('#_USER_GROUP')
+        ;
 
         $store = new CubeStore();
         $store->append($user_group_cube);
@@ -127,7 +143,8 @@ class CubeStoreTest extends OlapiTestCase
     {
         $user_group_cube = self::$connection
             ->getSystemDatabase()
-            ->getCube('#_USER_GROUP');
+            ->getCube('#_USER_GROUP')
+        ;
 
         $store = new CubeStore();
         $store->append($user_group_cube);
@@ -146,7 +163,8 @@ class CubeStoreTest extends OlapiTestCase
     {
         $user_group_cube = self::$connection
             ->getSystemDatabase()
-            ->getCube('#_USER_GROUP');
+            ->getCube('#_USER_GROUP')
+        ;
 
         $store = new CubeStore();
         $store->append($user_group_cube);
@@ -164,13 +182,5 @@ class CubeStoreTest extends OlapiTestCase
         self::assertIsArray($new_result);
         self::assertCount(2, $new_result);
         self::assertInstanceOf(Cube::class, $new_result[0]);
-    }
-    
-    /**
-     * @throws \Exception
-     */
-    public static function tearDownAfterClass(): void
-    {
-        self::$connection->close();
     }
 }

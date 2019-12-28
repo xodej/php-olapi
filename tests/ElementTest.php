@@ -1,15 +1,20 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Xodej\Olapi\Test;
 
-include_once __DIR__ . '/OlapiTestCase.php';
+include_once __DIR__.'/OlapiTestCase.php';
 
 use Xodej\Olapi\Connection;
 use Xodej\Olapi\Element;
 use Xodej\Olapi\User;
 
 /**
- * Class ElementTest
+ * Class ElementTest.
+ *
+ * @internal
+ * @coversNothing
  */
 class ElementTest extends OlapiTestCase
 {
@@ -21,6 +26,16 @@ class ElementTest extends OlapiTestCase
     public static function setUpBeforeClass(): void
     {
         self::$connection = new Connection(self::OLAP_HOST_WITH_PORT, self::OLAP_USER, self::OLAP_PASS);
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public static function tearDownAfterClass(): void
+    {
+        if (null !== self::$connection) {
+            self::$connection->close();
+        }
     }
 
     /**
@@ -51,15 +66,5 @@ class ElementTest extends OlapiTestCase
         self::assertEquals('admin', $admin_instance->getName());
 
         self::assertTrue(self::$connection->getSystemDatabase()->resetLicenseAssociation());
-    }
-
-    /**
-     * @throws \Exception
-     */
-    public static function tearDownAfterClass(): void
-    {
-        if (null !== self::$connection) {
-            self::$connection->close();
-        }
     }
 }

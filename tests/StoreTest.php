@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Xodej\Olapi\Test;
 
 use Xodej\Olapi\Store;

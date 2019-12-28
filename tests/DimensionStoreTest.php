@@ -1,15 +1,20 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Xodej\Olapi\Test;
 
 use Xodej\Olapi\Connection;
 use Xodej\Olapi\Dimension;
 use Xodej\Olapi\DimensionStore;
 
-include_once __DIR__ . '/OlapiTestCase.php';
+include_once __DIR__.'/OlapiTestCase.php';
 
 /**
- * Class DimensionStoreTest
+ * Class DimensionStoreTest.
+ *
+ * @internal
+ * @coversNothing
  */
 class DimensionStoreTest extends OlapiTestCase
 {
@@ -26,10 +31,18 @@ class DimensionStoreTest extends OlapiTestCase
     /**
      * @throws \Exception
      */
+    public static function tearDownAfterClass(): void
+    {
+        self::$connection->close();
+    }
+
+    /**
+     * @throws \Exception
+     */
     public function testPreSet(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        new DimensionStore([1,2,3]);
+        new DimensionStore([1, 2, 3]);
     }
 
     /**
@@ -69,7 +82,8 @@ class DimensionStoreTest extends OlapiTestCase
     {
         $user_dim = self::$connection
             ->getSystemDatabase()
-            ->getUserDimension();
+            ->getUserDimension()
+        ;
 
         $store = new DimensionStore();
         $store[] = $user_dim;
@@ -84,7 +98,8 @@ class DimensionStoreTest extends OlapiTestCase
     {
         $user_dim = self::$connection
             ->getSystemDatabase()
-            ->getUserDimension();
+            ->getUserDimension()
+        ;
 
         $store = new DimensionStore();
         $store[4] = $user_dim;
@@ -99,7 +114,8 @@ class DimensionStoreTest extends OlapiTestCase
     {
         $user_dim = self::$connection
             ->getSystemDatabase()
-            ->getUserDimension();
+            ->getUserDimension()
+        ;
 
         $store = new DimensionStore();
         $store->append($user_dim);
@@ -123,7 +139,8 @@ class DimensionStoreTest extends OlapiTestCase
     {
         $user_dim = self::$connection
             ->getSystemDatabase()
-            ->getUserDimension();
+            ->getUserDimension()
+        ;
 
         $store = new DimensionStore();
         $store->append($user_dim);
@@ -142,7 +159,8 @@ class DimensionStoreTest extends OlapiTestCase
     {
         $user_dim = self::$connection
             ->getSystemDatabase()
-            ->getUserDimension();
+            ->getUserDimension()
+        ;
 
         $store = new DimensionStore();
         $store->append($user_dim);
@@ -160,13 +178,5 @@ class DimensionStoreTest extends OlapiTestCase
         self::assertIsArray($new_result);
         self::assertCount(2, $new_result);
         self::assertInstanceOf(Dimension::class, $new_result[0]);
-    }
-
-    /**
-     * @throws \Exception
-     */
-    public static function tearDownAfterClass(): void
-    {
-        self::$connection->close();
     }
 }

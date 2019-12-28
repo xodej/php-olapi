@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Xodej\Olapi\Test;
 
 use Xodej\Olapi\Connection;
@@ -7,10 +9,13 @@ use Xodej\Olapi\Database;
 use Xodej\Olapi\DatabaseStore;
 use Xodej\Olapi\SystemDatabase;
 
-include_once __DIR__ . '/OlapiTestCase.php';
+include_once __DIR__.'/OlapiTestCase.php';
 
 /**
- * Class DatabaseStoreTest
+ * Class DatabaseStoreTest.
+ *
+ * @internal
+ * @coversNothing
  */
 class DatabaseStoreTest extends OlapiTestCase
 {
@@ -24,10 +29,18 @@ class DatabaseStoreTest extends OlapiTestCase
         self::$connection = new Connection(self::OLAP_HOST_WITH_PORT, self::OLAP_USER, self::OLAP_PASS);
     }
 
+    /**
+     * @throws \Exception
+     */
+    public static function tearDownAfterClass(): void
+    {
+        self::$connection->close();
+    }
+
     public function testPreSet(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        new DatabaseStore([1,2,3]);
+        new DatabaseStore([1, 2, 3]);
     }
 
     public function testUseOffset()
@@ -147,13 +160,5 @@ class DatabaseStoreTest extends OlapiTestCase
         self::assertCount(2, $new_result);
         self::assertInstanceOf(Database::class, $new_result[0]);
         self::assertInstanceOf(SystemDatabase::class, $new_result[0]);
-    }
-
-    /**
-     * @throws \Exception
-     */
-    public static function tearDownAfterClass(): void
-    {
-        self::$connection->close();
     }
 }

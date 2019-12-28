@@ -1,13 +1,18 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Xodej\Olapi\Test;
 
-include_once __DIR__ . '/OlapiTestCase.php';
+include_once __DIR__.'/OlapiTestCase.php';
 
 use Xodej\Olapi\Util;
 
 /**
- * Class UtilTest
+ * Class UtilTest.
+ *
+ * @internal
+ * @coversNothing
  */
 class UtilTest extends OlapiTestCase
 {

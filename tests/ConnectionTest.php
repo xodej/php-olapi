@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Xodej\Olapi\Test;
 
 use Xodej\Olapi\Connection;
@@ -7,7 +9,10 @@ use Xodej\Olapi\Connection;
 include_once __DIR__.'/OlapiTestCase.php';
 
 /**
- * Class ConnectionTest
+ * Class ConnectionTest.
+ *
+ * @internal
+ * @coversNothing
  */
 class ConnectionTest extends OlapiTestCase
 {
@@ -63,7 +68,7 @@ class ConnectionTest extends OlapiTestCase
     public function testDeleteDatabaseByIdNotExist(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        self::$connection->deleteDatabase(self::DATABASE . '_NE');
+        self::$connection->deleteDatabase(self::DATABASE.'_NE');
 
         $this->expectException(\InvalidArgumentException::class);
         self::$connection->deleteDatabaseById(99999999);

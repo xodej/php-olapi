@@ -1,14 +1,18 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Xodej\Olapi\Test;
 
 use Xodej\Olapi\Connection;
-use Xodej\Olapi\Element;
 
-include_once __DIR__ . '/OlapiTestCase.php';
+include_once __DIR__.'/OlapiTestCase.php';
 
 /**
- * Class DimensionTest
+ * Class DimensionTest.
+ *
+ * @internal
+ * @coversNothing
  */
 class DimensionTest extends OlapiTestCase
 {
@@ -30,11 +34,21 @@ class DimensionTest extends OlapiTestCase
     /**
      * @throws \Exception
      */
+    public static function tearDownAfterClass(): void
+    {
+        parent::tearDownAfterClass();
+        self::$connection->close();
+    }
+
+    /**
+     * @throws \Exception
+     */
     public function testAddDimension(): void
     {
         $user_dim = self::$connection
             ->getSystemDatabase()
-            ->getUserDimension();
+            ->getUserDimension()
+        ;
 
         self::assertIsString($user_dim->getFirstElement());
         self::assertEquals('admin', $user_dim->getFirstElement());
@@ -46,10 +60,16 @@ class DimensionTest extends OlapiTestCase
     /**
      * @throws \Exception
      */
-    public static function tearDownAfterClass(): void
+    public function testDimensionInfo(): void
     {
-        parent::tearDownAfterClass();
-        self::$connection->close();
+        $info = self::$connection
+            ->getDatabase('Demo')
+            ->getDimension('Products')
+            ->info()
+        ;
+
+        self::assertCount(1, $info);
+        self::assertIsArray($info[0]);
     }
 
     /**
@@ -59,7 +79,8 @@ class DimensionTest extends OlapiTestCase
     {
         $user_dim = self::$connection
             ->getSystemDatabase()
-            ->getUserDimension();
+            ->getUserDimension()
+        ;
 
         self::assertFalse($user_dim->isDebugMode());
         Connection::$debugMode = true;
@@ -74,7 +95,8 @@ class DimensionTest extends OlapiTestCase
     {
         $dim_prods = self::$connection
             ->getDatabaseByName('Biker')
-            ->getDimensionByName('Products');
+            ->getDimensionByName('Products')
+        ;
 
         self::assertEquals(3, $dim_prods->getMaxDepth(), 'Dimension::getMaxDepth() failed');
         self::assertEquals(4, $dim_prods->getMaxIndent(), 'Dimension::getMaxIndent() failed');
@@ -92,6 +114,7 @@ class DimensionTest extends OlapiTestCase
         self::$connection
             ->getSystemDatabase()
             ->getDimension('#_USER_')
-            ->getElementIdFromName('99999999');
+            ->getElementIdFromName('99999999')
+        ;
     }
 }
