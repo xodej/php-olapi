@@ -17,13 +17,10 @@ class DataComparison
     public const OPERATOR_NEQ = 32; // <>
     public const OPERATOR_TRUE = 64; // true
 
-    /**
-     * @var string
-     */
-    protected $operator;
+    protected int $operator;
 
     /**
-     * @var float|string
+     * @var float|string|int|bool
      */
     protected $parameter;
 
@@ -31,11 +28,15 @@ class DataComparison
      * DataComparison constructor.
      *
      * @param int $operator DataComparison::OPERATOR_XX constants
-     * @param $parameter
+     * @param mixed $parameter
      */
     public function __construct(int $operator, $parameter)
     {
         $this->operator = $operator;
+
+        if (!is_scalar($parameter)) {
+            throw new \InvalidArgumentException('Argument for DataComparison must be scalar and not null.');
+        }
         $this->parameter = $parameter;
     }
 
@@ -48,7 +49,7 @@ class DataComparison
     }
 
     /**
-     * @return float|string
+     * @return float|string|int|bool
      */
     public function getParameter()
     {

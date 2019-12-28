@@ -26,29 +26,38 @@ class TextFilter extends Filter
     public const FLAG_IGNORE_CASE = 8;
 
     /**
-     * @var array
+     * @var null|string[]
      */
-    protected $expressions;
+    protected ?array $expressions = null;
 
     /**
      * @param string $expression
+     *
+     * @return $this
      */
-    public function addExpression(string $expression): void
+    public function addExpression(string $expression): self
     {
         if (null === $this->expressions) {
             $this->expressions = [];
         }
 
         $this->expressions[] = $expression;
-    }
 
-    public function reset(): void
-    {
-        $this->expressions = [];
+        return $this;
     }
 
     /**
-     * @return array
+     * @return $this
+     */
+    public function reset(): self
+    {
+        $this->expressions = [];
+
+        return $this;
+    }
+
+    /**
+     * @return array<mixed>
      */
     public function parse(): array
     {

@@ -10,20 +10,16 @@ namespace Xodej\Olapi;
 class Area
 {
     /**
-     * @var null|array
+     * @var array<string,array<string,bool>>
      */
-    private $area;
-
-    /**
-     * @var Cube
-     */
-    private $cube;
+    private array $area;
+    private Cube $cube;
 
     /**
      * Area constructor.
      *
-     * @param Cube       $cube
-     * @param null|array $area
+     * @param Cube                                  $cube
+     * @param null|array<string,array<string,bool>> $area
      */
     public function __construct(Cube $cube, ?array $area = null)
     {
@@ -32,12 +28,12 @@ class Area
     }
 
     /**
-     * @param string               $dimension_name
+     * @param string $dimension_name
      * @param array<string>|string $elements
-     *
+     * @return $this
      * @throws \Exception
      */
-    public function addElements(string $dimension_name, $elements): void
+    public function addElements(string $dimension_name, $elements): self
     {
         if (!$this->cube->hasDimensionByName($dimension_name)) {
             throw new \InvalidArgumentException('unknown dimension '.
@@ -53,61 +49,61 @@ class Area
         foreach ($elements as $element) {
             $this->area[$dimension_name][$element] = true;
         }
+
+        return $this;
     }
 
     /**
-     * @param string               $dimension_name
+     * @param string $dimension_name
      * @param array<string>|string $elements
-     *
+     * @return $this
      * @throws \Exception
      */
-    public function setElements(string $dimension_name, $elements): void
+    public function setElements(string $dimension_name, $elements): self
     {
         if (!$this->cube->hasDimensionByName($dimension_name)) {
             throw new \InvalidArgumentException('unknown dimension '.
                 $dimension_name.' in cube '.$this->cube->getName());
         }
 
-        $elements = (array) $elements;
         $this->area[$dimension_name] = [];
-
-        foreach ($elements as $element) {
-            $this->area[$dimension_name][$element] = true;
-        }
+        return $this->addElements($dimension_name, $elements);
     }
 
     /**
-     * @param string               $dimension
-     * @param array<string>|string $elements
-     *
+     * @param string $dimension_name
+     * @param array<string>|string $except_elements
+     * @return $this
      * @throws \Exception
      */
-    public function allExcept(string $dimension, $elements): void
+    public function allExcept(string $dimension_name, $except_elements): self
     {
-        $elements = (array) $elements;
+        $except_elements = (array) $except_elements;
 
         $element_list = $this->cube->getDatabase()
-            ->getDimensionByName($dimension)
+            ->getDimensionByName($dimension_name)
             ->listElements()
         ;
 
         if (null === $element_list || !isset($element_list['olap_name'])) {
-            return;
+            return $this;
         }
 
         $this->area = (array) $this->area;
 
-        $this->area[$dimension] = $element_list['olap_name'];
+        $this->area[$dimension_name] = $element_list['olap_name'];
 
-        foreach ($elements as $element) {
-            if (isset($this->area[$dimension][$element])) {
-                unset($this->area[$dimension][$element]);
+        foreach ($except_elements as $element) {
+            if (isset($this->area[$dimension_name][$element])) {
+                unset($this->area[$dimension_name][$element]);
             }
         }
+
+        return $this;
     }
 
     /**
-     * @return array
+     * @return array<string,array<string>>
      */
     protected function prepareArea(): array
     {
@@ -134,7 +130,7 @@ class Area
     /**
      * @throws \Exception
      *
-     * @return array
+     * @return array<string>
      */
     public function getAreaAsArray(): array
     {

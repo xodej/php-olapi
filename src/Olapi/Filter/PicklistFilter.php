@@ -37,32 +37,28 @@ class PicklistFilter extends Filter
     /**
      * @var string[]
      */
-    private $elements;
+    private ?array $elements = null;
 
     /**
      * @param string $element_name
      *
-     * @throws \ErrorException
      * @throws \Exception
      *
      * @return bool
      *
      * @see PicklistFilter::addElementByName() alias
      */
-    public function addElement(string $element_name): bool
+    public function addElement(string $element_name): self
     {
         return $this->addElementByName($element_name);
     }
 
     /**
      * @param string $element_name
-     *
-     * @throws \ErrorException
+     * @return $this
      * @throws \Exception
-     *
-     * @return bool
      */
-    public function addElementByName(string $element_name): bool
+    public function addElementByName(string $element_name): self
     {
         if (!$this->getDimension()->hasElementByName($element_name)) {
             throw new \ErrorException('unknown element name '.$element_name.' in dimension '.$this->getDimension()->getName());
@@ -70,31 +66,31 @@ class PicklistFilter extends Filter
 
         $this->elements[] = $element_name;
 
-        return true;
+        return $this;
     }
 
     /**
      * @param int $element_id
-     *
-     * @throws \ErrorException
+     * @return $this
      * @throws \Exception
-     *
-     * @return bool
      */
-    public function addElementById(int $element_id): bool
+    public function addElementById(int $element_id): self
     {
         if (!$this->getDimension()->hasElementById($element_id)) {
             throw new \ErrorException('unknown element ID '.$element_id.' in dimension '.$this->getDimension()->getName());
         }
 
         $this->elements[] = $this->getDimension()->getElementNameFromId($element_id);
-
-        return true;
+        return $this;
     }
 
-    public function reset(): void
+    /**
+     * @return $this
+     */
+    public function reset(): self
     {
         $this->elements = [];
+        return $this;
     }
 
     /**

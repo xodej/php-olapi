@@ -45,58 +45,27 @@ class HierarchyFilter extends Filter
     public const FLAG_SIBLINGS_EXCLUSIVE = 8192;
     public const FLAG_SIBLINGS_INCLUSIVE = 16384;
 
-    /**
-     * @var string
-     */
-    protected $bound;
-
-    /**
-     * @var bool
-     */
-    protected $level;
-
-    /**
-     * @var int
-     */
-    protected $levelStart;
-
-    /**
-     * @var int
-     */
-    protected $levelEnd;
-
-    /**
-     * @var bool
-     */
-    protected $revolve;
-
-    /**
-     * @var string
-     */
-    protected $revolveElement;
-
-    /**
-     * @var int
-     */
-    protected $revolveCount;
-
-    /**
-     * @var int
-     */
-    protected $indent;
+    protected ?string $bound = null;
+    protected ?bool $level = null;
+    protected ?int $levelStart = null;
+    protected ?int $levelEnd = null;
+    protected ?bool $revolve = null;
+    protected ?string $revolveElement = null;
+    protected ?int $revolveCount = null;
+    protected ?int $indent = null;
 
     /**
      * @param string $element_name
-     *
-     * @throws \InvalidArgumentException
+     * @return $this
      */
-    public function setBoundElement(string $element_name): void
+    public function setBoundElement(string $element_name): self
     {
         if (!$this->getDimension()->hasElementByName($element_name)) {
             throw new \InvalidArgumentException('unknown element given as argument');
         }
 
         $this->bound = $element_name;
+        return $this;
     }
 
     /**
@@ -115,10 +84,12 @@ class HierarchyFilter extends Filter
 
     /**
      * @param int $level_start
+     * @return $this
      */
-    public function setLevelStart(int $level_start): void
+    public function setLevelStart(int $level_start): self
     {
         $this->levelStart = $level_start;
+        return $this;
     }
 
     /**
@@ -131,10 +102,12 @@ class HierarchyFilter extends Filter
 
     /**
      * @param int $level_end
+     * @return $this
      */
-    public function setLevelEnd(int $level_end): void
+    public function setLevelEnd(int $level_end): self
     {
         $this->levelEnd = $level_end;
+        return $this;
     }
 
     /**
@@ -147,16 +120,16 @@ class HierarchyFilter extends Filter
 
     /**
      * @param int $revolve_count
-     *
-     * @throws \InvalidArgumentException
+     * @return $this
      */
-    public function setRevolveCount(int $revolve_count): void
+    public function setRevolveCount(int $revolve_count): self
     {
         if ($revolve_count < 1) {
             throw new \InvalidArgumentException('argument must be integer');
         }
 
         $this->revolveCount = $revolve_count;
+        return $this;
     }
 
     /**
@@ -169,17 +142,16 @@ class HierarchyFilter extends Filter
 
     /**
      * @param string $revolve_name
-     *
-     * @throws \InvalidArgumentException
-     * @throws \Exception
+     * @return $this
      */
-    public function setRevolveName(string $revolve_name): void
+    public function setRevolveName(string $revolve_name): self
     {
         if (!$this->getDimension()->hasElementByName($revolve_name)) {
             throw new \InvalidArgumentException('argument not found in dimension');
         }
 
         $this->revolveElement = $revolve_name;
+        return $this;
     }
 
     /**

@@ -29,35 +29,17 @@ class Database implements IBase
     public const API_SCRIPT_EXECUTE = '/script/execute';
     public const API_SCRIPT_VARIABLES = '/script/variables';
 
-    /**
-     * @var Connection
-     */
-    private $connection;
+    private Connection $connection;
+    private DimensionStore $dimensions;
+    private CubeStore $cubes;
 
     /**
-     * @var DimensionStore
+     * @var string[]
      */
-    private $dimensions;
+    private array $metaInfo;
 
-    /**
-     * @var CubeStore
-     */
-    private $cubes;
-
-    /**
-     * @var array
-     */
-    private $metaInfo;
-
-    /**
-     * @var array
-     */
-    private $dimensionList;
-
-    /**
-     * @var array
-     */
-    private $cubeList;
+    private ?array $dimensionList = null;
+    private ?array $cubeList = null;
 
     /**
      * Database constructor.

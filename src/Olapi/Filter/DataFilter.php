@@ -58,59 +58,24 @@ class DataFilter extends Filter
     public const FLAG_USE_AND = 16384;
 
     /**
-     * @var null|Cube
-     */
-    protected $cube;
-
-    /**
      * @var DataComparison[]
      */
-    protected $cmps;
-
-    /**
-     * @var bool
-     */
-    protected $coordsSet;
+    protected ?array $cmps = null;
 
     /**
      * @var string[]
      */
-    protected $coords;
+    protected ?array $coords = null;
 
-    /**
-     * @var bool
-     */
-    protected $upperPercentageSet;
-
-    /**
-     * @var bool
-     */
-    protected $lowerPercentageSet;
-
-    /**
-     * @var float
-     */
-    protected $upperPercentage;
-
-    /**
-     * @var float
-     */
-    protected $lowerPercentage;
-
-    /**
-     * @var int
-     */
-    protected $topmost;
-
-    /**
-     * @var int
-     */
-    protected $useStrings;
-
-    /**
-     * @var null|Area
-     */
-    protected $subcube;
+    protected ?Cube $cube = null;
+    protected ?bool $coordsSet = null;
+    protected ?bool $upperPercentageSet = null;
+    protected ?bool $lowerPercentageSet = null;
+    protected ?float $upperPercentage = null;
+    protected ?float $lowerPercentage = null;
+    protected ?int $topmost = null;
+    protected ?int $useStrings = null;
+    protected ?Area $subcube = null;
 
     /**
      * DataFilter constructor.
@@ -125,19 +90,23 @@ class DataFilter extends Filter
 
     /**
      * @param Cube $cube
+     * @return $this
      */
-    public function setCube(Cube $cube): void
+    public function setCube(Cube $cube): self
     {
         $this->cube = $cube;
+        return $this;
     }
 
     /**
-     * @param null|bool $use_strings
+     * @param bool|null $use_strings
+     * @return $this
      */
-    public function useStrings(?bool $use_strings = null): void
+    public function useStrings(?bool $use_strings = null): self
     {
         $use_strings = $use_strings ?? false;
         $this->useStrings = (int) $use_strings;
+        return $this;
     }
 
     /**
@@ -192,12 +161,11 @@ class DataFilter extends Filter
     }
 
     /**
-     * @param int          $operator $operator DataComparison::OPERATOR_XX constants
-     * @param float|string $value
-     *
-     * @throws \Exception
+     * @param int $operator one of DataComparison::OPERATOR_XX constants
+     * @param $value
+     * @return $this
      */
-    public function addComparison(int $operator, $value): void
+    public function addComparison(int $operator, $value): self
     {
         if (2 === \count($this->cmps)) {
             throw new \InvalidArgumentException('only two comparisons are supported by Jedox');
@@ -208,19 +176,26 @@ class DataFilter extends Filter
         }
 
         $this->cmps[] = new DataComparison($operator, $value);
+        return $this;
     }
 
-    public function reset(): void
+    /**
+     * @return $this
+     */
+    public function reset(): self
     {
         $this->cmps = [];
         $this->subcube = null;
+        return $this;
     }
 
     /**
      * @param Area $area
+     * @return $this
      */
-    public function setArea(Area $area): void
+    public function setArea(Area $area): self
     {
         $this->subcube = $area;
+        return $this;
     }
 }

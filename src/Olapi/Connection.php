@@ -44,41 +44,30 @@ class Connection
 
     public const API_SAML_META_SP = '/meta-sp';
 
-    public static $debugMode = false;
+    public static bool $debugMode = false;
 
-    private $host;
-    private $user;
-    private $pass;
-    /**
-     * @var null|Client
-     */
-    private $client;
-    private $sessionId;
-    private $dataToken;
-    private $secret;
+    private ?string $host = null;
+    private ?string $user = null;
+    private ?string $pass = null;
 
-    /**
-     * @var null|Connection
-     */
-    private $superConnection;
+    private ?Client $client = null;
+    private ?string $sessionId = null;
+    private ?string $dataToken = null;
+    private ?string $secret = null;
 
-    /**
-     * @var DatabaseStore
-     */
-    private $databases;
+    private ?Connection $superConnection = null;
 
-    /**
-     * @var array
-     */
-    private $databaseList;
+    private ?DatabaseStore $databases = null;
+
+    private ?array $databaseList = null;
 
     /**
      * Connection constructor.
      *
-     * @param null|string $host_with_port
-     * @param null|string $username
-     * @param null|string $password
-     * @param null|string $sid
+     * @param null|string $host_with_port (Optional) url with port (default: 127.0.0.1:7777)
+     * @param null|string $username       (Optional) Jedox user name (default: admin)
+     * @param null|string $password       (Optional) Jedox password (default: admin)
+     * @param null|string $sid            (Optional) session ID
      *
      * @throws GuzzleException
      * @throws \ErrorException
@@ -116,6 +105,8 @@ class Connection
     }
 
     /**
+     * Explicit destructor to close Jedox connection
+     *
      * @throws \Exception
      */
     public function __destruct()
@@ -124,6 +115,8 @@ class Connection
     }
 
     /**
+     * Close connection, reset cached content and invalidate session ID
+     *
      * @throws \Exception
      *
      * @return bool
@@ -150,20 +143,33 @@ class Connection
     }
 
     /**
-     * @param string $database_name
+     * Creates a database
      *
-     * @throws \Exception
+     * @param string      $database_name       Name of the new database
+     * @param string|null $external_identifier (Optional) Path to backup file where the database will be loaded from
+     * @param string|null $password            (Optional) If in restore mode, password to provided encrypted archive with database.
      *
      * @return bool
+     * @throws \ErrorException
      */
-    public function createDatabase(string $database_name): bool
+    public function createDatabase(string $database_name, ?string $external_identifier = null, ?string $password = null): bool
     {
-        $response = $this->request(self::API_DATABASE_CREATE, [
+        $params = [
             'query' => [
                 'new_name' => $database_name,
                 'type' => 0,
             ],
-        ]);
+        ];
+
+        if (null !== $external_identifier) {
+            $params['query']['external_identifier'] = $external_identifier;
+        }
+
+        if (null !== $password) {
+            $params['query']['password'] = $password;
+        }
+
+        $response = $this->request(self::API_DATABASE_CREATE, $params);
 
         // @todo Connection::createDatabase() - reload databases
 
@@ -171,7 +177,9 @@ class Connection
     }
 
     /**
-     * @param string $database_name
+     * Deletes a database
+     *
+     * @param string $database_name database name
      *
      * @throws \Exception
      *
@@ -185,7 +193,9 @@ class Connection
     }
 
     /**
-     * @param int $database_id
+     * Delete database by ID
+     *
+     * @param int $database_id database ID
      *
      * @throws \Exception
      *
@@ -225,7 +235,9 @@ class Connection
     }
 
     /**
-     * @param string $database_name
+     * Delete database by database name
+     *
+     * @param string $database_name database name
      *
      * @throws \Exception
      *
@@ -241,8 +253,10 @@ class Connection
     }
 
     /**
-     * @param string $user_sid
-     * @param string $event_name
+     * Begin event
+     *
+     * @param string $user_sid   session ID of user
+     * @param string $event_name event name
      *
      * @throws \ErrorException
      *
@@ -261,6 +275,8 @@ class Connection
     }
 
     /**
+     * End event
+     *
      * @throws \ErrorException
      *
      * @return bool
@@ -273,8 +289,10 @@ class Connection
     }
 
     /**
-     * @param string     $database_name
-     * @param null|array $options
+     * Returns database script
+     *
+     * @param string     $database_name database name
+     * @param null|array $options       (Optional) array of options
      *
      * @throws \Exception
      *
@@ -291,6 +309,8 @@ class Connection
     }
 
     /**
+     * Returns connection object
+     *
      * @throws \Exception
      *
      * @return $this
@@ -305,6 +325,8 @@ class Connection
     }
 
     /**
+     * Returns user name used for connection
+     *
      * @throws \ErrorException
      *
      * @return string
@@ -317,8 +339,10 @@ class Connection
     }
 
     /**
-     * @param string    $databaseNameSlashCubeName
-     * @param null|bool $use_cache
+     * Returns cube object for given database/cube identifier
+     *
+     * @param string    $databaseNameSlashCubeName Jedox database/cube identifier
+     * @param null|bool $use_cache                 (Optional) use cache
      *
      * @throws \Exception
      *
@@ -336,6 +360,8 @@ class Connection
     }
 
     /**
+     * Returns data token
+     *
      * @throws \Exception
      *
      * @return null|string
@@ -349,7 +375,9 @@ class Connection
     }
 
     /**
-     * @param string $database_name
+     * Returns database object by database name
+     *
+     * @param string $database_name database name
      *
      * @throws \Exception
      *
@@ -363,8 +391,10 @@ class Connection
     }
 
     /**
-     * @param int       $database_id
-     * @param null|bool $use_cache
+     * Returns database object by database ID
+     *
+     * @param int       $database_id database ID
+     * @param null|bool $use_cache   (Optional) use cache
      *
      * @throws \Exception
      *
@@ -397,8 +427,10 @@ class Connection
     }
 
     /**
-     * @param string    $database_name
-     * @param null|bool $use_cache
+     * Returns database object by database name
+     *
+     * @param string    $database_name database name
+     * @param null|bool $use_cache     (Optional) use cache
      *
      * @throws \Exception
      *
@@ -414,7 +446,9 @@ class Connection
     }
 
     /**
-     * @param string $database_name
+     * Returns database ID from database name
+     *
+     * @param string $database_name database name
      *
      * @throws \DomainException
      *
@@ -430,7 +464,9 @@ class Connection
     }
 
     /**
-     * @param string $database_name
+     * Returns database record by database name
+     *
+     * @param string $database_name database name
      *
      * @throws \InvalidArgumentException
      * @throws \ErrorException
@@ -446,7 +482,9 @@ class Connection
     }
 
     /**
-     * @param int $database_id
+     * Returns database record by database ID
+     *
+     * @param int $database_id database ID
      *
      * @throws \InvalidArgumentException
      * @throws \Exception
@@ -464,7 +502,9 @@ class Connection
     }
 
     /**
-     * @param string $database_name
+     * Returns database record by database name
+     *
+     * @param string $database_name database name
      *
      * @throws \InvalidArgumentException
      * @throws \ErrorException
@@ -483,7 +523,9 @@ class Connection
     }
 
     /**
-     * @param int $databaseId
+     * Returns database object by database name
+     *
+     * @param int $databaseId database ID
      *
      * @return null|string
      */
@@ -493,7 +535,9 @@ class Connection
     }
 
     /**
-     * @param null|array{show_counters:int, show_enckey:int, show_user_info:int} $options
+     * Returns array response of /server/info API call
+     *
+     * @param null|array{show_counters:int, show_enckey:int, show_user_info:int} $options (Optional) options
      *
      * @throws \ErrorException
      *
@@ -511,10 +555,12 @@ class Connection
     }
 
     /**
-     * @param null|string $host_with_port
-     * @param null|string $user
-     * @param null|string $pass
-     * @param null|string $sid
+     * Returns connection object
+     *
+     * @param null|string $host_with_port (Optional) url with port (default: 127.0.0.1:7777)
+     * @param null|string $username       (Optional) Jedox user name (default: admin)
+     * @param null|string $password       (Optional) Jedox password (default: admin)
+     * @param null|string $sid            (Optional) session ID
      *
      * @throws GuzzleException
      * @throws \ErrorException
@@ -523,15 +569,17 @@ class Connection
      */
     public static function getInstance(
         ?string $host_with_port = null,
-        ?string $user = null,
-        ?string $pass = null,
+        ?string $username = null,
+        ?string $password = null,
         ?string $sid = null
     ): Connection {
-        return new self($host_with_port, $user, $pass, $sid);
+        return new self($host_with_port, $username, $password, $sid);
     }
 
     /**
-     * @param null|array{mode:string} $options
+     * Returns array response of /server/licenses API call
+     *
+     * @param null|array{mode:string} $options (Optional) options
      *
      * @throws \ErrorException
      *
@@ -547,6 +595,8 @@ class Connection
     }
 
     /**
+     * Returns secret if set
+     *
      * @return null|string
      */
     public function getSecret(): ?string
@@ -555,7 +605,10 @@ class Connection
     }
 
     /**
+     * Returns array of running user sessions
+     *
      * @throws \Exception
+     * @return void
      */
     public function getSessions(): void
     {
@@ -576,13 +629,15 @@ class Connection
      * This function only works if lib and server both run on the same machine
      * retrieves the session of user _internal_suite via shared memory.
      *
-     * @param null|string $secret
+     * @param null|string $secret (Optional) secret
      *
      * @throws GuzzleException
      * @throws \ErrorException
      * @throws \Exception
      *
      * @return null|Connection
+     *
+     * @nodoc
      */
     public function getSuperConnection(?string $secret = null): ?Connection
     {
@@ -621,6 +676,8 @@ class Connection
     }
 
     /**
+     * Returns system database object
+     *
      * @throws \InvalidArgumentException
      * @throws \Exception
      *
@@ -632,7 +689,9 @@ class Connection
     }
 
     /**
-     * @param null|string $user_name (default user name of connection)
+     * Returns user object
+     *
+     * @param null|string $user_name (Optional) user name (default: user name of connection)
      *
      * @throws \Exception
      *
@@ -648,6 +707,8 @@ class Connection
     }
 
     /**
+     * Returns array of user info
+     *
      * @throws \ErrorException
      *
      * @return Store
@@ -664,7 +725,9 @@ class Connection
     }
 
     /**
-     * @param string $database_name
+     * Returns true if database exists
+     *
+     * @param string $database_name database name
      *
      * @return bool
      *
@@ -676,7 +739,9 @@ class Connection
     }
 
     /**
-     * @param int $databaseId
+     * Returns true if database exists
+     *
+     * @param int $databaseId database ID
      *
      * @return bool
      */
@@ -686,7 +751,9 @@ class Connection
     }
 
     /**
-     * @param string $databaseName
+     * Returns true if database exists
+     *
+     * @param string $databaseName database name
      *
      * @return bool
      */
@@ -696,6 +763,8 @@ class Connection
     }
 
     /**
+     * Returns true if debug mode is enabled
+     *
      * @return bool
      */
     public function isDebugMode(): bool
@@ -810,7 +879,6 @@ class Connection
             ],
         ]);
 
-        // @todo check if the response really gives a status --> undocumented
         return (bool) ($response[0] ?? false);
     }
 
@@ -845,7 +913,7 @@ class Connection
 
         try {
             $response = $client->request('GET', $url, $params);
-            $this->dataToken = $response->getHeader('X-PALO-SV');
+            $this->dataToken = $response->getHeader('X-PALO-SV')[0] ?? null;
 
             return $this->parseCsvResponse($response);
         } catch (GuzzleException $exception) {
@@ -877,7 +945,7 @@ class Connection
 
         try {
             $response = $client->request('GET', $url, $params);
-            $this->dataToken = $response->getHeader('X-PALO-SV');
+            $this->dataToken = $response->getHeader('X-PALO-SV')[0] ?? null;
 
             return $response->getBody()->detach();
         } catch (GuzzleException $exception) {
@@ -971,6 +1039,8 @@ class Connection
     }
 
     /**
+     * Returns client object
+     *
      * @return null|Client
      */
     private function getClient(): ?Client
@@ -979,6 +1049,8 @@ class Connection
     }
 
     /**
+     * Returns session ID
+     *
      * @return string
      */
     private function getSessionId(): string
@@ -987,6 +1059,8 @@ class Connection
     }
 
     /**
+     * Initializes a connection
+     *
      * @throws GuzzleException
      * @throws \ErrorException
      *
@@ -1028,7 +1102,7 @@ class Connection
                 'decode_content' => 'gzip',
             ]);
 
-            $this->dataToken = $response->getHeader('X-PALO-SV');
+            $this->dataToken = $response->getHeader('X-PALO-SV')[0] ?? null;
             $login_data = \str_getcsv($response->getBody()->getContents(), ';', '"', '"');
 
             // check if login was successful
@@ -1050,9 +1124,9 @@ class Connection
     }
 
     /**
-     * parses the Jedox OLAP server response csv.
+     * Parses the Jedox OLAP server response csv.
      *
-     * @param ResponseInterface $response
+     * @param ResponseInterface $response response object
      *
      * @throws \Exception
      *

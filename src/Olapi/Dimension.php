@@ -41,31 +41,27 @@ class Dimension implements IBase
     public const DFILTER_TOP = 4096;
     public const DFILTER_NORULES = 8192;
 
+    private Database $database;
     /**
-     * @var Database
+     * @var ElementStore<Element>
      */
-    private $database;
+    private ElementStore $elements;
 
     /**
-     * @var ElementStore
+     * @var null|array<string,array<int|string,array<string>|int|string>>
      */
-    private $elements;
+    private ?array $elementList = null;
 
     /**
-     * @var array
+     * @var string[]
      */
-    private $elementList;
-
-    /**
-     * @var array
-     */
-    private $metaInfo;
+    private array $metaInfo;
 
     /**
      * Dimension constructor.
      *
      * @param Database $database database object
-     * @param array    $metaInfo array with meta information about the dimension
+     * @param string[] $metaInfo array with meta information about the dimension
      *
      * @throws \Exception
      */
@@ -89,7 +85,7 @@ class Dimension implements IBase
      *
      * @throws \Exception
      *
-     * @return array
+     * @return array<string>
      */
     public function addElement(
         string $elementName,
@@ -114,10 +110,11 @@ class Dimension implements IBase
         ]);
 
         if (null !== $parent_element) {
-            $this->appendElement($parent_element);
+            // @todo Dimension::addElement() fetch parent element and append new Element to parent
+            // if parent element is a Base element - do not consolidate you may loose data
+            // $this->appendElement($parent_element);
         }
 
-        // parent element is a Base element - do not consolidate you may loose data
         return $response[0];
     }
 
@@ -133,6 +130,7 @@ class Dimension implements IBase
     public function appendElement(string $element_name): Store
     {
         // @todo Dimension::appendElement()
+        // if parent element is a Base element - do not consolidate you may loose data
         return $this->getConnection()->request(self::API_ELEMENT_APPEND, [
             'query' => [
                 'database' => $this->getDatabase()->getOlapObjectId(),
@@ -452,8 +450,7 @@ class Dimension implements IBase
         ?float $values = null,
         ?array $options = null
     ): Store {
-        // 256 == ONLY_LEAVES
-        $mode = $mode ?? 256;
+        $mode = $mode ?? self::DFILTER_ONLY_LEAVES;
 
         $params = [
             'query' => [
@@ -463,8 +460,9 @@ class Dimension implements IBase
             ],
         ];
 
-        if (null === $cube_name || !\in_array($cube_name, $this->listCubes(), true)) {
-            throw new \Exception();
+        // @todo Dimension::dfilter() strtolower() for cube_name required?
+        if (!\in_array($cube_name, $this->listCubes(), true)) {
+            throw new \InvalidArgumentException('Dimension::dfilter() cube name '.$cube_name.' not found');
         }
 
         $cube = $this->getDatabase()->getCubeByName($cube_name);
@@ -491,7 +489,7 @@ class Dimension implements IBase
     }
 
     /**
-     * @param null|array $options
+     * @param null|array<string,bool|float|int|string> $options
      *
      * @throws \ErrorException
      * @throws \Exception
@@ -545,7 +543,7 @@ class Dimension implements IBase
         /** @var resource $stream_resource */
         if (null === ($stream_resource = $this->getConnection()
             ->requestRaw(self::API_DIMENSION_GENERATE_SCRIPT, $params))) {
-            throw new \ErrorException('failed to establish stream resource');
+            throw new \ErrorException('failed to establish stream resource in Dimension::exportAsScript()');
         }
 
         return (string) \stream_get_contents($stream_resource);
@@ -556,7 +554,7 @@ class Dimension implements IBase
      *
      * @throws \Exception
      *
-     * @return array
+     * @return array<string>
      */
     public function getAllBaseElements(): array
     {
@@ -571,7 +569,7 @@ class Dimension implements IBase
      *
      * @throws \Exception
      *
-     * @return array
+     * @return array<string>
      */
     public function getAllConsolidatedElements(?string $node = null): array
     {
@@ -583,7 +581,7 @@ class Dimension implements IBase
      *
      * @throws \Exception
      *
-     * @return Store
+     * @return Store<array<string>>
      */
     public function getAllElements(): Store
     {
@@ -612,7 +610,7 @@ class Dimension implements IBase
      *
      * @throws \Exception
      *
-     * @return Store
+     * @return Store<array<string>>
      */
     public function getAttributeList(): Store
     {
@@ -634,7 +632,7 @@ class Dimension implements IBase
      *
      * @throws \Exception
      *
-     * @return null|array
+     * @return null|array<int|string,array<int|string,array<int|string,mixed>>>
      */
     public function getAttributes(
         ?array $element_names = null,
@@ -672,7 +670,7 @@ class Dimension implements IBase
         }
 
         // fetch data from cube
-        $attributes = $attribute_cube->arrayExport($area_export, true);
+        $attributes = $attribute_cube->arrayExport($area_export, true, null, 100000);
 
         // fetch indexes of table headers
         $keys = \array_flip($attributes[0]);
@@ -703,15 +701,10 @@ class Dimension implements IBase
      *
      * @throws \Exception
      *
-     * @return array
+     * @return string[]
      */
     public function getBaseElementsOfNode(?string $element_name = null, ?string $filter = null): array
     {
-        // // debugging in case of error
-        // if (!is_array($this->getElementsOfNode($node))) {
-        // throw new \Exception($node);
-        // }
-
         $return = $this->basifyElementList($this->getElementListOfNode($element_name));
 
         if (null === $filter) {
@@ -759,7 +752,7 @@ class Dimension implements IBase
      *
      * @throws \Exception
      *
-     * @return array
+     * @return array<string>
      */
     public function getConsolidatedElementsOfNode(?string $node = null, ?string $filter = null): array
     {
@@ -812,7 +805,7 @@ class Dimension implements IBase
      *
      * @throws \Exception
      *
-     * @return array
+     * @return string[]
      *
      * @todo does not find duplicates
      *
@@ -940,7 +933,7 @@ class Dimension implements IBase
      *
      * @throws \Exception
      *
-     * @return array
+     * @return array<int,array<string,string>>
      */
     public function getElementListByDepth(?int $fromDepth = null, ?int $toDepth = null): array
     {
@@ -973,7 +966,7 @@ class Dimension implements IBase
      *
      * @throws \Exception
      *
-     * @return Store
+     * @return Store<array<string>>
      */
     public function getElementListOfNode(?string $element_name = null): Store
     {
@@ -1002,7 +995,7 @@ class Dimension implements IBase
      *
      * @throws \Exception
      *
-     * @return array
+     * @return array<string>
      */
     public function getElementListRecord(string $element_name): array
     {
@@ -1015,7 +1008,7 @@ class Dimension implements IBase
      * @throws \InvalidArgumentException
      * @throws \Exception
      *
-     * @return array
+     * @return array<string>
      */
     public function getElementListRecordById(int $element_id): array
     {
@@ -1032,7 +1025,7 @@ class Dimension implements IBase
      *
      * @throws \Exception
      *
-     * @return array
+     * @return array<string>
      */
     public function getElementListRecordByName(string $element_name): array
     {
@@ -1138,12 +1131,12 @@ class Dimension implements IBase
     /**
      * Create a parent child list for given node.
      *
-     * @param null|array|string $nodes
-     * @param null|int          $level
+     * @param null|string|string[] $nodes
+     * @param null|int             $level
      *
      * @throws \Exception
      *
-     * @return array
+     * @return array<int,array<int,string>>
      */
     public function getParentChildListOfNode($nodes = null, ?int $level = null): array
     {
@@ -1259,7 +1252,7 @@ class Dimension implements IBase
     /**
      * @throws \Exception
      *
-     * @return array
+     * @return string[]
      */
     public function listCubes(): array
     {
@@ -1281,7 +1274,7 @@ class Dimension implements IBase
      *
      * @throws \Exception
      *
-     * @return null|array
+     * @return null|array<string,array<int|string,array<string>|string>>
      */
     public function listElements(?bool $cached = null): ?array
     {
@@ -1616,7 +1609,7 @@ class Dimension implements IBase
     /**
      * @param string[] $listOfElementNames
      *
-     * @return array
+     * @return string[]
      */
     public function uniquifyElementList(array $listOfElementNames): array
     {
@@ -1627,11 +1620,22 @@ class Dimension implements IBase
     /**
      * @throws \Exception
      *
-     * @return Store
+     * @return Store<array<string>>
      */
     public function info(): Store
     {
-        return $this->getConnection()->request(self::API_DIMENSION_INFO);
+        $params = [
+            'query' => [
+                'database' => $this->getDatabase()->getOlapObjectId(),
+                'dimension' => $this->getOlapObjectId(),
+                'show_permission' => 1,
+                'show_counters' => 1,
+                'show_default_elements' => 1,
+                'show_count_by_type' => 1,
+            ],
+        ];
+
+        return $this->getConnection()->request(self::API_DIMENSION_INFO, $params);
     }
 
     /**
@@ -1643,7 +1647,7 @@ class Dimension implements IBase
      *
      * @throws \Exception
      *
-     * @return array
+     * @return array<string>
      */
     protected function internShowParents(
         Element $element,
@@ -1679,7 +1683,7 @@ class Dimension implements IBase
     /**
      * Removes all non-base elements from a list of elements.
      *
-     * @param Store $elementList list of dimension elements
+     * @param Store<array<string>> $elementList list of dimension elements
      *
      * @internal
      *
@@ -1704,7 +1708,7 @@ class Dimension implements IBase
     /**
      * Removes all base elements from a list of elements.
      *
-     * @param Store $elementList list of dimension elements
+     * @param Store<array<string>> $elementList list of dimension elements
      *
      * @throws \Exception
      *

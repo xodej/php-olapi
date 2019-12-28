@@ -10,8 +10,8 @@ namespace Xodej\Olapi;
 class Store extends \ArrayObject
 {
     /**
-     * @param string $func
-     * @param array  $argv
+     * @param string        $func
+     * @param array<string> $argv
      *
      * @throws \Exception
      *

@@ -18,17 +18,17 @@ use Xodej\Olapi\Filter\TextFilter;
  */
 class Subset
 {
-    private $name;
+    private string $name;
 
-    private $generalFilter;
-    private $hierFilter;
-    private $textFilter;
-    private $pickFilter;
-    private $attrFilter;
-    private $dataFilter;
-    private $sortFilter;
+    private GeneralFilter $generalFilter;
+    private ?HierarchyFilter $hierFilter = null;
+    private TextFilter $textFilter;
+    private ?PicklistFilter $pickFilter = null;
+    private ?AttributeFilter $attrFilter = null;
+    private ?DataFilter $dataFilter = null;
+    private SortFilter $sortFilter;
 
-    private $dimension;
+    private Dimension $dimension;
 
     /**
      * Subset constructor.
@@ -197,7 +197,7 @@ class Subset
 
     public function getHttpQuery(): void
     {
-        //@todo
+        //@todo implement Subset::getHttpQuery()
     }
 
     /**
@@ -221,11 +221,6 @@ class Subset
      */
     public function getSortFilter(): SortFilter
     {
-        // if not set return default sort filter
-        if (null === $this->sortFilter) {
-            return new SortFilter($this->dimension);
-        }
-
         return $this->sortFilter;
     }
 
@@ -239,57 +234,71 @@ class Subset
 
     /**
      * @param AttributeFilter $attrFilter
+     * @return $this
      */
-    public function setAttributeFilter(AttributeFilter $attrFilter): void
+    public function setAttributeFilter(AttributeFilter $attrFilter): self
     {
         $this->attrFilter = $attrFilter;
+        return $this;
     }
 
     /**
      * @param DataFilter $dataFilter
+     * @return $this
      */
-    public function setDataFilter(DataFilter $dataFilter): void
+    public function setDataFilter(DataFilter $dataFilter): self
     {
         $this->dataFilter = $dataFilter;
+        return $this;
     }
 
     /**
      * @param GeneralFilter $generalFilter
+     * @return $this
      */
-    public function setGeneralFilter(GeneralFilter $generalFilter): void
+    public function setGeneralFilter(GeneralFilter $generalFilter): self
     {
         $this->generalFilter = $generalFilter;
+        return $this;
     }
 
     /**
      * @param HierarchyFilter $hierFilter
+     * @return $this
      */
-    public function setHierarchyFilter(HierarchyFilter $hierFilter): void
+    public function setHierarchyFilter(HierarchyFilter $hierFilter): self
     {
         $this->hierFilter = $hierFilter;
+        return $this;
     }
 
     /**
      * @param PicklistFilter $pickFilter
+     * @return $this
      */
-    public function setPicklistFilter(PicklistFilter $pickFilter): void
+    public function setPicklistFilter(PicklistFilter $pickFilter): self
     {
         $this->pickFilter = $pickFilter;
+        return $this;
     }
 
     /**
      * @param SortFilter $sortFilter
+     * @return $this
      */
-    public function setSortFilter(SortFilter $sortFilter): void
+    public function setSortFilter(SortFilter $sortFilter): self
     {
         $this->sortFilter = $sortFilter;
+        return $this;
     }
 
     /**
      * @param TextFilter $textFilter
+     * @return $this
      */
-    public function setTextFilter(TextFilter $textFilter): void
+    public function setTextFilter(TextFilter $textFilter): self
     {
         $this->textFilter = $textFilter;
+        return $this;
     }
 }

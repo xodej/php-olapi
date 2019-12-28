@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Xodej\Olapi\Filter;
 
-use http\Exception\InvalidArgumentException;
-
 /**
  * Class SortFilter.
  */
@@ -69,30 +67,11 @@ class SortFilter extends Filter
     public const FLAG_NAME_PATH = 4194304;
     public const FLAG_INHERIT = 8388608;
 
-    /**
-     * @var string
-     */
-    protected $attribute;
-
-    /**
-     * @var int
-     */
-    protected $level;
-
-    /**
-     * @var int
-     */
-    protected $levelType;
-
-    /**
-     * @var int
-     */
-    protected $limitCount;
-
-    /**
-     * @var int
-     */
-    protected $limitStart;
+    protected ?string $attribute = null;
+    protected ?int $level = null;
+    protected ?int $levelType = null;
+    protected ?int $limitCount = null;
+    protected ?int $limitStart = null;
 
     /**
      * The allowed values are 1 (equivalently: empty), 2, 3 and 4 (4 as of Version 6.0 SR1). The argument alters the numbering of the hierarchy level, which in turn affects the subset, where the hierarchy level is specified in the filter.
@@ -107,7 +86,7 @@ class SortFilter extends Filter
     public function setLevelType(int $levelType): void
     {
         if ($levelType < 1 || $levelType > 4) {
-            throw new \InvalidArgumentException('SortFilter::setLevelType() only allows values between 1 and 4, got ' . $levelType);
+            throw new \InvalidArgumentException('SortFilter::setLevelType() only allows values between 1 and 4, got '.$levelType);
         }
         $this->levelType = $levelType;
     }
@@ -194,7 +173,7 @@ class SortFilter extends Filter
     }
 
     /**
-     * @return array
+     * @return array<mixed>
      */
     public function parse(): array
     {

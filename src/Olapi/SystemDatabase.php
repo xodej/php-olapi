@@ -9,13 +9,16 @@ namespace Xodej\Olapi;
  */
 class SystemDatabase extends Database
 {
-    public $reservedAccounts = ['admin', 'etl', '_internal_suite'];
+    /**
+     * @var array<string>
+     */
+    public array $reservedAccounts = ['admin', 'etl', '_internal_suite'];
 
     /**
      * SystemDatabase constructor.
      *
-     * @param Connection $conn      connection object
-     * @param array      $meta_info array of database parameters
+     * @param Connection    $conn      connection object
+     * @param array<string> $meta_info array of database parameters
      *
      * @throws \Exception
      */
@@ -26,7 +29,7 @@ class SystemDatabase extends Database
     }
 
     /**
-     * Returns user object from database
+     * Returns user object by user name.
      *
      * @param string $user_name user name
      *
@@ -36,14 +39,14 @@ class SystemDatabase extends Database
      */
     public function getUser(string $user_name): User
     {
-        /* @noinspection PhpIncompatibleReturnTypeInspection */ // @todo inspection
+        /* @noinspection PhpIncompatibleReturnTypeInspection */
         return $this->getUserDimension()
             ->getElement($user_name)
         ;
     }
 
     /**
-     * Returns array of all user names
+     * Returns array of all user names.
      *
      * @throws \Exception
      *
@@ -57,10 +60,10 @@ class SystemDatabase extends Database
     }
 
     /**
-     * Creates user and adds groups to the user account
+     * Creates and returns new user; adds given groups to the user account.
      *
-     * @param string     $user_name   user name
-     * @param null|array $group_names array of group names
+     * @param string        $user_name   user name
+     * @param null|string[] $group_names array of group names
      *
      * @throws \Exception
      *
@@ -89,7 +92,9 @@ class SystemDatabase extends Database
     }
 
     /**
-     * @param string $user_name
+     * Deletes user.
+     *
+     * @param string $user_name user name
      *
      * @throws \Exception
      *
@@ -105,7 +110,9 @@ class SystemDatabase extends Database
     }
 
     /**
-     * @param string $user_name
+     * Returns true if user exists.
+     *
+     * @param string $user_name user name
      *
      * @throws \Exception
      *
@@ -119,7 +126,9 @@ class SystemDatabase extends Database
     }
 
     /**
-     * @param string $group_name
+     * Returns group object for given group.
+     *
+     * @param string $group_name group name
      *
      * @throws \Exception
      *
@@ -127,13 +136,15 @@ class SystemDatabase extends Database
      */
     public function getGroup(string $group_name): Group
     {
-        /* @noinspection PhpIncompatibleReturnTypeInspection */ // @todo inspection
+        /* @noinspection PhpIncompatibleReturnTypeInspection */
         return $this->getGroupDimension()
             ->getElementByName($group_name)
         ;
     }
 
     /**
+     * Returns array of group names.
+     *
      * @throws \Exception
      *
      * @return string[]
@@ -146,7 +157,9 @@ class SystemDatabase extends Database
     }
 
     /**
-     * @param string $group_name
+     * Returns true if given group name exists.
+     *
+     * @param string $group_name group name
      *
      * @throws \Exception
      *
@@ -160,18 +173,21 @@ class SystemDatabase extends Database
     }
 
     /**
-     * @param string    $group_name
-     * @param null|bool $ignore_user
+     * Delete group, fails if users are attached to group. To delete groups with
+     * attached users set force_delete to true.
+     *
+     * @param string    $group_name   group name
+     * @param null|bool $force_delete force delete if users are attached to group
      *
      * @throws \Exception
      *
      * @return bool
      */
-    public function deleteGroup(string $group_name, ?bool $ignore_user = null): bool
+    public function deleteGroup(string $group_name, ?bool $force_delete = null): bool
     {
         // check if users are tied to group
-        $ignore_user = $ignore_user ?? false;
-        if (!$ignore_user && 0 !== count($this->getGroup($group_name)->getUsers())) {
+        $force_delete = $force_delete ?? false;
+        if (!$force_delete && 0 !== count($this->getGroup($group_name)->getUsers())) {
             return false;
         }
 
@@ -181,6 +197,8 @@ class SystemDatabase extends Database
     }
 
     /**
+     * Returns user dimension object.
+     *
      * @throws \Exception
      *
      * @return Dimension
@@ -191,6 +209,8 @@ class SystemDatabase extends Database
     }
 
     /**
+     * Returns group dimension object.
+     *
      * @throws \Exception
      *
      * @return Dimension
@@ -201,6 +221,9 @@ class SystemDatabase extends Database
     }
 
     /**
+     * Reset licenses attached to users (except for reserved accounts,
+     * like admin, etl and _internal_suite stored in SystemDatabase::$reservedAccounts).
+     *
      * @throws \Exception
      *
      * @return bool
@@ -227,7 +250,9 @@ class SystemDatabase extends Database
     }
 
     /**
-     * @param string $role_name
+     * Returns role object for given role name.
+     *
+     * @param string $role_name role name
      *
      * @throws \Exception
      *
@@ -235,13 +260,15 @@ class SystemDatabase extends Database
      */
     public function getRole(string $role_name): Role
     {
-        /* @noinspection PhpIncompatibleReturnTypeInspection */ // @todo inspection
+        /* @noinspection PhpIncompatibleReturnTypeInspection */
         return $this->getRoleDimension()
             ->getElementByName($role_name)
             ;
     }
 
     /**
+     * Returns role dimension object.
+     *
      * @throws \Exception
      *
      * @return Dimension
@@ -252,7 +279,9 @@ class SystemDatabase extends Database
     }
 
     /**
-     * @param string $role_name
+     * Returns true if role exists.
+     *
+     * @param string $role_name role name
      *
      * @throws \Exception
      *
@@ -266,8 +295,10 @@ class SystemDatabase extends Database
     }
 
     /**
-     * @param string        $group_name
-     * @param null|string[] $roles
+     * Creates and returns new group object with given roles.
+     *
+     * @param string        $group_name group name
+     * @param null|string[] $roles      roles
      *
      * @throws \Exception
      *
@@ -278,6 +309,8 @@ class SystemDatabase extends Database
         if ($this->hasGroup($group_name)) {
             throw new \InvalidArgumentException('failed to create group '.$group_name.': group already exist.');
         }
+
+        // @todo implement role attachments
 
         $group_dim = $this->getGroupDimension();
         $group_dim->addElement($group_name);
@@ -291,8 +324,10 @@ class SystemDatabase extends Database
     }
 
     /**
-     * @param string        $role_name
-     * @param null|string[] $rights_permissions
+     * Creates and returns new role object with given rights permissions.
+     *
+     * @param string        $role_name          role name
+     * @param null|string[] $rights_permissions rights permissions
      *
      * @throws \Exception
      *

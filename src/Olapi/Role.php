@@ -101,7 +101,7 @@ class Role extends Element
     }
 
     /**
-     * @return array
+     * @return array<string,string>
      */
     public static function defaultRights(): array
     {
@@ -109,7 +109,7 @@ class Role extends Element
     }
 
     /**
-     * @param null|array $rights_permissions
+     * @param null|array<string,string> $rights_permissions
      *
      * @return bool
      */
@@ -130,7 +130,7 @@ class Role extends Element
     }
 
     /**
-     * @param null|array $rights_permissions
+     * @param null|array<string,string> $rights_permissions
      *
      * @throws \Exception
      *
@@ -149,7 +149,7 @@ class Role extends Element
         // also check for valid values: Splash, Delete, Write, Read, None
         $right_object_paths = [];
         $right_object_values = [];
-        foreach (Role::defaultRights() as $right => $default_permission) {
+        foreach (self::defaultRights() as $right => $default_permission) {
             $permission = $rights_permissions[$right] ?? $default_permission;
             if (is_string($permission) && preg_match('~^[SDWRN]$~i', $permission)) {
                 $right_object_paths[] = [$this->getName(), $right];

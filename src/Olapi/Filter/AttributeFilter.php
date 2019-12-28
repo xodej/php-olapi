@@ -31,18 +31,15 @@ class AttributeFilter extends Filter
     public const FLAG_PERL_REGEX = 32;
     public const FLAG_IGNORE_CASE = 64;
 
-    /**
-     * @var array
-     */
-    protected $attributes;
+    protected ?array $attributes = null;
 
     /**
      * @param string $attribute_name
-     * @param array  $filters
-     *
+     * @param array $filters
+     * @return $this
      * @throws \Exception
      */
-    public function addAttribute(string $attribute_name, array $filters): void
+    public function addAttribute(string $attribute_name, array $filters): self
     {
         $attribute_dim = $this->getDimension()
             ->getDatabase()->getDimension('#_'.$this->getDimension()->getName().'_');
@@ -52,6 +49,7 @@ class AttributeFilter extends Filter
         }
 
         $this->attributes[$attribute_name] = [$attribute_name, $filters, \count($filters)];
+        return $this;
     }
 
     /**

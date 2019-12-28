@@ -11,8 +11,8 @@ use Xodej\Olapi\Dimension;
  */
 abstract class Filter
 {
-    protected $dimension;
-    protected $flags;
+    protected Dimension $dimension;
+    protected int $flags;
 
     /**
      * Filter constructor.

@@ -43,8 +43,8 @@ class User extends Element
     /**
      * @param string $jdx_b64_hash
      * @param string $secret       (see config.php --> CFG_SECRET)
-     *
      * @return string
+     * @throws \ErrorException
      */
     public static function getPasswordFromHash(string $jdx_b64_hash, string $secret): string
     {
@@ -58,7 +58,13 @@ class User extends Element
         $rand_bytes = \substr($jdx_hash, 0, 16);
         $hash = \substr($jdx_hash, 16);
 
-        return \openssl_decrypt($hash, 'AES-128-CFB8', $secret, OPENSSL_RAW_DATA, $rand_bytes);
+        $return = \openssl_decrypt($hash, 'AES-128-CFB8', $secret, OPENSSL_RAW_DATA, $rand_bytes);
+
+        if (false === $return) {
+            throw new \ErrorException('openssl_decrypt() failed in User::getPasswordFromHash()');
+        }
+
+        return $return;
     }
 
     /**
@@ -99,7 +105,7 @@ class User extends Element
     }
 
     /**
-     * @param string[] $group_names
+     * @param string[] $group_names group names
      *
      * @throws \Exception
      *

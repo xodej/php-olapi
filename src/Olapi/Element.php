@@ -17,15 +17,12 @@ class Element implements IBase
     public const TYPE_STRING = 2;
     public const TYPE_CONSOLIDATED = 4;
 
-    /**
-     * @var Dimension
-     */
-    private $dimension;
+    private Dimension $dimension;
 
     /**
      * @var string[]
      */
-    private $metaInfo;
+    private array $metaInfo;
 
     /**
      * Element constructor.

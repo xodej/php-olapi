@@ -51,40 +51,17 @@ class Cube implements IBase
     public const DRILL_MODE_SVS_SECONDARY = 2;
     public const DRILL_MODE_AUDIT = 3;
 
-    /**
-     * @var Database
-     */
-    protected $database;
+    protected Database $database;
+    protected bool $persistCachedValues = false;
+    private DimensionStore $dimensions;
+    private array $cache = [];
+    private array $cachedValues = [];
 
     /**
-     * @var bool
+     * @var string[]
      */
-    protected $persistCachedValues = false;
-
-    /**
-     * @var DimensionStore
-     */
-    private $dimensions;
-
-    /**
-     * @var array
-     */
-    private $cache = [];
-
-    /**
-     * @var array
-     */
-    private $cachedValues = [];
-
-    /**
-     * @var array
-     */
-    private $metaInfo;
-
-    /**
-     * @var ?array
-     */
-    private $cubeDimensionList;
+    private array $metaInfo;
+    private ?array $cubeDimensionList = null;
 
     /**
      * Holds the state if caching mode is on.
@@ -93,13 +70,13 @@ class Cube implements IBase
      *
      * @var bool
      */
-    private $inCacheMode = false;
+    private bool $inCacheMode = false;
 
     /**
      * Cube constructor.
      *
-     * @param Database $database
-     * @param array    $metaInfo
+     * @param Database $database database object
+     * @param array    $metaInfo array of meta information of cube (/cube/info)
      *
      * @throws \Exception
      */
@@ -112,10 +89,12 @@ class Cube implements IBase
     }
 
     /**
-     * @param null|array $requestParameters
-     * @param null|bool  $show_headers
-     * @param null|bool  $replace_special_chars
-     * @param null|int   $max_rows
+     * Returns an array of cube data based on given request parameters.
+     *
+     * @param null|array $requestParameters     array of request parameters
+     * @param null|bool  $show_headers          if true add headers as first array element
+     * @param null|bool  $replace_special_chars if true \t, \r and \n are replaced
+     * @param null|int   $max_rows              number of rows to be returned (default: 10,000)
      *
      * @throws \ErrorException
      *
@@ -158,6 +137,8 @@ class Cube implements IBase
     }
 
     /**
+     * Returns true if cube is in caching status.
+     *
      * @return bool
      */
     public function cacheCollectionEnabled(): bool
@@ -194,7 +175,9 @@ class Cube implements IBase
     }
 
     /**
-     * @param string $lock_id
+     * Commit data into cube.
+     *
+     * @param string $lock_id lock ID
      *
      * @throws \Exception
      *
@@ -210,7 +193,7 @@ class Cube implements IBase
             ],
         ]);
 
-        return (bool) $response[0];
+        return (bool) ($response[0] ?? false);
     }
 
     /**
@@ -232,7 +215,7 @@ class Cube implements IBase
             ],
         ]);
 
-        return (bool) $response[0];
+        return (bool) ($response[0] ?? false);
     }
 
     /**
@@ -244,9 +227,9 @@ class Cube implements IBase
      * @param null|mixed $value
      * @param null|array $options
      *
-     * @return bool
      *@throws \Exception
      *
+     * @return bool
      */
     public function copyValue(
         array $path_sender,
@@ -285,10 +268,12 @@ class Cube implements IBase
 
         $response = $this->getConnection()->request(self::API_CELL_COPY, $params);
 
-        return (bool) $response[0];
+        return (bool) ($response[0] ?? false);
     }
 
     /**
+     * Returns a cube area object which can be used in exports.
+     *
      * @param array $elementsBucketParam
      *
      * @throws \InvalidArgumentException
@@ -368,11 +353,11 @@ class Cube implements IBase
     }
 
     /**
-     * @param array $elementsBucketParam
+     * @param array<string,array<string>> $elementsBucketParam
      *
      * @throws \Exception
      *
-     * @return array
+     * @return array<string>
      */
     public function createSubcube(array $elementsBucketParam): array
     {
@@ -437,7 +422,7 @@ class Cube implements IBase
 
         $response = $this->getDatabase()->getConnection()->request(self::API_RULE_DESTROY, $params);
 
-        return (bool) $response[0];
+        return (bool) ($response[0] ?? false);
     }
 
     /**
@@ -494,7 +479,6 @@ class Cube implements IBase
 
         // Audit cell history mode = 3
         if (self::DRILL_MODE_AUDIT === $drill_mode) {
-            /* @noinspection PhpParamsInspection */ // @todo inspection
             $params['query']['area'] = new Area($this);
             $params['query']['definition'] = $request_parameters['definition'] ?? 'USER-D';
             $params['query']['blocksize'] = $request_parameters['blocksize'] ?? 1000;
@@ -937,7 +921,9 @@ class Cube implements IBase
     }
 
     /**
-     * @param string $dimension_name
+     * Returns true if given dimension name is used in cube.
+     *
+     * @param string $dimension_name dimension name
      *
      * @throws \Exception
      *
@@ -951,7 +937,9 @@ class Cube implements IBase
     }
 
     /**
-     * @param string $dimension_name
+     * Returns true if given dimension name is used in cube.
+     *
+     * @param string $dimension_name dimension name
      *
      * @throws \Exception
      *
@@ -969,7 +957,7 @@ class Cube implements IBase
      *
      * @throws \Exception
      *
-     * @return Store
+     * @return Store<array<string>>
      */
     public function info(?array $options = null): Store
     {
@@ -1004,7 +992,7 @@ class Cube implements IBase
      *
      * @throws \Exception
      *
-     * @return array
+     * @return int[]|string[]
      */
     public function listDimensions(?bool $show_names = null): array
     {
@@ -1026,7 +1014,7 @@ class Cube implements IBase
      *
      * @throws \Exception
      *
-     * @return Store
+     * @return Store<array<string>>
      */
     public function listLocks(): Store
     {
@@ -1062,7 +1050,7 @@ class Cube implements IBase
      *
      * @throws \Exception
      *
-     * @return Store
+     * @return Store<array<string>>
      */
     public function lock(?array $area = null): Store
     {
@@ -1087,12 +1075,12 @@ class Cube implements IBase
      * Modifies an enterprise rule for a cube. Use the parameter "definition" for changing the rule or
      * use the parameter "activate" for activating and deactivating.
      *
-     * @param int[] $rule_identifiers
-     * @param int[] $rule_positions
+     * @param int[] $rule_identifiers array of rule IDs
+     * @param int[] $rule_positions   array of rule positions
      *
      * @throws \Exception
      *
-     * @return Store
+     * @return Store<array<string>>
      */
     public function moveRules(array $rule_identifiers, array $rule_positions): Store
     {
@@ -1110,15 +1098,16 @@ class Cube implements IBase
     }
 
     /**
-     * @param string $definition
+     * Parse given rule.
+     *
+     * @param string $definition rule definition
      *
      * @throws \Exception
      *
-     * @return Store
+     * @return Store<array<string>>
      */
     public function parseRule(string $definition): Store
     {
-        // @todo Cube::parseRule()
         return $this->getConnection()->request(self::API_RULE_PARSE, [
             'query' => [
                 'database' => $this->getDatabase()->getOlapObjectId(),
@@ -1142,8 +1131,10 @@ class Cube implements IBase
     }
 
     /**
-     * @param string   $lock_id
-     * @param null|int $steps
+     * Rollback data commit (if lock was enabled).
+     *
+     * @param string   $lock_id lock ID
+     * @param null|int $steps   number of steps (default "")
      *
      * @throws \Exception
      *
@@ -1164,6 +1155,8 @@ class Cube implements IBase
     }
 
     /**
+     * [DEPRECATED] use Database::save() instead.
+     *
      * @throws \Exception
      *
      * @return bool
@@ -1183,9 +1176,11 @@ class Cube implements IBase
     }
 
     /**
-     * @param array      $values
-     * @param array      $dims_multi
-     * @param null|array $options
+     * Write data into cube in bulk mode.
+     *
+     * @param array<mixed>              $values     array of values
+     * @param array<array<string>>      $dims_multi array of coordinates (dimension names)
+     * @param null|array<string,string> $options    array of options
      *
      * @throws \Exception
      *
@@ -1222,13 +1217,13 @@ class Cube implements IBase
 
         $response = $this->getConnection()->request(self::API_CELL_REPLACE_BULK, $params);
 
-        return (bool) $response[0];
+        return (bool) ($response[0] ?? false);
     }
 
     /**
-     * @param mixed      $value
-     * @param array      $dims
-     * @param null|array $options
+     * @param mixed                     $value
+     * @param string[]                  $dims
+     * @param null|array<string,string> $options
      *
      * @throws \Exception
      *
@@ -1236,6 +1231,8 @@ class Cube implements IBase
      */
     public function setValue($value, array $dims, ?array $options = null): bool
     {
+        // @todo replace with call of Cube::setBulk()??
+
         $params = [
             'query' => [
                 'database' => $this->getDatabase()->getOlapObjectId(),
@@ -1292,7 +1289,7 @@ class Cube implements IBase
     /**
      * @example file_put_contents('x.csv', $cube->export());
      *
-     * @param null|array $request_parameters
+     * @param null|array<string,mixed> $request_parameters
      *
      * @throws \Exception
      *
@@ -1328,14 +1325,14 @@ class Cube implements IBase
     /**
      * @return int
      */
-    public function GetDimensionCount(): int
+    public function getDimensionCount(): int
     {
         return (int) $this->metaInfo[2];
     }
 
     /**
-     * @param null|array  $request_parameters
-     * @param null|string $coord_path
+     * @param null|array<string,mixed> $request_parameters
+     * @param null|string              $coord_path
      *
      * @throws \ErrorException
      * @throws \Exception
@@ -1462,7 +1459,7 @@ class Cube implements IBase
     }
 
     /**
-     * @param array     $dim_element_coordinates
+     * @param string[]  $dim_element_coordinates
      * @param null|bool $use_keys
      *
      * @throws \Exception
@@ -1482,8 +1479,7 @@ class Cube implements IBase
                 $dimension = $this->getDatabase()->getDimensionById($dim_id);
                 $element = $dim_element_coordinates[$dimension->getName()] ?? null;
                 if (null === $element) {
-                    throw new \InvalidArgumentException('element for dimension '.
-                        $dimension->getName().' missing in parameters');
+                    throw new \InvalidArgumentException('element for dimension '.$dimension->getName().' missing in parameters');
                 }
                 $return[] = $dimension->getElementIdFromName((string) $element);
             }

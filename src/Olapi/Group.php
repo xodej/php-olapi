@@ -10,11 +10,11 @@ namespace Xodej\Olapi;
 class Group extends Element
 {
     /**
-     * Returns array of users attached to the group.
+     * Returns array of user names attached to the group.
      *
      * @throws \Exception
      *
-     * @return array
+     * @return string[]
      */
     public function getUsers(): array
     {
@@ -40,7 +40,7 @@ class Group extends Element
      *
      * @throws \Exception
      *
-     * @return array
+     * @return string[]
      */
     public function getRoles(): array
     {
