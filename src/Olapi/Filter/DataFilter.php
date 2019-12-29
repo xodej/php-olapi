@@ -90,22 +90,26 @@ class DataFilter extends Filter
 
     /**
      * @param Cube $cube
+     *
      * @return $this
      */
     public function setCube(Cube $cube): self
     {
         $this->cube = $cube;
+
         return $this;
     }
 
     /**
-     * @param bool|null $use_strings
+     * @param null|bool $use_strings
+     *
      * @return $this
      */
     public function useStrings(?bool $use_strings = null): self
     {
         $use_strings = $use_strings ?? false;
         $this->useStrings = (int) $use_strings;
+
         return $this;
     }
 
@@ -163,6 +167,7 @@ class DataFilter extends Filter
     /**
      * @param int $operator one of DataComparison::OPERATOR_XX constants
      * @param $value
+     *
      * @return $this
      */
     public function addComparison(int $operator, $value): self
@@ -176,6 +181,7 @@ class DataFilter extends Filter
         }
 
         $this->cmps[] = new DataComparison($operator, $value);
+
         return $this;
     }
 
@@ -186,16 +192,19 @@ class DataFilter extends Filter
     {
         $this->cmps = [];
         $this->subcube = null;
+
         return $this;
     }
 
     /**
      * @param Area $area
+     *
      * @return $this
      */
     public function setArea(Area $area): self
     {
         $this->subcube = $area;
+
         return $this;
     }
 }

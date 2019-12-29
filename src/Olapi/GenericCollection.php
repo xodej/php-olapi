@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Xodej\Olapi;
 
 /**
- * Class Store.
+ * Class GenericCollection.
  */
-class Store extends \ArrayObject
+class GenericCollection extends \ArrayObject
 {
     /**
      * @param string        $func

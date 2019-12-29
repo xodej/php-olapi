@@ -5,16 +5,16 @@ declare(strict_types=1);
 namespace Xodej\Olapi;
 
 /**
- * Class DatabaseStore.
+ * Class DimensionCollection.
  */
-class DatabaseStore extends Store
+class DimensionCollection extends GenericCollection
 {
     /**
-     * DatabaseStore constructor.
+     * DimensionCollection constructor.
      *
      * @param array       $input
-     * @param int|null    $flags
-     * @param string|null $iterator_class
+     * @param null|int    $flags
+     * @param null|string $iterator_class
      *
      * @throws \Exception
      */
@@ -32,22 +32,22 @@ class DatabaseStore extends Store
     /**
      * @param mixed $index
      *
-     * @return Database
+     * @return Dimension
      */
-    public function offsetGet($index): Database
+    public function offsetGet($index): Dimension
     {
         return parent::offsetGet($index);
     }
 
     /**
-     * @param Database $value
+     * @param Dimension $value
      *
      * @throws \Exception
      */
     public function append($value): void
     {
-        if (!($value instanceof Database)) {
-            throw new \InvalidArgumentException('parameter type Database expected');
+        if (!($value instanceof Dimension)) {
+            throw new \InvalidArgumentException('parameter type Dimension expected');
         }
         parent::append($value);
     }
@@ -60,14 +60,14 @@ class DatabaseStore extends Store
      */
     public function offsetSet($index, $newval): void
     {
-        if (!($newval instanceof Database)) {
-            throw new \InvalidArgumentException('parameter type Database expected');
+        if (!($newval instanceof Dimension)) {
+            throw new \InvalidArgumentException('parameter type Dimension expected');
         }
         parent::offsetSet($index, $newval);
     }
 
     /**
-     * @param DatabaseStore $input
+     * @param DimensionCollection $input
      *
      * @throws \InvalidArgumentException
      *
@@ -76,14 +76,14 @@ class DatabaseStore extends Store
     public function exchangeArray($input): array
     {
         if (!($input instanceof static)) {
-            throw new \InvalidArgumentException('parameter type DatabaseStore expected');
+            throw new \InvalidArgumentException('parameter type DimensionCollection expected');
         }
 
         return parent::exchangeArray($input->getArrayCopy());
     }
 
     /**
-     * @return Database[]
+     * @return Dimension[]
      */
     public function getArrayCopy(): array
     {

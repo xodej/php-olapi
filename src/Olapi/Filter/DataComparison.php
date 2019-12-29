@@ -20,14 +20,14 @@ class DataComparison
     protected int $operator;
 
     /**
-     * @var float|string|int|bool
+     * @var bool|float|int|string
      */
     protected $parameter;
 
     /**
      * DataComparison constructor.
      *
-     * @param int $operator DataComparison::OPERATOR_XX constants
+     * @param int   $operator  DataComparison::OPERATOR_XX constants
      * @param mixed $parameter
      */
     public function __construct(int $operator, $parameter)
@@ -49,7 +49,7 @@ class DataComparison
     }
 
     /**
-     * @return float|string|int|bool
+     * @return bool|float|int|string
      */
     public function getParameter()
     {

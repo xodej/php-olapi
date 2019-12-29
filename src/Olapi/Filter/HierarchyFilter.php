@@ -56,6 +56,7 @@ class HierarchyFilter extends Filter
 
     /**
      * @param string $element_name
+     *
      * @return $this
      */
     public function setBoundElement(string $element_name): self
@@ -65,6 +66,7 @@ class HierarchyFilter extends Filter
         }
 
         $this->bound = $element_name;
+
         return $this;
     }
 
@@ -84,11 +86,13 @@ class HierarchyFilter extends Filter
 
     /**
      * @param int $level_start
+     *
      * @return $this
      */
     public function setLevelStart(int $level_start): self
     {
         $this->levelStart = $level_start;
+
         return $this;
     }
 
@@ -102,11 +106,13 @@ class HierarchyFilter extends Filter
 
     /**
      * @param int $level_end
+     *
      * @return $this
      */
     public function setLevelEnd(int $level_end): self
     {
         $this->levelEnd = $level_end;
+
         return $this;
     }
 
@@ -120,6 +126,7 @@ class HierarchyFilter extends Filter
 
     /**
      * @param int $revolve_count
+     *
      * @return $this
      */
     public function setRevolveCount(int $revolve_count): self
@@ -129,6 +136,7 @@ class HierarchyFilter extends Filter
         }
 
         $this->revolveCount = $revolve_count;
+
         return $this;
     }
 
@@ -142,6 +150,7 @@ class HierarchyFilter extends Filter
 
     /**
      * @param string $revolve_name
+     *
      * @return $this
      */
     public function setRevolveName(string $revolve_name): self
@@ -151,6 +160,7 @@ class HierarchyFilter extends Filter
         }
 
         $this->revolveElement = $revolve_name;
+
         return $this;
     }
 

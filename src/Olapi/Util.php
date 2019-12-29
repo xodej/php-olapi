@@ -49,8 +49,6 @@ class Util
      *
      * @param \SimpleXMLElement $receiver simpleXML element
      * @param \SimpleXMLElement $sender   simpleXML element
-     *
-     * @return void
      */
     public static function simpleXmlAppend(\SimpleXMLElement $receiver, \SimpleXMLElement $sender): void
     {

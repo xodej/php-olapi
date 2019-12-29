@@ -5,28 +5,24 @@ declare(strict_types=1);
 namespace Xodej\Olapi\Test;
 
 use Xodej\Olapi\Connection;
-use Xodej\Olapi\Cube;
-use Xodej\Olapi\CubeStore;
+use Xodej\Olapi\Element;
+use Xodej\Olapi\ElementCollection;
 
 include_once __DIR__.'/OlapiTestCase.php';
 
 /**
- * Class CubeStoreTest.
+ * Class ElementCollectionTest.
  *
  * @internal
  * @coversNothing
  */
-class CubeStoreTest extends OlapiTestCase
+class ElementCollectionTest extends OlapiTestCase
 {
     /**
      * @var Connection
      */
     private static $connection;
 
-    /**
-     * @throws \ErrorException
-     * @throws \GuzzleHttp\Exception\GuzzleException
-     */
     public static function setUpBeforeClass(): void
     {
         self::$connection = new Connection(self::OLAP_HOST_WITH_PORT, self::OLAP_USER, self::OLAP_PASS);
@@ -46,7 +42,7 @@ class CubeStoreTest extends OlapiTestCase
     public function testPreSet(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        new CubeStore([1, 2, 3]);
+        new ElementCollection([1, 2, 3]);
     }
 
     /**
@@ -54,7 +50,7 @@ class CubeStoreTest extends OlapiTestCase
      */
     public function testUseOffset(): void
     {
-        $store = new CubeStore();
+        $store = new ElementCollection();
         $this->expectException(\InvalidArgumentException::class);
         $store[0] = new \stdClass();
     }
@@ -64,7 +60,7 @@ class CubeStoreTest extends OlapiTestCase
      */
     public function testUseAppend(): void
     {
-        $store = new CubeStore();
+        $store = new ElementCollection();
         $this->expectException(\InvalidArgumentException::class);
         $store->append(new \stdClass());
     }
@@ -74,7 +70,7 @@ class CubeStoreTest extends OlapiTestCase
      */
     public function testUseExchangeArray(): void
     {
-        $store = new CubeStore();
+        $store = new ElementCollection();
         $this->expectException(\InvalidArgumentException::class);
         $store->exchangeArray(new \stdClass());
     }
@@ -82,49 +78,52 @@ class CubeStoreTest extends OlapiTestCase
     /**
      * @throws \Exception
      */
-    public function testAddCube(): void
+    public function testAddElement(): void
     {
-        $user_group_cube = self::$connection
+        $element_admin = self::$connection
             ->getSystemDatabase()
-            ->getCube('#_USER_GROUP')
+            ->getUserDimension()
+            ->getElementByName('admin')
         ;
 
-        $store = new CubeStore();
-        $store[] = $user_group_cube;
+        $store = new ElementCollection();
+        $store[] = $element_admin;
 
-        self::assertInstanceOf(Cube::class, $store[0]);
+        self::assertInstanceOf(Element::class, $store[0]);
     }
 
     /**
      * @throws \Exception
      */
-    public function testAddCubeUseOffset(): void
+    public function testAddElementUseOffset(): void
     {
-        $user_group_cube = self::$connection
+        $element_admin = self::$connection
             ->getSystemDatabase()
-            ->getCube('#_USER_GROUP')
+            ->getUserDimension()
+            ->getElementByName('admin')
         ;
 
-        $store = new CubeStore();
-        $store[4] = $user_group_cube;
+        $store = new ElementCollection();
+        $store[4] = $element_admin;
 
-        self::assertInstanceOf(Cube::class, $store[4]);
+        self::assertInstanceOf(Element::class, $store[4]);
     }
 
     /**
      * @throws \Exception
      */
-    public function testAppendCubeUseOffset(): void
+    public function testAppendElementUseOffset(): void
     {
-        $user_group_cube = self::$connection
+        $element_admin = self::$connection
             ->getSystemDatabase()
-            ->getCube('#_USER_GROUP')
+            ->getUserDimension()
+            ->getElementByName('admin')
         ;
 
-        $store = new CubeStore();
-        $store->append($user_group_cube);
+        $store = new ElementCollection();
+        $store->append($element_admin);
 
-        self::assertInstanceOf(Cube::class, $store[0]);
+        self::assertInstanceOf(Element::class, $store[0]);
     }
 
     /**
@@ -132,8 +131,8 @@ class CubeStoreTest extends OlapiTestCase
      */
     public function testInstance(): void
     {
-        $store = new CubeStore();
-        self::assertInstanceOf(CubeStore::class, $store);
+        $store = new ElementCollection();
+        self::assertInstanceOf(ElementCollection::class, $store);
     }
 
     /**
@@ -141,19 +140,20 @@ class CubeStoreTest extends OlapiTestCase
      */
     public function testArrayCopy(): void
     {
-        $user_group_cube = self::$connection
+        $element_admin = self::$connection
             ->getSystemDatabase()
-            ->getCube('#_USER_GROUP')
+            ->getUserDimension()
+            ->getElementByName('admin')
         ;
 
-        $store = new CubeStore();
-        $store->append($user_group_cube);
+        $store = new ElementCollection();
+        $store->append($element_admin);
 
         $result = $store->getArrayCopy();
 
         self::assertIsArray($result);
         self::assertArrayHasKey(0, $result);
-        self::assertInstanceOf(Cube::class, $result[0]);
+        self::assertInstanceOf(Element::class, $result[0]);
     }
 
     /**
@@ -161,26 +161,27 @@ class CubeStoreTest extends OlapiTestCase
      */
     public function testExchangeArray(): void
     {
-        $user_group_cube = self::$connection
+        $element_admin = self::$connection
             ->getSystemDatabase()
-            ->getCube('#_USER_GROUP')
+            ->getUserDimension()
+            ->getElementByName('admin')
         ;
 
-        $store = new CubeStore();
-        $store->append($user_group_cube);
+        $store = new ElementCollection();
+        $store->append($element_admin);
 
-        $exchange = new CubeStore();
-        $exchange->append($user_group_cube);
-        $exchange->append($user_group_cube);
+        $exchange = new ElementCollection();
+        $exchange->append($element_admin);
+        $exchange->append($element_admin);
 
         $old_result = $store->exchangeArray($exchange);
 
-        // self::assertInternalType('array', $old_result);
+        self::assertIsArray($old_result);
         self::assertCount(1, $old_result);
 
         $new_result = $store->getArrayCopy();
         self::assertIsArray($new_result);
         self::assertCount(2, $new_result);
-        self::assertInstanceOf(Cube::class, $new_result[0]);
+        self::assertInstanceOf(Element::class, $new_result[0]);
     }
 }

@@ -42,9 +42,9 @@ class Element implements IBase
      *
      * @throws \Exception
      *
-     * @return null|Store
+     * @return null|GenericCollection
      */
-    public function addChild(Element $child, ?float $weight = null): ?Store
+    public function addChild(Element $child, ?float $weight = null): ?GenericCollection
     {
         $children_ids = $this->getChildrenIds();
         $children_ids[] = $child->getOlapObjectId();
@@ -95,9 +95,9 @@ class Element implements IBase
      *
      * @throws \Exception
      *
-     * @return null|Store
+     * @return null|GenericCollection
      */
-    public function attach(Element $parent, ?float $weight = null): ?Store
+    public function attach(Element $parent, ?float $weight = null): ?GenericCollection
     {
         $weight = $weight ?? 1.0;
 
@@ -372,9 +372,9 @@ class Element implements IBase
     /**
      * @throws \Exception
      *
-     * @return Store
+     * @return GenericCollection
      */
-    public function getInfo(): Store
+    public function getInfo(): GenericCollection
     {
         // @todo overwrite $this->metaInfo
         return $this->getConnection()->request(self::API_ELEMENT_INFO, [
@@ -388,7 +388,7 @@ class Element implements IBase
     }
 
     /**
-     * Returns an element object
+     * Returns an element object.
      *
      * @param Dimension $dimension    dimension object
      * @param string    $element_name element name
@@ -404,7 +404,7 @@ class Element implements IBase
     }
 
     /**
-     * Returns name of the element
+     * Returns name of the element.
      *
      * @return string
      */
@@ -414,7 +414,7 @@ class Element implements IBase
     }
 
     /**
-     * Returns OLAP object ID
+     * Returns OLAP object ID.
      *
      * @return int
      */
@@ -424,13 +424,13 @@ class Element implements IBase
     }
 
     /**
-     * Returns array of parent element IDs
+     * Returns array of parent element IDs.
      *
      * @return int[]
      */
     public function getParentIds(): array
     {
-        if ($this->metaInfo[8] === '') {
+        if ('' === $this->metaInfo[8]) {
             return [];
         }
 
@@ -440,7 +440,7 @@ class Element implements IBase
     }
 
     /**
-     * Returns array of parent element objects
+     * Returns array of parent element objects.
      *
      * @throws \Exception
      *
@@ -463,7 +463,7 @@ class Element implements IBase
     }
 
     /**
-     * Returns array of sibling element objects
+     * Returns array of sibling element objects.
      *
      * @throws \Exception
      *
@@ -669,9 +669,9 @@ class Element implements IBase
      *
      * @throws \Exception
      *
-     * @return null|Store
+     * @return null|GenericCollection
      */
-    public function modify(?array $children = null, ?array $weights = null, ?int $type = null): ?Store
+    public function modify(?array $children = null, ?array $weights = null, ?int $type = null): ?GenericCollection
     {
         // @todo implement Element:modify()
 
@@ -761,9 +761,9 @@ class Element implements IBase
     /**
      * @throws \Exception
      *
-     * @return Store
+     * @return GenericCollection
      */
-    public function replaceBulk(): Store
+    public function replaceBulk(): GenericCollection
     {
         // @todo Element::replaceBulk()
         $params = [

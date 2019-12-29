@@ -5,18 +5,19 @@ declare(strict_types=1);
 namespace Xodej\Olapi\Test;
 
 use Xodej\Olapi\Connection;
-use Xodej\Olapi\Dimension;
-use Xodej\Olapi\DimensionStore;
+use Xodej\Olapi\Database;
+use Xodej\Olapi\DatabaseCollection;
+use Xodej\Olapi\SystemDatabase;
 
 include_once __DIR__.'/OlapiTestCase.php';
 
 /**
- * Class DimensionStoreTest.
+ * Class DatabaseCollectionTest.
  *
  * @internal
  * @coversNothing
  */
-class DimensionStoreTest extends OlapiTestCase
+class DatabaseCollectionTest extends OlapiTestCase
 {
     /**
      * @var Connection
@@ -36,21 +37,15 @@ class DimensionStoreTest extends OlapiTestCase
         self::$connection->close();
     }
 
-    /**
-     * @throws \Exception
-     */
     public function testPreSet(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        new DimensionStore([1, 2, 3]);
+        new DatabaseCollection([1, 2, 3]);
     }
 
-    /**
-     * @throws \Exception
-     */
-    public function testUseOffset(): void
+    public function testUseOffset()
     {
-        $store = new DimensionStore();
+        $store = new DatabaseCollection();
         $this->expectException(\InvalidArgumentException::class);
         $store[0] = new \stdClass();
     }
@@ -60,7 +55,7 @@ class DimensionStoreTest extends OlapiTestCase
      */
     public function testUseAppend(): void
     {
-        $store = new DimensionStore();
+        $store = new DatabaseCollection();
         $this->expectException(\InvalidArgumentException::class);
         $store->append(new \stdClass());
     }
@@ -70,7 +65,7 @@ class DimensionStoreTest extends OlapiTestCase
      */
     public function testUseExchangeArray(): void
     {
-        $store = new DimensionStore();
+        $store = new DatabaseCollection();
         $this->expectException(\InvalidArgumentException::class);
         $store->exchangeArray(new \stdClass());
     }
@@ -78,49 +73,40 @@ class DimensionStoreTest extends OlapiTestCase
     /**
      * @throws \Exception
      */
-    public function testAddDimension(): void
+    public function testAddDatabase(): void
     {
-        $user_dim = self::$connection
-            ->getSystemDatabase()
-            ->getUserDimension()
-        ;
+        $db_sys = self::$connection->getSystemDatabase();
 
-        $store = new DimensionStore();
-        $store[] = $user_dim;
+        $store = new DatabaseCollection();
+        $store[] = $db_sys;
 
-        self::assertInstanceOf(Dimension::class, $store[0]);
+        self::assertInstanceOf(Database::class, $store[0]);
     }
 
     /**
      * @throws \Exception
      */
-    public function testAddDimensionUseOffset(): void
+    public function testAddDatabaseUseOffset(): void
     {
-        $user_dim = self::$connection
-            ->getSystemDatabase()
-            ->getUserDimension()
-        ;
+        $db_sys = self::$connection->getSystemDatabase();
 
-        $store = new DimensionStore();
-        $store[4] = $user_dim;
+        $store = new DatabaseCollection();
+        $store[4] = $db_sys;
 
-        self::assertInstanceOf(Dimension::class, $store[4]);
+        self::assertInstanceOf(Database::class, $store[4]);
     }
 
     /**
      * @throws \Exception
      */
-    public function testAppendDimensionUseOffset(): void
+    public function testAppendDatabaseUseOffset(): void
     {
-        $user_dim = self::$connection
-            ->getSystemDatabase()
-            ->getUserDimension()
-        ;
+        $db_sys = self::$connection->getSystemDatabase();
 
-        $store = new DimensionStore();
-        $store->append($user_dim);
+        $store = new DatabaseCollection();
+        $store->append($db_sys);
 
-        self::assertInstanceOf(Dimension::class, $store[0]);
+        self::assertInstanceOf(Database::class, $store[0]);
     }
 
     /**
@@ -128,8 +114,8 @@ class DimensionStoreTest extends OlapiTestCase
      */
     public function testInstance(): void
     {
-        $store = new DimensionStore();
-        self::assertInstanceOf(DimensionStore::class, $store);
+        $store = new DatabaseCollection();
+        self::assertInstanceOf(DatabaseCollection::class, $store);
     }
 
     /**
@@ -137,19 +123,17 @@ class DimensionStoreTest extends OlapiTestCase
      */
     public function testArrayCopy(): void
     {
-        $user_dim = self::$connection
-            ->getSystemDatabase()
-            ->getUserDimension()
-        ;
+        $db_sys = self::$connection->getSystemDatabase();
 
-        $store = new DimensionStore();
-        $store->append($user_dim);
+        $store = new DatabaseCollection();
+        $store->append($db_sys);
 
         $result = $store->getArrayCopy();
 
         self::assertIsArray($result);
         self::assertArrayHasKey(0, $result);
-        self::assertInstanceOf(Dimension::class, $result[0]);
+        self::assertInstanceOf(Database::class, $result[0]);
+        self::assertInstanceOf(SystemDatabase::class, $result[0]);
     }
 
     /**
@@ -157,17 +141,14 @@ class DimensionStoreTest extends OlapiTestCase
      */
     public function testExchangeArray(): void
     {
-        $user_dim = self::$connection
-            ->getSystemDatabase()
-            ->getUserDimension()
-        ;
+        $db_sys = self::$connection->getSystemDatabase();
 
-        $store = new DimensionStore();
-        $store->append($user_dim);
+        $store = new DatabaseCollection();
+        $store->append($db_sys);
 
-        $exchange = new DimensionStore();
-        $exchange->append($user_dim);
-        $exchange->append($user_dim);
+        $exchange = new DatabaseCollection();
+        $exchange->append($db_sys);
+        $exchange->append($db_sys);
 
         $old_result = $store->exchangeArray($exchange);
 
@@ -177,6 +158,7 @@ class DimensionStoreTest extends OlapiTestCase
         $new_result = $store->getArrayCopy();
         self::assertIsArray($new_result);
         self::assertCount(2, $new_result);
-        self::assertInstanceOf(Dimension::class, $new_result[0]);
+        self::assertInstanceOf(Database::class, $new_result[0]);
+        self::assertInstanceOf(SystemDatabase::class, $new_result[0]);
     }
 }

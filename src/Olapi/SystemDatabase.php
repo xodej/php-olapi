@@ -39,7 +39,7 @@ class SystemDatabase extends Database
      */
     public function getUser(string $user_name): User
     {
-        /* @noinspection PhpIncompatibleReturnTypeInspection */
+        // @noinspection PhpIncompatibleReturnTypeInspection
         return $this->getUserDimension()
             ->getElement($user_name)
         ;
@@ -136,7 +136,7 @@ class SystemDatabase extends Database
      */
     public function getGroup(string $group_name): Group
     {
-        /* @noinspection PhpIncompatibleReturnTypeInspection */
+        // @noinspection PhpIncompatibleReturnTypeInspection
         return $this->getGroupDimension()
             ->getElementByName($group_name)
         ;
@@ -260,7 +260,7 @@ class SystemDatabase extends Database
      */
     public function getRole(string $role_name): Role
     {
-        /* @noinspection PhpIncompatibleReturnTypeInspection */
+        // @noinspection PhpIncompatibleReturnTypeInspection
         return $this->getRoleDimension()
             ->getElementByName($role_name)
             ;

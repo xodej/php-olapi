@@ -5,16 +5,16 @@ declare(strict_types=1);
 namespace Xodej\Olapi;
 
 /**
- * Class ElementStore.
+ * Class DatabaseCollection.
  */
-class ElementStore extends Store
+class DatabaseCollection extends GenericCollection
 {
     /**
-     * ElementStore constructor.
+     * DatabaseCollection constructor.
      *
      * @param array       $input
-     * @param int|null    $flags
-     * @param string|null $iterator_class
+     * @param null|int    $flags
+     * @param null|string $iterator_class
      *
      * @throws \Exception
      */
@@ -32,22 +32,22 @@ class ElementStore extends Store
     /**
      * @param mixed $index
      *
-     * @return Element
+     * @return Database
      */
-    public function offsetGet($index): Element
+    public function offsetGet($index): Database
     {
         return parent::offsetGet($index);
     }
 
     /**
-     * @param Element $value
+     * @param Database $value
      *
      * @throws \Exception
      */
     public function append($value): void
     {
-        if (!($value instanceof Element)) {
-            throw new \InvalidArgumentException('parameter type Element expected');
+        if (!($value instanceof Database)) {
+            throw new \InvalidArgumentException('parameter type Database expected');
         }
         parent::append($value);
     }
@@ -60,14 +60,14 @@ class ElementStore extends Store
      */
     public function offsetSet($index, $newval): void
     {
-        if (!($newval instanceof Element)) {
-            throw new \InvalidArgumentException('parameter type Element expected');
+        if (!($newval instanceof Database)) {
+            throw new \InvalidArgumentException('parameter type Database expected');
         }
         parent::offsetSet($index, $newval);
     }
 
     /**
-     * @param ElementStore $input
+     * @param DatabaseCollection $input
      *
      * @throws \InvalidArgumentException
      *
@@ -76,14 +76,14 @@ class ElementStore extends Store
     public function exchangeArray($input): array
     {
         if (!($input instanceof static)) {
-            throw new \InvalidArgumentException('parameter type ElementStore expected');
+            throw new \InvalidArgumentException('parameter type DatabaseCollection expected');
         }
 
         return parent::exchangeArray($input->getArrayCopy());
     }
 
     /**
-     * @return Element[]
+     * @return Database[]
      */
     public function getArrayCopy(): array
     {

@@ -55,8 +55,10 @@ class PicklistFilter extends Filter
 
     /**
      * @param string $element_name
-     * @return $this
+     *
      * @throws \Exception
+     *
+     * @return $this
      */
     public function addElementByName(string $element_name): self
     {
@@ -71,8 +73,10 @@ class PicklistFilter extends Filter
 
     /**
      * @param int $element_id
-     * @return $this
+     *
      * @throws \Exception
+     *
+     * @return $this
      */
     public function addElementById(int $element_id): self
     {
@@ -81,6 +85,7 @@ class PicklistFilter extends Filter
         }
 
         $this->elements[] = $this->getDimension()->getElementNameFromId($element_id);
+
         return $this;
     }
 
@@ -90,6 +95,7 @@ class PicklistFilter extends Filter
     public function reset(): self
     {
         $this->elements = [];
+
         return $this;
     }
 

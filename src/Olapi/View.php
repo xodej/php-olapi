@@ -22,7 +22,7 @@ class View implements IBase
     public const FLAG_AXIS_FULL_SIZE = 256;
 
     /**
-     * @var SubsetStore
+     * @var SubsetCollection
      */
     protected $subsets;
 
@@ -50,7 +50,7 @@ class View implements IBase
      */
     public function __construct(Database $db)
     {
-        $this->subsets = new SubsetStore();
+        $this->subsets = new SubsetCollection();
         $this->database = $db;
         $this->name = "\t".\sha1(\random_bytes(160));
     }
@@ -104,7 +104,7 @@ class View implements IBase
      *
      * @throws \Exception
      *
-     * @return Store|resource
+     * @return GenericCollection|resource
      */
     public function fire(bool $debug = null)
     {
@@ -138,7 +138,7 @@ class View implements IBase
 
         $response = $this->getConnection()->request(self::API_VIEW_CALCULATE, $params);
 
-        $return = new Store();
+        $return = new GenericCollection();
         $flag_switch = false;
         foreach ($response as $entry) {
             /* @noinspection PhpAssignmentInConditionInspection */ // @todo inspection
@@ -154,8 +154,6 @@ class View implements IBase
 
     /**
      * @throws \DomainException
-     *
-     * @return void
      */
     public function reload(): void
     {

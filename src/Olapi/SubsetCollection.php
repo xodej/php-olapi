@@ -5,16 +5,16 @@ declare(strict_types=1);
 namespace Xodej\Olapi;
 
 /**
- * Class CubeStore.
+ * Class SubsetCollection.
  */
-class CubeStore extends Store
+class SubsetCollection extends GenericCollection
 {
     /**
-     * CubeStore constructor.
+     * SubsetCollection constructor.
      *
      * @param array       $input
-     * @param int|null    $flags
-     * @param string|null $iterator_class
+     * @param null|int    $flags
+     * @param null|string $iterator_class
      *
      * @throws \Exception
      */
@@ -32,22 +32,22 @@ class CubeStore extends Store
     /**
      * @param mixed $index
      *
-     * @return Cube
+     * @return Subset
      */
-    public function offsetGet($index): Cube
+    public function offsetGet($index): Subset
     {
         return parent::offsetGet($index);
     }
 
     /**
-     * @param Cube $value
+     * @param Subset $value
      *
      * @throws \Exception
      */
     public function append($value): void
     {
-        if (!($value instanceof Cube)) {
-            throw new \InvalidArgumentException('parameter type Cube expected');
+        if (!($value instanceof Subset)) {
+            throw new \InvalidArgumentException('parameter type Subet expected');
         }
         parent::append($value);
     }
@@ -60,14 +60,14 @@ class CubeStore extends Store
      */
     public function offsetSet($index, $newval): void
     {
-        if (!($newval instanceof Cube)) {
-            throw new \InvalidArgumentException('parameter type Cube expected');
+        if (!($newval instanceof Subset)) {
+            throw new \InvalidArgumentException('parameter type Subset expected');
         }
         parent::offsetSet($index, $newval);
     }
 
     /**
-     * @param CubeStore $input
+     * @param SubsetCollection $input
      *
      * @throws \InvalidArgumentException
      *
@@ -76,14 +76,14 @@ class CubeStore extends Store
     public function exchangeArray($input): array
     {
         if (!($input instanceof static)) {
-            throw new \InvalidArgumentException('parameter type CubeStore expected');
+            throw new \InvalidArgumentException('parameter type SubsetCollection expected');
         }
 
         return parent::exchangeArray($input->getArrayCopy());
     }
 
     /**
-     * @return Cube[]
+     * @return Subset[]
      */
     public function getArrayCopy(): array
     {

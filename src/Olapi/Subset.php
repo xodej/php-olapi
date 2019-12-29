@@ -234,71 +234,85 @@ class Subset
 
     /**
      * @param AttributeFilter $attrFilter
+     *
      * @return $this
      */
     public function setAttributeFilter(AttributeFilter $attrFilter): self
     {
         $this->attrFilter = $attrFilter;
+
         return $this;
     }
 
     /**
      * @param DataFilter $dataFilter
+     *
      * @return $this
      */
     public function setDataFilter(DataFilter $dataFilter): self
     {
         $this->dataFilter = $dataFilter;
+
         return $this;
     }
 
     /**
      * @param GeneralFilter $generalFilter
+     *
      * @return $this
      */
     public function setGeneralFilter(GeneralFilter $generalFilter): self
     {
         $this->generalFilter = $generalFilter;
+
         return $this;
     }
 
     /**
      * @param HierarchyFilter $hierFilter
+     *
      * @return $this
      */
     public function setHierarchyFilter(HierarchyFilter $hierFilter): self
     {
         $this->hierFilter = $hierFilter;
+
         return $this;
     }
 
     /**
      * @param PicklistFilter $pickFilter
+     *
      * @return $this
      */
     public function setPicklistFilter(PicklistFilter $pickFilter): self
     {
         $this->pickFilter = $pickFilter;
+
         return $this;
     }
 
     /**
      * @param SortFilter $sortFilter
+     *
      * @return $this
      */
     public function setSortFilter(SortFilter $sortFilter): self
     {
         $this->sortFilter = $sortFilter;
+
         return $this;
     }
 
     /**
      * @param TextFilter $textFilter
+     *
      * @return $this
      */
     public function setTextFilter(TextFilter $textFilter): self
     {
         $this->textFilter = $textFilter;
+
         return $this;
     }
 }

@@ -28,10 +28,12 @@ class Area
     }
 
     /**
-     * @param string $dimension_name
+     * @param string               $dimension_name
      * @param array<string>|string $elements
-     * @return $this
+     *
      * @throws \Exception
+     *
+     * @return $this
      */
     public function addElements(string $dimension_name, $elements): self
     {
@@ -54,10 +56,12 @@ class Area
     }
 
     /**
-     * @param string $dimension_name
+     * @param string               $dimension_name
      * @param array<string>|string $elements
-     * @return $this
+     *
      * @throws \Exception
+     *
+     * @return $this
      */
     public function setElements(string $dimension_name, $elements): self
     {
@@ -67,14 +71,17 @@ class Area
         }
 
         $this->area[$dimension_name] = [];
+
         return $this->addElements($dimension_name, $elements);
     }
 
     /**
-     * @param string $dimension_name
+     * @param string               $dimension_name
      * @param array<string>|string $except_elements
-     * @return $this
+     *
      * @throws \Exception
+     *
+     * @return $this
      */
     public function allExcept(string $dimension_name, $except_elements): self
     {
@@ -103,21 +110,6 @@ class Area
     }
 
     /**
-     * @return array<string,array<string>>
-     */
-    protected function prepareArea(): array
-    {
-        $this->area = (array) $this->area;
-
-        $temp_area = [];
-        foreach ($this->area as $dimension => $values) {
-            $temp_area[$dimension] = \array_keys($values);
-        }
-
-        return $temp_area;
-    }
-
-    /**
      * @throws \Exception
      *
      * @return string
@@ -135,5 +127,20 @@ class Area
     public function getAreaAsArray(): array
     {
         return $this->cube->createSubcube($this->prepareArea());
+    }
+
+    /**
+     * @return array<string,array<string>>
+     */
+    protected function prepareArea(): array
+    {
+        $this->area = (array) $this->area;
+
+        $temp_area = [];
+        foreach ($this->area as $dimension => $values) {
+            $temp_area[$dimension] = \array_keys($values);
+        }
+
+        return $temp_area;
     }
 }

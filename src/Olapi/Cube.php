@@ -53,7 +53,7 @@ class Cube implements IBase
 
     protected Database $database;
     protected bool $persistCachedValues = false;
-    private DimensionStore $dimensions;
+    private DimensionCollection $dimensions;
     private array $cache = [];
     private array $cachedValues = [];
 
@@ -85,7 +85,7 @@ class Cube implements IBase
         $this->database = $database;
         $this->metaInfo = $metaInfo;
 
-        $this->dimensions = new DimensionStore();
+        $this->dimensions = new DimensionCollection();
     }
 
     /**
@@ -227,7 +227,7 @@ class Cube implements IBase
      * @param null|mixed $value
      * @param null|array $options
      *
-     *@throws \Exception
+     * @throws \Exception
      *
      * @return bool
      */
@@ -291,9 +291,9 @@ class Cube implements IBase
      *
      * @throws \Exception
      *
-     * @return Store
+     * @return GenericCollection
      */
-    public function createHold(Area $area): Store
+    public function createHold(Area $area): GenericCollection
     {
         return $this->getDatabase()->getConnection()->request(self::API_HOLD_CREATE, [
             'query' => [
@@ -456,9 +456,9 @@ class Cube implements IBase
      *
      * @throws \Exception
      *
-     * @return Store
+     * @return GenericCollection
      */
-    public function drillthrough(array $path, ?int $drill_mode = null, ?array $request_parameters = null): Store
+    public function drillthrough(array $path, ?int $drill_mode = null, ?array $request_parameters = null): GenericCollection
     {
         $request_parameters = $request_parameters ?? [];
         $drill_mode = $drill_mode ?? self::DRILL_MODE_SVS;
@@ -721,13 +721,13 @@ class Cube implements IBase
     /**
      * @throws \Exception
      *
-     * @return DimensionStore
+     * @return DimensionCollection
      */
-    public function getDimensions(): DimensionStore
+    public function getDimensions(): DimensionCollection
     {
         $dimension_list = $this->listDimensions();
 
-        $this->dimensions = new DimensionStore();
+        $this->dimensions = new DimensionCollection();
         foreach ($dimension_list as $dimension_id) {
             $this->dimensions[] = $this->getDatabase()->getDimensionById((int) $dimension_id);
         }
@@ -770,9 +770,9 @@ class Cube implements IBase
      *
      * @throws \Exception
      *
-     * @return Store
+     * @return GenericCollection
      */
-    public function getRules(?string $pattern = null, ?bool $use_identifier = null): Store
+    public function getRules(?string $pattern = null, ?bool $use_identifier = null): GenericCollection
     {
         $use_identifier = $use_identifier ?? false;
 
@@ -793,7 +793,7 @@ class Cube implements IBase
             return 1 === \preg_match($pattern, $v[1]);
         });
 
-        return new Store($response);
+        return new GenericCollection($response);
     }
 
     /**
@@ -824,7 +824,7 @@ class Cube implements IBase
      */
     public function getValue(array $dims, ?bool $use_keys = null)
     {
-        $response = $this->getValueAsStore($dims, $use_keys)[0] ?? [];
+        $response = $this->getValueAsCollection($dims, $use_keys)[0] ?? [];
 
         if ('1' !== $response[1]) {
             return null;
@@ -840,9 +840,9 @@ class Cube implements IBase
      *
      * @throws \Exception
      *
-     * @return Store
+     * @return GenericCollection
      */
-    public function getValueAsStore(array $dims, ?bool $use_keys = null): Store
+    public function getValueAsCollection(array $dims, ?bool $use_keys = null): GenericCollection
     {
         $use_keys = $use_keys ?? false;
 
@@ -957,9 +957,9 @@ class Cube implements IBase
      *
      * @throws \Exception
      *
-     * @return Store<array<string>>
+     * @return GenericCollection<array<string>>
      */
-    public function info(?array $options = null): Store
+    public function info(?array $options = null): GenericCollection
     {
         return $this->getDatabase()->getConnection()->request(self::API_CUBE_INFO, [
             'query' => [
@@ -1014,9 +1014,9 @@ class Cube implements IBase
      *
      * @throws \Exception
      *
-     * @return Store<array<string>>
+     * @return GenericCollection<array<string>>
      */
-    public function listLocks(): Store
+    public function listLocks(): GenericCollection
     {
         return $this->getDatabase()->getConnection()->request(self::API_CUBE_LOCKS, [
             'query' => [
@@ -1050,9 +1050,9 @@ class Cube implements IBase
      *
      * @throws \Exception
      *
-     * @return Store<array<string>>
+     * @return GenericCollection<array<string>>
      */
-    public function lock(?array $area = null): Store
+    public function lock(?array $area = null): GenericCollection
     {
         $params = [
             'query' => [
@@ -1080,9 +1080,9 @@ class Cube implements IBase
      *
      * @throws \Exception
      *
-     * @return Store<array<string>>
+     * @return GenericCollection<array<string>>
      */
-    public function moveRules(array $rule_identifiers, array $rule_positions): Store
+    public function moveRules(array $rule_identifiers, array $rule_positions): GenericCollection
     {
         $params = [
             'query' => [
@@ -1104,9 +1104,9 @@ class Cube implements IBase
      *
      * @throws \Exception
      *
-     * @return Store<array<string>>
+     * @return GenericCollection<array<string>>
      */
-    public function parseRule(string $definition): Store
+    public function parseRule(string $definition): GenericCollection
     {
         return $this->getConnection()->request(self::API_RULE_PARSE, [
             'query' => [

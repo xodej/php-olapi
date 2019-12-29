@@ -30,8 +30,8 @@ class Database implements IBase
     public const API_SCRIPT_VARIABLES = '/script/variables';
 
     private Connection $connection;
-    private DimensionStore $dimensions;
-    private CubeStore $cubes;
+    private DimensionCollection $dimensions;
+    private CubeCollection $cubes;
 
     /**
      * @var string[]
@@ -54,8 +54,8 @@ class Database implements IBase
         $this->connection = $connection;
         $this->metaInfo = $metaInfo;
 
-        $this->dimensions = new DimensionStore();
-        $this->cubes = new CubeStore();
+        $this->dimensions = new DimensionCollection();
+        $this->cubes = new CubeCollection();
 
         $this->initDimensions();
         $this->initCubes();
@@ -251,8 +251,8 @@ class Database implements IBase
         ?array $options = null
     ): string {
         $params = ['query' => [
-                'database' => $this->getOlapObjectId(),
-            ],
+            'database' => $this->getOlapObjectId(),
+        ],
         ];
 
         if (null !== $dimension_names) {

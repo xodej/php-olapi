@@ -57,7 +57,7 @@ class Connection
 
     private ?Connection $superConnection = null;
 
-    private ?DatabaseStore $databases = null;
+    private ?DatabaseCollection $databases = null;
 
     private ?array $databaseList = null;
 
@@ -98,14 +98,14 @@ class Connection
         }
 
         // init ArrayObject for database objects
-        $this->databases = new DatabaseStore();
+        $this->databases = new DatabaseCollection();
 
         // initialize http client and read available databases from server
         $this->init();
     }
 
     /**
-     * Explicit destructor to close Jedox connection
+     * Explicit destructor to close Jedox connection.
      *
      * @throws \Exception
      */
@@ -115,7 +115,7 @@ class Connection
     }
 
     /**
-     * Close connection, reset cached content and invalidate session ID
+     * Close connection, reset cached content and invalidate session ID.
      *
      * @throws \Exception
      *
@@ -136,21 +136,22 @@ class Connection
         ]);
 
         $this->client = null;
-        $this->databases = new DatabaseStore();
+        $this->databases = new DatabaseCollection();
         $this->databaseList = [];
 
         return true;
     }
 
     /**
-     * Creates a database
+     * Creates a database.
      *
      * @param string      $database_name       Name of the new database
-     * @param string|null $external_identifier (Optional) Path to backup file where the database will be loaded from
-     * @param string|null $password            (Optional) If in restore mode, password to provided encrypted archive with database.
+     * @param null|string $external_identifier (Optional) Path to backup file where the database will be loaded from
+     * @param null|string $password            (Optional) If in restore mode, password to provided encrypted archive with database
+     *
+     * @throws \ErrorException
      *
      * @return bool
-     * @throws \ErrorException
      */
     public function createDatabase(string $database_name, ?string $external_identifier = null, ?string $password = null): bool
     {
@@ -177,7 +178,7 @@ class Connection
     }
 
     /**
-     * Deletes a database
+     * Deletes a database.
      *
      * @param string $database_name database name
      *
@@ -193,7 +194,7 @@ class Connection
     }
 
     /**
-     * Delete database by ID
+     * Delete database by ID.
      *
      * @param int $database_id database ID
      *
@@ -235,7 +236,7 @@ class Connection
     }
 
     /**
-     * Delete database by database name
+     * Delete database by database name.
      *
      * @param string $database_name database name
      *
@@ -253,7 +254,7 @@ class Connection
     }
 
     /**
-     * Begin event
+     * Begin event.
      *
      * @param string $user_sid   session ID of user
      * @param string $event_name event name
@@ -275,7 +276,7 @@ class Connection
     }
 
     /**
-     * End event
+     * End event.
      *
      * @throws \ErrorException
      *
@@ -289,7 +290,7 @@ class Connection
     }
 
     /**
-     * Returns database script
+     * Returns database script.
      *
      * @param string     $database_name database name
      * @param null|array $options       (Optional) array of options
@@ -309,7 +310,7 @@ class Connection
     }
 
     /**
-     * Returns connection object
+     * Returns connection object.
      *
      * @throws \Exception
      *
@@ -325,7 +326,7 @@ class Connection
     }
 
     /**
-     * Returns user name used for connection
+     * Returns user name used for connection.
      *
      * @throws \ErrorException
      *
@@ -339,7 +340,7 @@ class Connection
     }
 
     /**
-     * Returns cube object for given database/cube identifier
+     * Returns cube object for given database/cube identifier.
      *
      * @param string    $databaseNameSlashCubeName Jedox database/cube identifier
      * @param null|bool $use_cache                 (Optional) use cache
@@ -360,7 +361,7 @@ class Connection
     }
 
     /**
-     * Returns data token
+     * Returns data token.
      *
      * @throws \Exception
      *
@@ -375,7 +376,7 @@ class Connection
     }
 
     /**
-     * Returns database object by database name
+     * Returns database object by database name.
      *
      * @param string $database_name database name
      *
@@ -391,7 +392,7 @@ class Connection
     }
 
     /**
-     * Returns database object by database ID
+     * Returns database object by database ID.
      *
      * @param int       $database_id database ID
      * @param null|bool $use_cache   (Optional) use cache
@@ -427,7 +428,7 @@ class Connection
     }
 
     /**
-     * Returns database object by database name
+     * Returns database object by database name.
      *
      * @param string    $database_name database name
      * @param null|bool $use_cache     (Optional) use cache
@@ -446,7 +447,7 @@ class Connection
     }
 
     /**
-     * Returns database ID from database name
+     * Returns database ID from database name.
      *
      * @param string $database_name database name
      *
@@ -464,7 +465,7 @@ class Connection
     }
 
     /**
-     * Returns database record by database name
+     * Returns database record by database name.
      *
      * @param string $database_name database name
      *
@@ -482,7 +483,7 @@ class Connection
     }
 
     /**
-     * Returns database record by database ID
+     * Returns database record by database ID.
      *
      * @param int $database_id database ID
      *
@@ -502,7 +503,7 @@ class Connection
     }
 
     /**
-     * Returns database record by database name
+     * Returns database record by database name.
      *
      * @param string $database_name database name
      *
@@ -523,7 +524,7 @@ class Connection
     }
 
     /**
-     * Returns database object by database name
+     * Returns database object by database name.
      *
      * @param int $databaseId database ID
      *
@@ -535,15 +536,15 @@ class Connection
     }
 
     /**
-     * Returns array response of /server/info API call
+     * Returns array response of /server/info API call.
      *
      * @param null|array{show_counters:int, show_enckey:int, show_user_info:int} $options (Optional) options
      *
      * @throws \ErrorException
      *
-     * @return Store
+     * @return GenericCollection<array<string>>
      */
-    public function getInfo(?array $options = null): Store
+    public function getInfo(?array $options = null): GenericCollection
     {
         return $this->request(self::API_SERVER_INFO, [
             'query' => [
@@ -555,7 +556,7 @@ class Connection
     }
 
     /**
-     * Returns connection object
+     * Returns connection object.
      *
      * @param null|string $host_with_port (Optional) url with port (default: 127.0.0.1:7777)
      * @param null|string $username       (Optional) Jedox user name (default: admin)
@@ -577,15 +578,15 @@ class Connection
     }
 
     /**
-     * Returns array response of /server/licenses API call
+     * Returns array response of /server/licenses API call.
      *
      * @param null|array{mode:string} $options (Optional) options
      *
      * @throws \ErrorException
      *
-     * @return Store
+     * @return GenericCollection<array<string>>
      */
-    public function getLicenseInfos(?array $options = null): Store
+    public function getLicenseInfos(?array $options = null): GenericCollection
     {
         return $this->request(self::API_SERVER_LICENSES, [
             'query' => [
@@ -595,7 +596,7 @@ class Connection
     }
 
     /**
-     * Returns secret if set
+     * Returns secret if set.
      *
      * @return null|string
      */
@@ -605,10 +606,9 @@ class Connection
     }
 
     /**
-     * Returns array of running user sessions
+     * Returns array of running user sessions.
      *
      * @throws \Exception
-     * @return void
      */
     public function getSessions(): void
     {
@@ -676,7 +676,7 @@ class Connection
     }
 
     /**
-     * Returns system database object
+     * Returns system database object.
      *
      * @throws \InvalidArgumentException
      * @throws \Exception
@@ -689,7 +689,7 @@ class Connection
     }
 
     /**
-     * Returns user object
+     * Returns user object.
      *
      * @param null|string $user_name (Optional) user name (default: user name of connection)
      *
@@ -707,13 +707,13 @@ class Connection
     }
 
     /**
-     * Returns array of user info
+     * Returns array of user info.
      *
      * @throws \ErrorException
      *
-     * @return Store
+     * @return GenericCollection
      */
-    public function getUserInfo(): Store
+    public function getUserInfo(): GenericCollection
     {
         return $this->request(self::API_SERVER_USER_INFO, [
             'query' => [
@@ -725,7 +725,7 @@ class Connection
     }
 
     /**
-     * Returns true if database exists
+     * Returns true if database exists.
      *
      * @param string $database_name database name
      *
@@ -739,7 +739,7 @@ class Connection
     }
 
     /**
-     * Returns true if database exists
+     * Returns true if database exists.
      *
      * @param int $databaseId database ID
      *
@@ -751,7 +751,7 @@ class Connection
     }
 
     /**
-     * Returns true if database exists
+     * Returns true if database exists.
      *
      * @param string $databaseName database name
      *
@@ -763,7 +763,7 @@ class Connection
     }
 
     /**
-     * Returns true if debug mode is enabled
+     * Returns true if debug mode is enabled.
      *
      * @return bool
      */
@@ -773,7 +773,7 @@ class Connection
     }
 
     /**
-     * @param null|bool  $cached
+     * @param null|bool                                                                             $cached
      * @param null|array{show_normal:int, show_system:int, show_user_info:int, show_permission:int} $options
      *
      * @throws \ErrorException
@@ -853,7 +853,7 @@ class Connection
      */
     public function reload(): self
     {
-        $this->databases = new DatabaseStore();
+        $this->databases = new DatabaseCollection();
         $this->databaseList = [];
         $this->listDatabases(false);
 
@@ -883,12 +883,14 @@ class Connection
     }
 
     /**
-     * @param string $url
-     * @param array|null $params
-     * @return Store
+     * @param string     $url
+     * @param null|array $params
+     *
      * @throws \ErrorException
+     *
+     * @return GenericCollection
      */
-    public function request(string $url, ?array $params = null): Store
+    public function request(string $url, ?array $params = null): GenericCollection
     {
         if (null === ($client = $this->getClient())) {
             throw new \ErrorException('HTTP client not initialized. Cancelled HTTP request.');
@@ -922,7 +924,7 @@ class Connection
             \file_put_contents('php://stderr', $exception->getMessage());
         }
 
-        return new Store();
+        return new GenericCollection();
     }
 
     /**
@@ -1009,9 +1011,9 @@ class Connection
     /**
      * @throws \ErrorException
      *
-     * @return Store
+     * @return GenericCollection
      */
-    public function svsInfo(): Store
+    public function svsInfo(): GenericCollection
     {
         return $this->request(self::API_SVS_INFO, []);
     }
@@ -1039,7 +1041,7 @@ class Connection
     }
 
     /**
-     * Returns client object
+     * Returns client object.
      *
      * @return null|Client
      */
@@ -1049,7 +1051,7 @@ class Connection
     }
 
     /**
-     * Returns session ID
+     * Returns session ID.
      *
      * @return string
      */
@@ -1059,7 +1061,7 @@ class Connection
     }
 
     /**
-     * Initializes a connection
+     * Initializes a connection.
      *
      * @throws GuzzleException
      * @throws \ErrorException
@@ -1130,9 +1132,9 @@ class Connection
      *
      * @throws \Exception
      *
-     * @return Store
+     * @return GenericCollection
      */
-    private function parseCsvResponse(ResponseInterface $response): Store
+    private function parseCsvResponse(ResponseInterface $response): GenericCollection
     {
         if (200 !== $response->getStatusCode()) {
             throw new \ErrorException('OLAP server returned HTTP status code '.
@@ -1140,7 +1142,7 @@ class Connection
         }
 
         // wrap in ArrayObject for memory optimized handling
-        $return = new Store();
+        $return = new GenericCollection();
 
         // fetch body as stream from guzzle client
         $stream = $response->getBody()->detach();

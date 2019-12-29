@@ -35,9 +35,11 @@ class AttributeFilter extends Filter
 
     /**
      * @param string $attribute_name
-     * @param array $filters
-     * @return $this
+     * @param array  $filters
+     *
      * @throws \Exception
+     *
+     * @return $this
      */
     public function addAttribute(string $attribute_name, array $filters): self
     {
@@ -49,6 +51,7 @@ class AttributeFilter extends Filter
         }
 
         $this->attributes[$attribute_name] = [$attribute_name, $filters, \count($filters)];
+
         return $this;
     }
 

@@ -43,9 +43,9 @@ class Dimension implements IBase
 
     private Database $database;
     /**
-     * @var ElementStore<Element>
+     * @var ElementCollection<Element>
      */
-    private ElementStore $elements;
+    private ElementCollection $elements;
 
     /**
      * @var null|array<string,array<int|string,array<string>|int|string>>
@@ -70,7 +70,7 @@ class Dimension implements IBase
         $this->database = $database;
         $this->metaInfo = $metaInfo;
 
-        $this->elements = new ElementStore();
+        $this->elements = new ElementCollection();
 
         $this->init();
     }
@@ -125,9 +125,9 @@ class Dimension implements IBase
      *
      * @throws \Exception
      *
-     * @return Store
+     * @return GenericCollection
      */
-    public function appendElement(string $element_name): Store
+    public function appendElement(string $element_name): GenericCollection
     {
         // @todo Dimension::appendElement()
         // if parent element is a Base element - do not consolidate you may loose data
@@ -440,7 +440,7 @@ class Dimension implements IBase
      *
      * @throws \Exception
      *
-     * @return Store
+     * @return GenericCollection
      */
     public function dfilter(
         string $cube_name,
@@ -449,7 +449,7 @@ class Dimension implements IBase
         ?string $condition = null,
         ?float $values = null,
         ?array $options = null
-    ): Store {
+    ): GenericCollection {
         $mode = $mode ?? self::DFILTER_ONLY_LEAVES;
 
         $params = [
@@ -581,9 +581,9 @@ class Dimension implements IBase
      *
      * @throws \Exception
      *
-     * @return Store<array<string>>
+     * @return GenericCollection<array<string>>
      */
-    public function getAllElements(): Store
+    public function getAllElements(): GenericCollection
     {
         return $this->getElementListOfNode();
     }
@@ -610,9 +610,9 @@ class Dimension implements IBase
      *
      * @throws \Exception
      *
-     * @return Store<array<string>>
+     * @return GenericCollection<array<string>>
      */
-    public function getAttributeList(): Store
+    public function getAttributeList(): GenericCollection
     {
         if (preg_match('~^#_~', $this->getName())) {
             throw new \DomainException('Dimension::AttributeList() not supported by dimension '.$this->getName());
@@ -966,9 +966,9 @@ class Dimension implements IBase
      *
      * @throws \Exception
      *
-     * @return Store<array<string>>
+     * @return GenericCollection<array<string>>
      */
-    public function getElementListOfNode(?string $element_name = null): Store
+    public function getElementListOfNode(?string $element_name = null): GenericCollection
     {
         $params = [
             'query' => [
@@ -1317,13 +1317,13 @@ class Dimension implements IBase
     }
 
     /**
-     * @param Element    $node
-     * @param null|bool  $delete
-     * @param null|bool  $force
-     * @param null|int   $level
-     * @param null|Store $remove_collection
-     * @param null|Store $tree_elements
-     * @param null|Store $blacklist
+     * @param Element                $node
+     * @param null|bool              $delete
+     * @param null|bool              $force
+     * @param null|int               $level
+     * @param null|GenericCollection $remove_collection
+     * @param null|GenericCollection $tree_elements
+     * @param null|GenericCollection $blacklist
      *
      * @throws \Exception
      *
@@ -1334,16 +1334,16 @@ class Dimension implements IBase
         ?bool $delete = null,
         ?bool $force = null,
         ?int $level = null,
-        ?Store $remove_collection = null,
-        ?Store $tree_elements = null,
-        ?Store $blacklist = null
+        ?GenericCollection $remove_collection = null,
+        ?GenericCollection $tree_elements = null,
+        ?GenericCollection $blacklist = null
     ): bool {
         $force = $force ?? false;
         $delete = $delete ?? false;
         $level = $level ?? 0;
-        $remove_collection = $remove_collection ?? new Store();
-        $tree_elements = $tree_elements ?? new Store();
-        $blacklist = $blacklist ?? new Store();
+        $remove_collection = $remove_collection ?? new GenericCollection();
+        $tree_elements = $tree_elements ?? new GenericCollection();
+        $blacklist = $blacklist ?? new GenericCollection();
 
         // you don't need to de-consolidate base elements
         if ($node->isBaseElement()) {
@@ -1450,7 +1450,7 @@ class Dimension implements IBase
             $element = $this->getElementByName($element);
         }
 
-        $return = new Store();
+        $return = new GenericCollection();
         $this->internShowParents($element, $return, $full_path);
 
         return $return->getArrayCopy();
@@ -1525,27 +1525,27 @@ class Dimension implements IBase
     /**
      * As a user please use Dimension::traverse() instead.
      *
-     * @param string     $element_name      dimension element name or node name
-     * @param null|int   $fetch_mode        (1 - base elements|2 - consolidated elements|3 - all = default)
-     * @param null|Store $result            internally used for the result set (users should always use null)
-     * @param null|int   $level             internally used for level of recursion (users should always use null)
-     * @param null|bool  $remove_duplicates remove duplicate nodes
-     *
-     * @see Dimension::traverse()
+     * @param string                 $element_name      dimension element name or node name
+     * @param null|int               $fetch_mode        (1 - base elements|2 - consolidated elements|3 - all = default)
+     * @param null|GenericCollection $result            internally used for the result set (users should always use null)
+     * @param null|int               $level             internally used for level of recursion (users should always use null)
+     * @param null|bool              $remove_duplicates remove duplicate nodes
      *
      * @throws \Exception
      *
-     * @return Store
+     * @return GenericCollection
+     *
+     * @see Dimension::traverse()
      */
     public function fullTraverse(
         string $element_name,
         ?int $fetch_mode = null,
-        ?Store $result = null,
+        ?GenericCollection $result = null,
         ?int $level = null,
         ?bool $remove_duplicates = null
-    ): Store {
+    ): GenericCollection {
         $fetch_mode = $fetch_mode ?? 3;
-        $result = $result ?? new Store();
+        $result = $result ?? new GenericCollection();
         $level = $level ?? 0;
         $remove_duplicates = $remove_duplicates ?? true;
 
@@ -1620,9 +1620,9 @@ class Dimension implements IBase
     /**
      * @throws \Exception
      *
-     * @return Store<array<string>>
+     * @return GenericCollection<array<string>>
      */
-    public function info(): Store
+    public function info(): GenericCollection
     {
         $params = [
             'query' => [
@@ -1639,11 +1639,11 @@ class Dimension implements IBase
     }
 
     /**
-     * @param Element       $element
-     * @param null|Store    $return
-     * @param null|bool     $full_path
-     * @param null|int      $level
-     * @param null|string[] $ancestors
+     * @param Element                $element
+     * @param null|GenericCollection $return
+     * @param null|bool              $full_path
+     * @param null|int               $level
+     * @param null|string[]          $ancestors
      *
      * @throws \Exception
      *
@@ -1651,7 +1651,7 @@ class Dimension implements IBase
      */
     protected function internShowParents(
         Element $element,
-        ?Store $return = null,
+        ?GenericCollection $return = null,
         ?bool $full_path = null,
         ?int $level = null,
         ?array $ancestors = null
@@ -1659,7 +1659,7 @@ class Dimension implements IBase
         $ancestors = $ancestors ?? [];
         $level = $level ?? 0;
         $full_path = $full_path ?? true;
-        $return = $return ?? new Store();
+        $return = $return ?? new GenericCollection();
 
         $parents = $element->getParents();
         $ancestors[] = $element->getName();
@@ -1683,13 +1683,13 @@ class Dimension implements IBase
     /**
      * Removes all non-base elements from a list of elements.
      *
-     * @param Store<array<string>> $elementList list of dimension elements
-     *
-     * @internal
+     * @param GenericCollection<array<string>> $elementList list of dimension elements
      *
      * @return string[]
+     *
+     * @internal
      */
-    private function basifyElementList(Store $elementList): array
+    private function basifyElementList(GenericCollection $elementList): array
     {
         // remove consolidated elements
         $element_list = \array_filter($elementList->getArrayCopy(), static function (array $e) {
@@ -1708,15 +1708,15 @@ class Dimension implements IBase
     /**
      * Removes all base elements from a list of elements.
      *
-     * @param Store<array<string>> $elementList list of dimension elements
+     * @param GenericCollection<array<string>> $elementList list of dimension elements
      *
      * @throws \Exception
      *
-     * @internal
-     *
      * @return string[]
+     *
+     * @internal
      */
-    private function consolifyElementList(Store $elementList): array
+    private function consolifyElementList(GenericCollection $elementList): array
     {
         $element_list = $elementList->getArrayCopy();
 

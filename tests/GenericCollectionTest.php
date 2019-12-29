@@ -4,21 +4,21 @@ declare(strict_types=1);
 
 namespace Xodej\Olapi\Test;
 
-use Xodej\Olapi\Store;
+use Xodej\Olapi\GenericCollection;
 
 include_once __DIR__.'/OlapiTestCase.php';
 
 /**
- * Class StoreTest.
+ * Class GenericCollectionTest.
  *
  * @internal
  * @coversNothing
  */
-class StoreTest extends OlapiTestCase
+class GenericCollectionTest extends OlapiTestCase
 {
     public function testHash()
     {
-        $store = new Store(['a', 'b']);
+        $store = new GenericCollection(['a', 'b']);
         self::assertIsString($store->getHash());
 
         $new_order = $store->array_reverse();

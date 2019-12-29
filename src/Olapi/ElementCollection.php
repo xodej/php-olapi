@@ -5,16 +5,16 @@ declare(strict_types=1);
 namespace Xodej\Olapi;
 
 /**
- * Class DimensionStore.
+ * Class ElementCollection.
  */
-class DimensionStore extends Store
+class ElementCollection extends GenericCollection
 {
     /**
-     * DimensionStore constructor.
+     * ElementCollection constructor.
      *
      * @param array       $input
-     * @param int|null    $flags
-     * @param string|null $iterator_class
+     * @param null|int    $flags
+     * @param null|string $iterator_class
      *
      * @throws \Exception
      */
@@ -32,22 +32,22 @@ class DimensionStore extends Store
     /**
      * @param mixed $index
      *
-     * @return Dimension
+     * @return Element
      */
-    public function offsetGet($index): Dimension
+    public function offsetGet($index): Element
     {
         return parent::offsetGet($index);
     }
 
     /**
-     * @param Dimension $value
+     * @param Element $value
      *
      * @throws \Exception
      */
     public function append($value): void
     {
-        if (!($value instanceof Dimension)) {
-            throw new \InvalidArgumentException('parameter type Dimension expected');
+        if (!($value instanceof Element)) {
+            throw new \InvalidArgumentException('parameter type Element expected');
         }
         parent::append($value);
     }
@@ -60,14 +60,14 @@ class DimensionStore extends Store
      */
     public function offsetSet($index, $newval): void
     {
-        if (!($newval instanceof Dimension)) {
-            throw new \InvalidArgumentException('parameter type Dimension expected');
+        if (!($newval instanceof Element)) {
+            throw new \InvalidArgumentException('parameter type Element expected');
         }
         parent::offsetSet($index, $newval);
     }
 
     /**
-     * @param DimensionStore $input
+     * @param ElementCollection $input
      *
      * @throws \InvalidArgumentException
      *
@@ -76,14 +76,14 @@ class DimensionStore extends Store
     public function exchangeArray($input): array
     {
         if (!($input instanceof static)) {
-            throw new \InvalidArgumentException('parameter type DimensionStore expected');
+            throw new \InvalidArgumentException('parameter type ElementCollection expected');
         }
 
         return parent::exchangeArray($input->getArrayCopy());
     }
 
     /**
-     * @return Dimension[]
+     * @return Element[]
      */
     public function getArrayCopy(): array
     {

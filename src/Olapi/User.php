@@ -43,8 +43,10 @@ class User extends Element
     /**
      * @param string $jdx_b64_hash
      * @param string $secret       (see config.php --> CFG_SECRET)
-     * @return string
+     *
      * @throws \ErrorException
+     *
+     * @return string
      */
     public static function getPasswordFromHash(string $jdx_b64_hash, string $secret): string
     {
