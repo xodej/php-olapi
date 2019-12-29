@@ -21,25 +21,10 @@ class View implements IBase
     public const FLAG_VIEW_PARENT_PATHS = 128;
     public const FLAG_AXIS_FULL_SIZE = 256;
 
-    /**
-     * @var SubsetCollection
-     */
-    protected $subsets;
-
-    /**
-     * @var Database
-     */
-    protected $database;
-
-    /**
-     * @var Cube
-     */
-    protected $cube;
-
-    /**
-     * @var string
-     */
-    protected $name;
+    protected SubsetCollection $subsets;
+    protected Database $database;
+    protected ?Cube $cube = null;
+    protected string $name;
 
     /**
      * View constructor.
@@ -62,7 +47,7 @@ class View implements IBase
      */
     public function getOlapObjectId(): int
     {
-        return \random_int(1000000, 9999999);
+        return \random_int(1_000_000, 9_999_999);
     }
 
     /**

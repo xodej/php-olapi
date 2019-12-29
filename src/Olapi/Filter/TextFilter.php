@@ -65,6 +65,10 @@ class TextFilter extends Filter
             return [];
         }
 
+        if (null === $this->getFlag()) {
+            $this->setFlag(0);
+        }
+
         return [
             self::FILTER_ID,
             $this->getFlag(),

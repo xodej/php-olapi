@@ -64,7 +64,7 @@ class AttributeFilter extends Filter
     {
         // no flags set - use default flag
         if (null === $this->getFlag()) {
-            $this->addFlag(self::FLAG_PERL_REGEX);
+            $this->setFlag(self::FLAG_PERL_REGEX);
             $this->addFlag(self::FLAG_IGNORE_CASE);
         }
 

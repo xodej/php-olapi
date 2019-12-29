@@ -180,6 +180,8 @@ class SortFilter extends Filter
         // no flags set - use default flag
         if (null === $this->getFlag()) {
             $this->setFlag(self::FLAG_POSITION);
+            // $this->addFlag(self::FLAG_WHOLE);
+            // $this->addFlag(self::FLAG_SHOW_DUPLICATES);
         }
 
         // build return string

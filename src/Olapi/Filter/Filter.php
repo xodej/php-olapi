@@ -12,7 +12,7 @@ use Xodej\Olapi\Dimension;
 abstract class Filter
 {
     protected Dimension $dimension;
-    protected int $flags;
+    protected ?int $flags = null;
 
     /**
      * Filter constructor.
@@ -22,7 +22,6 @@ abstract class Filter
     public function __construct(Dimension $dimension)
     {
         $this->dimension = $dimension;
-        $this->flags = 0;
     }
 
     /**

@@ -126,7 +126,7 @@ class DataFilter extends Filter
 
         // no flags set - use default flag
         if (null === $this->getFlag()) {
-            $this->addFlag(self::FLAG_SUM);
+            $this->setFlag(self::FLAG_SUM);
         }
 
         $return = [

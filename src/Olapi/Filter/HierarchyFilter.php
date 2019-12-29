@@ -189,7 +189,7 @@ class HierarchyFilter extends Filter
     {
         // no flags set - use default flag
         if (null === $this->getFlag()) {
-            $this->addFlag(self::FLAG_BELOW_INCLUSIVE);
+            $this->setFlag(self::FLAG_BELOW_INCLUSIVE);
         }
 
         $return = [
