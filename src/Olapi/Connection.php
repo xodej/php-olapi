@@ -57,9 +57,17 @@ class Connection
 
     private ?Connection $superConnection = null;
 
-    private ?DatabaseCollection $databases = null;
+    private DatabaseCollection $databases;
 
-    private ?array $databaseList = null;
+    /**
+     * @var null|array<int,array<string>>
+     */
+    private ?array $databaseLookupByID = null;
+
+    /**
+     * @var null|array<string,int>
+     */
+    private ?array $databaseLookupByName = null;
 
     /**
      * Connection constructor.
@@ -137,7 +145,8 @@ class Connection
 
         $this->client = null;
         $this->databases = new DatabaseCollection();
-        $this->databaseList = [];
+        $this->databaseLookupByID = [];
+        $this->databaseLookupByName = [];
 
         return true;
     }
@@ -220,14 +229,14 @@ class Connection
             if (isset($this->databases[$database_id])) {
                 unset($this->databases[$database_id]);
             }
-            if (isset($this->databaseList['olap_id'][$database_id])) {
-                unset($this->databaseList['olap_id'][$database_id]);
+            if (isset($this->databaseLookupByID[$database_id])) {
+                unset($this->databaseLookupByID[$database_id]);
             }
 
             $database_name = $this->getDatabaseNameFromId($database_id);
 
-            if (null !== $database_name && isset($this->databaseList['olap_name'][\strtolower($database_name)])) {
-                unset($this->databaseList['olap_name'][\strtolower($database_name)]);
+            if (null !== $database_name && isset($this->databaseLookupByName[\strtolower($database_name)])) {
+                unset($this->databaseLookupByName[\strtolower($database_name)]);
             }
         }
         // @todo Database::deleteDimension() - reload dimensions
@@ -292,18 +301,17 @@ class Connection
     /**
      * Returns database script.
      *
-     * @param string     $database_name database name
-     * @param null|array $options       (Optional) array of options
+     * @param string                    $database_name   database name
+     * @param null|array                $dimension_names (Optional) array of dimension names
+     * @param null|array                $cube_names      (Optional) array of cube names
+     * @param null|array<string,string> $options         (Optional) array of options
      *
      * @throws \Exception
      *
      * @return string
      */
-    public function generateScript(string $database_name, ?array $options = null): string
+    public function generateScript(string $database_name, ?array $dimension_names = null, ?array $cube_names = null, ?array $options = null): string
     {
-        $dimension_names = $options['name_dimensions'] ?? null;
-        $cube_names = $options['name_cubes'] ?? null;
-
         return $this->getDatabaseByName($database_name)
             ->generateScript($dimension_names, $cube_names, $options)
         ;
@@ -457,8 +465,8 @@ class Connection
      */
     public function getDatabaseIdFromName(string $database_name): int
     {
-        if (isset($this->databaseList['olap_name'][\strtolower($database_name)])) {
-            return $this->databaseList['olap_name'][\strtolower($database_name)];
+        if (isset($this->databaseLookupByName[\strtolower($database_name)])) {
+            return $this->databaseLookupByName[\strtolower($database_name)];
         }
 
         throw new \DomainException('database '.$database_name.' not found');
@@ -495,11 +503,11 @@ class Connection
     public function getDatabaseListRecordById(int $database_id): array
     {
         $this->listDatabases();
-        if (!isset($this->databaseList['olap_id'][$database_id])) {
+        if (!isset($this->databaseLookupByID[$database_id])) {
             throw new \InvalidArgumentException('Unknown database ID '.$database_id.' given.');
         }
 
-        return $this->databaseList['olap_id'][$database_id];
+        return $this->databaseLookupByID[$database_id];
     }
 
     /**
@@ -532,7 +540,7 @@ class Connection
      */
     public function getDatabaseNameFromId(int $databaseId): ?string
     {
-        return $this->databaseList['olap_id'][$databaseId][1] ?? null;
+        return $this->databaseLookupByID[$databaseId][1] ?? null;
     }
 
     /**
@@ -747,7 +755,7 @@ class Connection
      */
     public function hasDatabaseById(int $databaseId): bool
     {
-        return isset($this->databaseList['olap_id'][$databaseId]);
+        return isset($this->databaseLookupByID[$databaseId]);
     }
 
     /**
@@ -759,7 +767,7 @@ class Connection
      */
     public function hasDatabaseByName(string $databaseName): bool
     {
-        return isset($this->databaseList['olap_name'][\strtolower($databaseName)]);
+        return isset($this->databaseLookupByName[\strtolower($databaseName)]);
     }
 
     /**
@@ -778,7 +786,7 @@ class Connection
      *
      * @throws \ErrorException
      *
-     * @return null|array
+     * @return null|array<int,array<string>>
      */
     public function listDatabases(?bool $cached = null, ?array $options = null): ?array
     {
@@ -786,8 +794,8 @@ class Connection
 
         $options = (array) $options;
 
-        if (true === $cached && null !== $this->databaseList) {
-            return $this->databaseList;
+        if (true === $cached && null !== $this->databaseLookupByID) {
+            return $this->databaseLookupByID;
         }
 
         $database_list = $this->request(self::API_SERVER_DATABASES, [
@@ -799,27 +807,30 @@ class Connection
             ],
         ]);
 
-        $tmp_list = [];
+        $this->databaseLookupByID = [];
+        $this->databaseLookupByName = [];
 
         foreach ($database_list as $database_row) {
-            $tmp_list['olap_id'][(int) $database_row[0]] = $database_row;
-            $tmp_list['olap_name'][\strtolower($database_row[1])] = (int) $database_row[0];
+            $this->databaseLookupByID[(int) $database_row[0]] = $database_row;
+            $this->databaseLookupByName[\strtolower($database_row[1])] = (int) $database_row[0];
         }
 
         // CompatibilityLayer support
         if ((bool) ($options['palo_compat'] ?? false)) {
-            return $tmp_list['olap_name'] ?? [];
+            $return = [];
+            \array_map(static function ($v) use (&$return) {
+                $return[$v[1]] = $v[0];
+            }, $this->databaseLookupByID);
+
+            return $return;
         }
 
-        // databases complete
-        $this->databaseList = $tmp_list;
-
-        return $this->databaseList;
+        return $this->databaseLookupByID;
     }
 
     /**
-     * @param array $params
-     * @param array $options
+     * @param array                $params
+     * @param array<string,string> $options
      *
      * @return array
      */
@@ -854,7 +865,8 @@ class Connection
     public function reload(): self
     {
         $this->databases = new DatabaseCollection();
-        $this->databaseList = [];
+        $this->databaseLookupByID = [];
+        $this->databaseLookupByName = [];
         $this->listDatabases(false);
 
         return $this;

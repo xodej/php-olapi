@@ -48,9 +48,14 @@ class Dimension implements IBase
     private ElementCollection $elements;
 
     /**
-     * @var null|array<string,array<int|string,array<string>|int|string>>
+     * @var null|array<int,array<string>>
      */
-    private ?array $elementList = null;
+    private ?array $elementLookupByID = null;
+
+    /**
+     * @var null|array<string,int>
+     */
+    private ?array $elementLookupByName = null;
 
     /**
      * @var string[]
@@ -431,12 +436,12 @@ class Dimension implements IBase
     /**
      * Filter dimension elements by OLAP dfilter expression.
      *
-     * @param string      $cube_name cube name
-     * @param null|int    $mode      one of the Dimension::DFILTER_X modes
-     * @param null|Area   $area      area object
-     * @param null|string $condition Condition on the value of numeric or string cells (default is no condition). A condition starts with >, >=, <, <=, ==, or != and is followed by a double or a string. Two condition can be combined by and, or, xor. If you specify a string value, the value has to be csv encoded. Do not forget to URL encode the complete condition string.
-     * @param null|float  $values    values for Top, Upper % and Lower % in this order
-     * @param null|array  $options   array of options
+     * @param string                    $cube_name cube name
+     * @param null|int                  $mode      one of the Dimension::DFILTER_X modes
+     * @param null|Area                 $area      area object
+     * @param null|string               $condition Condition on the value of numeric or string cells (default is no condition). A condition starts with >, >=, <, <=, ==, or != and is followed by a double or a string. Two condition can be combined by and, or, xor. If you specify a string value, the value has to be csv encoded. Do not forget to URL encode the complete condition string.
+     * @param null|float                $values    values for Top, Upper % and Lower % in this order
+     * @param null|array<string,string> $options   array of options
      *
      * @throws \Exception
      *
@@ -794,7 +799,7 @@ class Dimension implements IBase
 
         $info = $this->info();
         if (!isset($info[10])) {
-            throw new \Exception('failed Dimension::getDimensionsToken() - live call to OLAP failed');
+            throw new \ErrorException('failed Dimension::getDimensionsToken() - live call to OLAP failed');
         }
 
         return (string) $info[10];
@@ -858,7 +863,7 @@ class Dimension implements IBase
      */
     public function getElementById(int $eId): Element
     {
-        if (!isset($this->elementList['olap_id'][$eId])) {
+        if (!isset($this->elementLookupByID[$eId])) {
             throw new \InvalidArgumentException('Unknown element id '.$eId.' given.');
         }
 
@@ -901,11 +906,11 @@ class Dimension implements IBase
      */
     public function getElementByName(string $eName): Element
     {
-        if (!isset($this->elementList['olap_name'][\strtolower($eName)])) {
+        if (!isset($this->elementLookupByName[\strtolower($eName)])) {
             throw new \ErrorException('unknown element '.$eName);
         }
 
-        $dim_el = $this->elementList['olap_name'][\strtolower($eName)];
+        $dim_el = $this->elementLookupByName[\strtolower($eName)];
 
         return $this->getElementById($dim_el);
     }
@@ -924,7 +929,7 @@ class Dimension implements IBase
                 $this->getName().' requested.');
         }
 
-        return $this->elementList['olap_name'][\strtolower($element_name)];
+        return $this->elementLookupByName[\strtolower($element_name)];
     }
 
     /**
@@ -1017,7 +1022,7 @@ class Dimension implements IBase
             throw new \InvalidArgumentException('Unknown element ID '.$element_id.' given.');
         }
 
-        return $this->elementList['olap_id'][$element_id];
+        return $this->elementLookupByID[$element_id];
     }
 
     /**
@@ -1047,12 +1052,12 @@ class Dimension implements IBase
     public function getElementNameFromId(int $elementId): string
     {
         // unknown elementID requested
-        if (!isset($this->elementList['olap_id'][$elementId][1])) {
+        if (!isset($this->elementLookupByID[$elementId][1])) {
             throw new \InvalidArgumentException('Name for unknown element ID '.$elementId.' from dimension '.
                 $this->getName().' requested.');
         }
 
-        return $this->elementList['olap_id'][$elementId][1];
+        return $this->elementLookupByID[$elementId][1];
     }
 
     /**
@@ -1060,15 +1065,11 @@ class Dimension implements IBase
      */
     public function getFirstElement(): ?string
     {
-        $this->elementList['olap_name'] = $this->elementList['olap_name'] ?? [];
-
-        \reset($this->elementList['olap_name']);
-
-        if (null === ($return = \key($this->elementList['olap_name']))) {
-            return null;
+        if (null !== ($first_key = \array_key_first($this->elementLookupByID))) {
+            return (string) $this->elementLookupByID[$first_key][1];
         }
 
-        return (string) $return;
+        return null;
     }
 
     /**
@@ -1226,7 +1227,7 @@ class Dimension implements IBase
      */
     public function hasElementById(int $element_id): bool
     {
-        return isset($this->elementList['olap_id'][$element_id]);
+        return isset($this->elementLookupByID[$element_id]);
     }
 
     /**
@@ -1236,7 +1237,7 @@ class Dimension implements IBase
      */
     public function hasElementByName(string $element_name): bool
     {
-        return isset($this->elementList['olap_name'][\strtolower($element_name)]);
+        return isset($this->elementLookupByName[\strtolower($element_name)]);
     }
 
     /**
@@ -1256,35 +1257,34 @@ class Dimension implements IBase
      */
     public function listCubes(): array
     {
-        // @todo improve performance - it's very slow
+        // @todo improve performance - use of in_array()
         $return = [];
-        foreach ($this->getDatabase()->listCubes() as $cube_name) {
-            $cube_record = $this->getDatabase()->getCubeListRecordByName($cube_name);
-
+        foreach ($this->getDatabase()->listCubes() as $cube_record) {
             if (\in_array($this->getOlapObjectId(), \explode(',', $cube_record[3]), false)) {
-                $return[$cube_record[1]] = true;
+                $return[$cube_record[0]] = $cube_record[1];
             }
         }
 
-        return \array_keys($return);
+        return $return;
     }
 
     /**
-     * @param null|bool $cached
+     * @param null|bool                $cached
+     * @param null|array<string,mixed> $options
      *
      * @throws \Exception
      *
-     * @return null|array<string,array<int|string,array<string>|string>>
+     * @return null|array<int,array<string>>
      */
-    public function listElements(?bool $cached = null): ?array
+    public function listElements(?bool $cached = null, ?array $options = null): ?array
     {
         $cached = $cached ?? true;
 
-        if (true === $cached && null !== $this->elementList) {
-            return $this->elementList;
-        }
+        $options = (array) $options;
 
-        $this->elementList = [];
+        if (true === $cached && null !== $this->elementLookupByID) {
+            return $this->elementLookupByID;
+        }
 
         $element_list = $this->getConnection()->request(self::API_DIMENSION_ELEMENTS, [
             'query' => [
@@ -1296,12 +1296,25 @@ class Dimension implements IBase
             ],
         ]);
 
+        $this->elementLookupByID = [];
+        $this->elementLookupByName = [];
+
         foreach ($element_list as $element_row) {
-            $this->elementList['olap_id'][(int) $element_row[0]] = $element_row;
-            $this->elementList['olap_name'][\strtolower($element_row[1])] = (int) $element_row[0];
+            $this->elementLookupByID[(int) $element_row[0]] = $element_row;
+            $this->elementLookupByName[\strtolower($element_row[1])] = (int) $element_row[0];
         }
 
-        return $this->elementList;
+        // CompatibilityLayer support
+        if ((bool) ($options['palo_compat'] ?? false)) {
+            $return = [];
+            \array_map(static function ($v) use (&$return) {
+                $return[$v[1]] = $v[0];
+            }, $this->elementLookupByID);
+
+            return $return;
+        }
+
+        return $this->elementLookupByID;
     }
 
     /**

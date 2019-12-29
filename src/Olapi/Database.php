@@ -38,14 +38,31 @@ class Database implements IBase
      */
     private array $metaInfo;
 
-    private ?array $dimensionList = null;
-    private ?array $cubeList = null;
+    /**
+     * @var null|array<int,array<string>>
+     */
+    private ?array $cubeLookupByID = null;
+
+    /**
+     * @var null|array<string,int>
+     */
+    private ?array $cubeLookupByName = null;
+
+    /**
+     * @var null|array<int,array<string>>
+     */
+    private ?array $dimensionLookupByID = null;
+
+    /**
+     * @var null|array<string,int>
+     */
+    private ?array $dimensionLookupByName = null;
 
     /**
      * Database constructor.
      *
      * @param Connection $connection
-     * @param array      $metaInfo
+     * @param string[]   $metaInfo
      *
      * @throws \Exception
      */
@@ -57,13 +74,13 @@ class Database implements IBase
         $this->dimensions = new DimensionCollection();
         $this->cubes = new CubeCollection();
 
-        $this->initDimensions();
-        $this->initCubes();
+        $this->listDimensions(false);
+        $this->listCubes(false);
     }
 
     /**
-     * @param string $name
-     * @param array  $dimensionNames
+     * @param string   $name
+     * @param string[] $dimensionNames
      *
      * @throws \Exception
      *
@@ -81,13 +98,12 @@ class Database implements IBase
         ]);
 
         // @todo Database::createCube() - reload cubes
-
         return '1' === ($response[0] ?? '0');
     }
 
     /**
-     * @param string     $dimension_name
-     * @param null|array $options
+     * @param string                   $dimension_name
+     * @param null|array<string,mixed> $options
      *
      * @throws \Exception
      *
@@ -237,19 +253,19 @@ class Database implements IBase
     /**
      * Generates new script for a database.
      *
-     * @param null|array $dimension_names
-     * @param null|array $cube_names
-     * @param null|array $options
+     * @param null|string[]            $dimension_names
+     * @param null|string[]            $cube_names
+     * @param null|array<string,mixed> $options
      *
      * @throws \Exception
      *
-     * @return string
+     * @return null|string
      */
     public function generateScript(
         ?array $dimension_names = null,
         ?array $cube_names = null,
         ?array $options = null
-    ): string {
+    ): ?string {
         $params = ['query' => [
             'database' => $this->getOlapObjectId(),
         ],
@@ -325,7 +341,11 @@ class Database implements IBase
             return '';
         }
 
-        return \stream_get_contents($response);
+        if (false === ($return = \stream_get_contents($response))) {
+            return null;
+        }
+
+        return $return;
     }
 
     /**
@@ -404,7 +424,7 @@ class Database implements IBase
                 $this->getDatabase()->getName());
         }
 
-        return $this->cubeList['olap_name'][\strtolower($cube_name)];
+        return $this->cubeLookupByName[\strtolower($cube_name)];
     }
 
     /**
@@ -414,7 +434,7 @@ class Database implements IBase
      * @throws \Exception
      * @throws \InvalidArgumentException
      *
-     * @return array
+     * @return string[]
      *
      * @see Database::getCubeListRecordByName() alias
      */
@@ -429,17 +449,15 @@ class Database implements IBase
      * @throws \Exception
      * @throws \InvalidArgumentException
      *
-     * @return array
+     * @return string[]
      */
     public function getCubeListRecordById(int $cube_id): array
     {
-        $this->listCubes();
-
         if (!$this->hasCubeById($cube_id)) {
             throw new \InvalidArgumentException('Unknown cube ID '.$cube_id.' given.');
         }
 
-        return $this->cubeList['olap_id'][$cube_id];
+        return $this->cubeLookupByID[$cube_id];
     }
 
     /**
@@ -449,7 +467,7 @@ class Database implements IBase
      * @throws \Exception
      * @throws \InvalidArgumentException
      *
-     * @return array
+     * @return string[]
      */
     public function getCubeListRecordByName(string $cube_name): array
     {
@@ -472,7 +490,7 @@ class Database implements IBase
                 $this->getDatabase()->getName());
         }
 
-        return $this->cubeList['olap_id'][$cube_id][1];
+        return $this->cubeLookupByID[$cube_id][1];
     }
 
     /**
@@ -551,7 +569,7 @@ class Database implements IBase
     public function getDimensionIdFromName(string $dimension_name): int
     {
         if ($this->hasDimensionByName($dimension_name)) {
-            return $this->dimensionList['olap_name'][\strtolower($dimension_name)];
+            return $this->dimensionLookupByName[\strtolower($dimension_name)];
         }
 
         throw new \ErrorException('dimension name '.$dimension_name.' not found in database '.
@@ -563,7 +581,7 @@ class Database implements IBase
      *
      * @throws \Exception
      *
-     * @return array
+     * @return string[]
      *
      * @see Database::getDimensionListRecordByName() alias
      */
@@ -578,17 +596,15 @@ class Database implements IBase
      * @throws \Exception
      * @throws \InvalidArgumentException
      *
-     * @return array
+     * @return string[]
      */
     public function getDimensionListRecordById(int $dimension_id): array
     {
-        $this->listDimensions();
-
         if (!$this->hasDimensionById($dimension_id)) {
             throw new \InvalidArgumentException('Unknown dimension ID '.$dimension_id.' given.');
         }
 
-        return $this->dimensionList['olap_id'][$dimension_id];
+        return $this->dimensionLookupByID[$dimension_id];
     }
 
     /**
@@ -596,11 +612,10 @@ class Database implements IBase
      *
      * @throws \Exception
      *
-     * @return array
+     * @return string[]
      */
     public function getDimensionListRecordByName(string $dimension_name): array
     {
-        $this->listDimensions();
         $dimension_id = $this->getDimensionIdFromName($dimension_name);
 
         return $this->getDimensionListRecordById($dimension_id);
@@ -616,7 +631,7 @@ class Database implements IBase
     public function getDimensionNameFromId(int $dimension_id): string
     {
         if ($this->hasDimensionById($dimension_id)) {
-            return $this->dimensionList['olap_id'][$dimension_id][1];
+            return $this->dimensionLookupByID[$dimension_id][1];
         }
 
         throw new \ErrorException('dimension id '.$dimension_id.' not found in database '.
@@ -671,7 +686,7 @@ class Database implements IBase
      */
     public function hasCubeById(int $cubeId): bool
     {
-        return isset($this->cubeList['olap_id'][$cubeId]);
+        return isset($this->cubeLookupByID[$cubeId]);
     }
 
     /**
@@ -681,7 +696,7 @@ class Database implements IBase
      */
     public function hasCubeByName(string $cubeName): bool
     {
-        return isset($this->cubeList['olap_name'][\strtolower($cubeName)]);
+        return isset($this->cubeLookupByName[\strtolower($cubeName)]);
     }
 
     /**
@@ -703,7 +718,7 @@ class Database implements IBase
      */
     public function hasDimensionById(int $dimension_id): bool
     {
-        return isset($this->dimensionList['olap_id'][$dimension_id]);
+        return isset($this->dimensionLookupByID[$dimension_id]);
     }
 
     /**
@@ -713,13 +728,13 @@ class Database implements IBase
      */
     public function hasDimensionByName(string $dimensionName): bool
     {
-        return isset($this->dimensionList['olap_name'][\strtolower($dimensionName)]);
+        return isset($this->dimensionLookupByName[\strtolower($dimensionName)]);
     }
 
     /**
      * @throws \Exception
      *
-     * @return array
+     * @return string[]
      */
     public function info(): array
     {
@@ -742,71 +757,6 @@ class Database implements IBase
     }
 
     /**
-     * prefetch dimension and cube information.
-     *
-     * @throws \Exception
-     */
-    public function init(): bool
-    {
-        $this->initDimensions();
-        $this->initCubes();
-
-        return true;
-    }
-
-    /**
-     * @throws \Exception
-     *
-     * @return bool
-     */
-    public function initCubes(): bool
-    {
-        // @todo make Database::initCubes() to cast all names to lower case (to work case insensitive)
-        $cube_list = $this->listCubes(false);
-
-        $tmp_cube_list = [
-            'olap_id' => [],
-            'olap_name' => [],
-        ];
-
-        foreach ($cube_list as $cube_row) {
-            $tmp_cube_list['olap_id'][(int) $cube_row[0]] = (array) $cube_row;
-            $tmp_cube_list['olap_name'][\strtolower($cube_row[1])] = (int) $cube_row[0];
-        }
-
-        $this->cubeList = $tmp_cube_list;
-        $this->cubeList['simple'] = \array_flip($this->cubeList['olap_name']);
-
-        return true;
-    }
-
-    /**
-     * @throws \Exception
-     *
-     * @return bool
-     */
-    public function initDimensions(): bool
-    {
-        // @todo make Database::initDimensions() to cast all names to lower case (to work case insensitive)
-        $dimension_list = $this->listDimensions(false);
-
-        $tmp_dim_list = [
-            'olap_id' => [],
-            'olap_name' => [],
-        ];
-
-        foreach ($dimension_list as $dimension_row) {
-            $tmp_dim_list['olap_id'][(int) $dimension_row[0]] = (array) $dimension_row;
-            $tmp_dim_list['olap_name'][\strtolower($dimension_row[1])] = (int) $dimension_row[0];
-        }
-
-        $this->dimensionList = $tmp_dim_list;
-        $this->dimensionList['simple'] = \array_flip($this->dimensionList['olap_name']);
-
-        return true;
-    }
-
-    /**
      * @throws \Exception
      *
      * @return bool
@@ -817,12 +767,12 @@ class Database implements IBase
     }
 
     /**
-     * @param null|bool  $cached
-     * @param null|array $options
+     * @param null|bool                 $cached
+     * @param null|array<string,string> $options
      *
      * @throws \Exception
      *
-     * @return array
+     * @return array<int,array<string>>|array<int,string>
      */
     public function listCubes(?bool $cached = null, ?array $options = null): array
     {
@@ -830,8 +780,8 @@ class Database implements IBase
 
         $options = (array) $options;
 
-        if (true === $cached && null !== $this->cubeList) {
-            return $this->cubeList['simple'];
+        if (true === $cached && null !== $this->cubeLookupByID) {
+            return $this->cubeLookupByID;
         }
 
         $cube_list = $this->getConnection()->request(self::API_DATABASE_CUBES, [
@@ -849,20 +799,33 @@ class Database implements IBase
             ],
         ]);
 
-        if ((bool) ($options['palo_compat'] ?? false)) {
-            return \array_column($cube_list->getArrayCopy(), 1);
+        $this->cubeLookupByID = [];
+        $this->cubeLookupByName = [];
+
+        foreach ($cube_list as $cube_row) {
+            $this->cubeLookupByID[(int) $cube_row[0]] = (array) $cube_row;
+            $this->cubeLookupByName[\strtolower($cube_row[1])] = (int) $cube_row[0];
         }
 
-        return $cube_list->getArrayCopy();
+        if ((bool) ($options['palo_compat'] ?? false)) {
+            $return = [];
+            \array_map(static function ($v) use (&$return) {
+                $return[$v[0]] = $v[1];
+            }, $this->cubeLookupByID);
+
+            return $return;
+        }
+
+        return $this->cubeLookupByID;
     }
 
     /**
-     * @param null|bool  $cached
-     * @param null|array $options
+     * @param null|bool                $cached
+     * @param null|array<string,mixed> $options
      *
      * @throws \Exception
      *
-     * @return array
+     * @return array<int,array<string>>|array<int,string>
      */
     public function listDimensions(?bool $cached = null, ?array $options = null): array
     {
@@ -870,8 +833,8 @@ class Database implements IBase
 
         $options = (array) $options;
 
-        if (true === $cached && null !== $this->dimensionList) {
-            return $this->dimensionList['simple'];
+        if (true === $cached && null !== $this->dimensionLookupByID) {
+            return $this->dimensionLookupByID;
         }
 
         $params = [
@@ -893,11 +856,24 @@ class Database implements IBase
 
         $dimension_list = $this->getConnection()->request(self::API_DATABASE_DIMENSIONS, $params);
 
-        if ((bool) ($options['palo_compat'] ?? false)) {
-            return \array_column($dimension_list->getArrayCopy(), 1);
+        $this->dimensionLookupByID = [];
+        $this->dimensionLookupByName = [];
+
+        foreach ($dimension_list as $dimension_row) {
+            $this->dimensionLookupByID[(int) $dimension_row[0]] = (array) $dimension_row;
+            $this->dimensionLookupByName[\strtolower($dimension_row[1])] = (int) $dimension_row[0];
         }
 
-        return $dimension_list->getArrayCopy();
+        if ((bool) ($options['palo_compat'] ?? false)) {
+            $return = [];
+            \array_map(static function ($v) use (&$return) {
+                $return[$v[0]] = $v[1];
+            }, $this->dimensionLookupByID);
+
+            return $return;
+        }
+
+        return $this->dimensionLookupByID;
     }
 
     /**
@@ -1023,7 +999,7 @@ class Database implements IBase
     }
 
     /**
-     * @param null|array $options
+     * @param null|array<string,string> $options
      *
      * @throws \Exception
      *

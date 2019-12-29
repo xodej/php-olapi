@@ -92,19 +92,29 @@ class Area
             ->listElements()
         ;
 
-        if (null === $element_list || !isset($element_list['olap_name'])) {
+        if (null === $element_list || empty($element_list)) {
             return $this;
         }
 
-        $this->area = (array) $this->area;
+        $element_list = \array_map(static function ($v) {
+            return $v[1];
+        }, $element_list);
 
-        $this->area[$dimension_name] = $element_list['olap_name'];
+        $except_elements = \array_map(static function ($v) {
+            return \strtolower($v);
+        }, $except_elements);
+        $except_elements_flipped = \array_flip($except_elements);
 
-        foreach ($except_elements as $element) {
-            if (isset($this->area[$dimension_name][$element])) {
-                unset($this->area[$dimension_name][$element]);
+        $element_list = \array_filter($element_list, static function ($v) use ($except_elements_flipped) {
+            if (isset($except_elements_flipped[\strtolower($v)])) {
+                return false;
             }
-        }
+
+            return true;
+        });
+
+        $this->area = (array) $this->area;
+        $this->area[$dimension_name] = \array_flip($element_list);
 
         return $this;
     }

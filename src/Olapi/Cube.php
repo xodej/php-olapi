@@ -54,14 +54,21 @@ class Cube implements IBase
     protected Database $database;
     protected bool $persistCachedValues = false;
     private DimensionCollection $dimensions;
+
+    /**
+     * @var array<string,string>
+     */
     private array $cache = [];
+
+    /**
+     * @var array<string,mixed>
+     */
     private array $cachedValues = [];
 
     /**
      * @var string[]
      */
     private array $metaInfo;
-    private ?array $cubeDimensionList = null;
 
     /**
      * Holds the state if caching mode is on.
@@ -76,7 +83,7 @@ class Cube implements IBase
      * Cube constructor.
      *
      * @param Database $database database object
-     * @param array    $metaInfo array of meta information of cube (/cube/info)
+     * @param string[] $metaInfo array of meta information of cube (/cube/info)
      *
      * @throws \Exception
      */
@@ -91,14 +98,14 @@ class Cube implements IBase
     /**
      * Returns an array of cube data based on given request parameters.
      *
-     * @param null|array $requestParameters     array of request parameters
-     * @param null|bool  $show_headers          if true add headers as first array element
-     * @param null|bool  $replace_special_chars if true \t, \r and \n are replaced
-     * @param null|int   $max_rows              number of rows to be returned (default: 10,000)
+     * @param null|array<string,string> $requestParameters     array of request parameters
+     * @param null|bool                 $show_headers          if true add headers as first array element
+     * @param null|bool                 $replace_special_chars if true \t, \r and \n are replaced
+     * @param null|int                  $max_rows              number of rows to be returned (default: 10,000)
      *
      * @throws \ErrorException
      *
-     * @return array
+     * @return array<int,array<string>>
      */
     public function arrayExport(
         ?array $requestParameters = null,
@@ -149,7 +156,7 @@ class Cube implements IBase
     /**
      * Deletes all data, or all data in specified coordinates.
      *
-     * @param null|array $element_list multi-dimensional array of elements to be cleared or all
+     * @param null|array<string,array<string>> $element_list multi-dimensional array of elements to be cleared or all
      *
      * @throws \Exception
      *
@@ -221,11 +228,11 @@ class Cube implements IBase
     /**
      * Copies a cell path or a calculated predictive value to an other cell path.
      *
-     * @param array      $path_sender
-     * @param array      $path_receiver
-     * @param null|bool  $use_rules
-     * @param null|mixed $value
-     * @param null|array $options
+     * @param string[]                  $path_sender
+     * @param string[]                  $path_receiver
+     * @param null|bool                 $use_rules
+     * @param null|mixed                $value
+     * @param null|array<string,string> $options
      *
      * @throws \Exception
      *
@@ -307,9 +314,9 @@ class Cube implements IBase
     /**
      * Creates a new enterprise rule for a cube.
      *
-     * @param string     $definition
-     * @param null|bool  $activate
-     * @param null|array $options
+     * @param string                    $definition
+     * @param null|bool                 $activate
+     * @param null|array<string,string> $options
      *
      * @throws \Exception
      *
@@ -953,7 +960,7 @@ class Cube implements IBase
     /**
      * Shows cube data.
      *
-     * @param null|array $options
+     * @param null|array<string,string> $options
      *
      * @throws \Exception
      *
@@ -996,17 +1003,13 @@ class Cube implements IBase
      */
     public function listDimensions(?bool $show_names = null): array
     {
-        if (null === $this->cubeDimensionList) {
-            $this->cubeDimensionList = \array_map(static function (int $v) {
-                return $v;
-            }, \explode(',', $this->metaInfo[3]));
-        }
+        return \array_map(function (int $v) use ($show_names) {
+            if (true === $show_names) {
+                return $this->getDatabase()->getDimensionNameFromId($v);
+            }
 
-        if (true === $show_names) {
-            return \array_map([$this->getDatabase(), 'getDimensionNameFromId'], $this->cubeDimensionList);
-        }
-
-        return $this->cubeDimensionList;
+            return $v;
+        }, \explode(',', $this->metaInfo[3]));
     }
 
     /**
