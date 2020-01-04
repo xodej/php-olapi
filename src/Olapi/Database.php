@@ -726,6 +726,7 @@ class Database implements IBase
 
         $cube_list = $this->getConnection()->request(self::API_DATABASE_CUBES, $params->asArray());
 
+        $this->cubes = new CubeCollection();
         $this->cubeLookupByID = [];
         $this->cubeLookupByName = [];
 
@@ -766,6 +767,7 @@ class Database implements IBase
 
         $dimension_list = $this->getConnection()->request(self::API_DATABASE_DIMENSIONS, $params->asArray());
 
+        $this->dimensions = new DimensionCollection();
         $this->dimensionLookupByID = [];
         $this->dimensionLookupByName = [];
 

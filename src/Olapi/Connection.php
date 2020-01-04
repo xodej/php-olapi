@@ -786,6 +786,7 @@ class Connection
 
         $database_list = $this->request(self::API_SERVER_DATABASES, $params->asArray());
 
+        $this->databases = new DatabaseCollection();
         $this->databaseLookupByID = [];
         $this->databaseLookupByName = [];
 
@@ -798,7 +799,6 @@ class Connection
     }
 
     /**
-     * @throws GuzzleException
      * @throws \ErrorException
      * @throws \Exception
      *
@@ -1031,7 +1031,6 @@ class Connection
     /**
      * Initializes a connection.
      *
-     * @throws GuzzleException
      * @throws \ErrorException
      *
      * @return self
@@ -1088,7 +1087,7 @@ class Connection
         }
 
         // load database infos
-        $this->listDatabases();
+        $this->listDatabases(false);
 
         return $this;
     }

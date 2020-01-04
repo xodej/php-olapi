@@ -1267,7 +1267,7 @@ class Cube implements IBase
      *
      * @return \stdClass
      */
-    protected function doRawRequest(?ApiCellExportParams $params = null, string $coord_path = null): object
+    protected function doRawRequest(?ApiCellExportParams $params = null, ?string $coord_path = null): object
     {
         // init the return stream with 10MB in memory size
         // if exceeds 10MB it's swapped into file on disk
@@ -1282,52 +1282,20 @@ class Cube implements IBase
         $params->cube = $this->getOlapObjectId();
         $params->blocksize ??= 10000;
 
+        $params->area ??= \implode(',', \array_fill(0, \count($this->listDimensions()), '*'));
+
         $params->use_rules ??= false;
         $params->base_only ??= true;
         $params->skip_empty ??= true;
         $params->type ??= 0;
         $params->show_rule ??= false;
 
-        // if given area is an area object, fetch as array
-        if (isset($request_parameters['area']) && $request_parameters['area'] instanceof Area) {
-            $request_parameters['area'] = $request_parameters['area']->getArea();
-        }
-
-        // set up the request parameter for the API call
-        $req_params = [
-            'query' => [
-                'database' => $this->getDatabase()->getOlapObjectId(),
-                'cube' => $this->getOlapObjectId(),
-                'blocksize' => (int) ($request_parameters['blocksize'] ?? 10000),
-                // @todo Cube::export() - path
-                'area' => $request_parameters['area'] ??
-                \implode(',', \array_fill(0, \count($this->listDimensions()), '*')),
-                // @todo Cube::export() - condition
-                'use_rules' => (int) ($request_parameters['use_rules'] ?? 0),
-                'base_only' => (int) ($request_parameters['base_only'] ?? 1),
-                'skip_empty' => (int) ($request_parameters['skip_empty'] ?? 1),
-                'type' => (int) ($request_parameters['type'] ?? 0),
-                // @todo Cube::export() - properties
-                'show_rule' => (int) ($request_parameters['show_rule'] ?? 0),
-            ],
-        ];
-
-        if (isset($request_parameters['condition'])) {
-            $req_params['query']['condition'] = $request_parameters['condition'];
-        }
-
-        if (isset($request_parameters['properties'])) {
-            $req_params['query']['properties'] = $request_parameters['properties'];
-        }
-
         // use the path as offset only for
         // subsequent runs not the first run
-        if (null !== $coord_path) {
-            $req_params['query']['path'] = $coord_path;
-        }
+        $params->path ??= $coord_path;
 
         // make the API call and fetch the response as stream resource
-        $stream = $this->getConnection()->requestRaw(self::API_CELL_EXPORT, $req_params);
+        $stream = $this->getConnection()->requestRaw(self::API_CELL_EXPORT, $params->asArray());
 
         if (null === $stream) {
             throw new \ErrorException('HTTP request to OLAP resulted in error');
