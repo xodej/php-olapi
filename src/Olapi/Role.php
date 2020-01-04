@@ -162,6 +162,11 @@ class Role extends Element
             $right_object_values[] = strtoupper($default_permission);
         }
 
+        // nothing to write to cube
+        if (0 === \count($right_object_values)) {
+            return false;
+        }
+
         return $this->getConnection()
             ->getSystemDatabase()
             ->getCubeByName('#_ROLE_RIGHT_OBJECT')

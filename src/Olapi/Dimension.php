@@ -90,7 +90,7 @@ class Dimension implements IBase
 
         $this->elements = new ElementCollection();
 
-        $this->init();
+        $this->listElements(false);
     }
 
     /**
@@ -878,7 +878,7 @@ class Dimension implements IBase
     public function getElementIdFromName(string $element_name): int
     {
         if (!$this->hasElementByName($element_name)) {
-            throw new \InvalidArgumentException('ID for unknown element '.$element_name.' from dimension '.
+            throw new \InvalidArgumentException('ID for unknown element `'.$element_name.'` from dimension '.
                 $this->getName().' requested.');
         }
 
@@ -964,7 +964,6 @@ class Dimension implements IBase
      */
     public function getElementListRecordById(int $element_id): array
     {
-        $this->listElements();
         if (!$this->hasElementById($element_id)) {
             throw new \InvalidArgumentException('Unknown element ID '.$element_id.' given.');
         }
@@ -981,7 +980,6 @@ class Dimension implements IBase
      */
     public function getElementListRecordByName(string $element_name): array
     {
-        $this->listElements();
         if (!$this->hasElementByName($element_name)) {
             throw new \InvalidArgumentException('Unknown element name '.$element_name.' given.');
         }
@@ -1238,6 +1236,7 @@ class Dimension implements IBase
 
         $element_list = $this->getConnection()->request(self::API_DIMENSION_ELEMENTS, $params->asArray());
 
+        $this->elements = new ElementCollection();
         $this->elementLookupByID = [];
         $this->elementLookupByName = [];
 
@@ -1705,13 +1704,5 @@ class Dimension implements IBase
         $return .= '</node>';
 
         return $return;
-    }
-
-    /**
-     * @throws \Exception
-     */
-    private function init(): void
-    {
-        $this->listElements();
     }
 }

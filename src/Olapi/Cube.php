@@ -1141,6 +1141,17 @@ class Cube implements IBase
      */
     public function setBulk(array $values, array $dims_multi, ?ApiCellReplaceBulkParams $params = null): bool
     {
+        $count_values = \count($values);
+        $count_paths = \count($dims_multi);
+
+        if ($count_values !== $count_paths) {
+            throw new \InvalidArgumentException(sprintf('Cube::setBulk() requires equal amount of paths and values: received %d paths but %s values', $count_paths, $count_values));
+        }
+
+        if (0 === $count_values || 0 === $count_paths) {
+            throw new \InvalidArgumentException(sprintf('Cube::setBulk() requires non-zero amount of paths and values: received %d paths and %s values', $count_paths, $count_values));
+        }
+
         $params ??= new ApiCellReplaceBulkParams();
         $params->database = $this->getDatabase()->getOlapObjectId();
         $params->cube = $this->getOlapObjectId();

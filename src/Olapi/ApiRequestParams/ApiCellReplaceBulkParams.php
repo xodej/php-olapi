@@ -47,7 +47,7 @@ class ApiCellReplaceBulkParams extends RequestParams
      *
      * Jedox-Doc type: path
      */
-    public ?string $paths = null;
+    public string $paths;
 
     /**
      * Colon separated list of paths. Each path is a comma separated list of
@@ -64,7 +64,7 @@ class ApiCellReplaceBulkParams extends RequestParams
      *
      * Jedox-Doc type: double/string
      */
-    public ?string $values = null;
+    public string $values;
 
     /**
      * If 0 (the default), then a numeric value given is stored in the cube. If 1,

@@ -819,8 +819,6 @@ class Connection
     public function reload(): self
     {
         $this->databases = new DatabaseCollection();
-        $this->databaseLookupByID = [];
-        $this->databaseLookupByName = [];
         $this->listDatabases(false);
 
         return $this;
@@ -886,7 +884,7 @@ class Connection
 
             return $this->parseCsvResponse($response);
         } catch (\Exception $exception) {
-            \file_put_contents('php://stderr', $exception->getMessage());
+            \file_put_contents('php://stderr', $exception->getMessage().PHP_EOL.$exception->getTrace());
         }
 
         return new GenericCollection();

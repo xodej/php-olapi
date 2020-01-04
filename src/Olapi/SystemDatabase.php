@@ -242,6 +242,11 @@ class SystemDatabase extends Database
             $paths[] = [$account, 'licenses'];
         }
 
+        // nothing to write to cube
+        if (0 === \count($values)) {
+            return false;
+        }
+
         return $this->getConnection()
             ->getSystemDatabase()
             ->getCubeByName('#_USER_USER_PROPERTIES')

@@ -144,6 +144,11 @@ class User extends Element
             $paths[] = [$this->getName(), $new_group];
         }
 
+        // nothing to write to cube
+        if (0 === \count($values)) {
+            return false;
+        }
+
         return $this->getConnection()
             ->getSystemDatabase()
             ->getCubeByName('#_USER_GROUP')
@@ -177,6 +182,11 @@ class User extends Element
         foreach ($new_groups as $new_group) {
             $values[] = 1;
             $paths[] = [$this->getName(), $new_group];
+        }
+
+        // nothing to write to cube
+        if (0 === \count($values)) {
+            return false;
         }
 
         return $this->getConnection()
@@ -282,6 +292,11 @@ class User extends Element
         foreach ($remove_groups as $remove_group) {
             $values[] = null;
             $paths[] = [$this->getName(), $remove_group];
+        }
+
+        // nothing to write to cube
+        if (0 === \count($values)) {
+            return false;
         }
 
         return $this->getConnection()

@@ -466,7 +466,7 @@ class Database implements IBase
         }
 
         // dimension not yet initialized
-        if (!$use_cache || !isset($this->dimensions[$dimension_id])) {
+        if (!isset($this->dimensions[$dimension_id]) || !$use_cache) {
             $this->dimensions[$dimension_id] = new Dimension($this, $this->getDimensionListRecordById($dimension_id));
         }
 
