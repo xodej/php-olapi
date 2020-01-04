@@ -4,6 +4,21 @@ declare(strict_types=1);
 
 namespace Xodej\Olapi;
 
+use Xodej\Olapi\ApiRequestParams\ApiCubeCreateParams;
+use Xodej\Olapi\ApiRequestParams\ApiCubeDestroyParams;
+use Xodej\Olapi\ApiRequestParams\ApiCubeRenameParams;
+use Xodej\Olapi\ApiRequestParams\ApiDatabaseCubesParams;
+use Xodej\Olapi\ApiRequestParams\ApiDatabaseDimensionsParams;
+use Xodej\Olapi\ApiRequestParams\ApiDatabaseGenerateScriptParams;
+use Xodej\Olapi\ApiRequestParams\ApiDatabaseInfoParams;
+use Xodej\Olapi\ApiRequestParams\ApiDatabaseLoadParams;
+use Xodej\Olapi\ApiRequestParams\ApiDatabaseRebuildMarkersParams;
+use Xodej\Olapi\ApiRequestParams\ApiDatabaseSaveParams;
+use Xodej\Olapi\ApiRequestParams\ApiDatabaseUnloadParams;
+use Xodej\Olapi\ApiRequestParams\ApiDimensionCreateParams;
+use Xodej\Olapi\ApiRequestParams\ApiDimensionDestroyParams;
+use Xodej\Olapi\ApiRequestParams\ApiDimensionRenameParams;
+
 /**
  * Class Database.
  */
@@ -15,12 +30,12 @@ class Database implements IBase
 
     public const API_DATABASE_CUBES = '/database/cubes';
     public const API_DATABASE_DIMENSIONS = '/database/dimensions';
+    public const API_DATABASE_GENERATE_SCRIPT = '/database/generate_script';
     public const API_DATABASE_INFO = '/database/info';
     public const API_DATABASE_LOAD = '/database/load';
+    public const API_DATABASE_REBUILD_MARKERS = '/database/rebuild_markers';
     public const API_DATABASE_SAVE = '/database/save';
     public const API_DATABASE_UNLOAD = '/database/unload';
-    public const API_DATABASE_REBUILD_MARKERS = '/database/rebuild_markers';
-    public const API_DATABASE_GENERATE_SCRIPT = '/database/generate_script';
 
     public const API_DIMENSION_CREATE = '/dimension/create';
     public const API_DIMENSION_DESTROY = '/dimension/destroy';
@@ -88,39 +103,32 @@ class Database implements IBase
      */
     public function createCube(string $name, array $dimensionNames): bool
     {
-        $response = $this->getConnection()->request(self::API_CUBE_CREATE, [
-            'query' => [
-                'database' => $this->getOlapObjectId(),
-                'new_name' => $name,
-                'name_dimensions' => \implode(',', $dimensionNames),
-                'type' => 0, // default
-            ],
-        ]);
+        $params = new ApiCubeCreateParams();
+        $params->database = $this->getOlapObjectId();
+        $params->new_name = $name;
+        $params->name_dimensions = \implode(',', $dimensionNames);
+
+        $response = $this->getConnection()->request(self::API_CUBE_CREATE, $params->asArray());
 
         // @todo Database::createCube() - reload cubes
-        return '1' === ($response[0] ?? '0');
+        return '1' === ($response[0][0] ?? '0');
     }
 
     /**
-     * @param string                   $dimension_name
-     * @param null|array<string,mixed> $options
+     * @param string                        $dimension_name
+     * @param null|ApiDimensionCreateParams $params
      *
      * @throws \Exception
      *
      * @return bool
      */
-    public function createDimension(string $dimension_name, ?array $options = null): bool
+    public function createDimension(string $dimension_name, ?ApiDimensionCreateParams $params = null): bool
     {
-        $options = (array) $options;
+        $params ??= new ApiDimensionCreateParams();
+        $params->database = $this->getOlapObjectId();
+        $params->new_name = $dimension_name;
 
-        $response = $this->getConnection()->request(self::API_DIMENSION_CREATE, [
-            'query' => [
-                'database' => $this->getOlapObjectId(),
-                'new_name' => $dimension_name,
-                'type' => (int) ($options['type'] ?? 0), // default 0
-                'mode' => (int) ($options['mode'] ?? 0), // default 0 (since Jedox 2019.3)
-            ],
-        ]);
+        $response = $this->getConnection()->request(self::API_DIMENSION_CREATE, $params->asArray());
 
         // @todo Database::createDimension() - reload dimensions
         return \is_numeric($response[0][0] ?? 'X');
@@ -153,24 +161,15 @@ class Database implements IBase
             throw new \InvalidArgumentException('Unknown cube ID '.$cube_id.' given.');
         }
 
-        $response = $this->getConnection()->request(self::API_CUBE_DESTROY, [
-            'query' => [
-                'database' => $this->getOlapObjectId(),
-                'cube' => $cube_id,
-            ],
-        ]);
+        $params = new ApiCubeDestroyParams();
+        $params->database = $this->getOlapObjectId();
+        $params->cube = $cube_id;
 
-        $flag_successful = ('1' === ($response[0][0] ?? '0'));
+        $response = $this->getConnection()->request(self::API_CUBE_DESTROY, $params->asArray());
 
-        if ($flag_successful) {
-            if (isset($this->cubes[$cube_id])) {
-                unset($this->cubes[$cube_id]);
-            }
-            // reload cubes w/o caching
-            $this->listCubes(false);
-        }
+        $this->listCubes(false);
 
-        return $flag_successful;
+        return '1' === ($response[0][0] ?? '0');
     }
 
     /**
@@ -218,20 +217,15 @@ class Database implements IBase
             throw new \InvalidArgumentException('Unknown dimension ID '.$dimension_id.' given.');
         }
 
-        $response = $this->getConnection()->request(self::API_DIMENSION_DESTROY, [
-            'query' => [
-                'database' => $this->getOlapObjectId(),
-                'dimension' => $dimension_id,
-            ],
-        ]);
+        $params = new ApiDimensionDestroyParams();
+        $params->database = $this->getOlapObjectId();
+        $params->dimension = $dimension_id;
 
-        // delete references of deleted dimension in data model
-        $tmp_object = $this->dimensions[$dimension_id];
-        unset($tmp_object, $this->dimensions[$dimension_id]);
+        $response = $this->getConnection()->request(self::API_DIMENSION_DESTROY, $params->asArray());
 
-        // @todo Database::deleteDimension() - reload dimensions
+        $this->listDimensions(false);
 
-        return '1' === ($response[0] ?? '0');
+        return '1' === ($response[0][0] ?? '0');
     }
 
     /**
@@ -253,9 +247,9 @@ class Database implements IBase
     /**
      * Generates new script for a database.
      *
-     * @param null|string[]            $dimension_names
-     * @param null|string[]            $cube_names
-     * @param null|array<string,mixed> $options
+     * @param null|string[]                        $dimension_names
+     * @param null|string[]                        $cube_names
+     * @param null|ApiDatabaseGenerateScriptParams $params
      *
      * @throws \Exception
      *
@@ -264,78 +258,17 @@ class Database implements IBase
     public function generateScript(
         ?array $dimension_names = null,
         ?array $cube_names = null,
-        ?array $options = null
+        ?ApiDatabaseGenerateScriptParams $params = null
     ): ?string {
-        $params = ['query' => [
-            'database' => $this->getOlapObjectId(),
-        ],
-        ];
-
+        $params = $params ?? new ApiDatabaseGenerateScriptParams();
+        $params->database = $this->getOlapObjectId();
         if (null !== $dimension_names) {
-            $params['query']['name_dimensions'] = \implode(',', $dimension_names);
+            $params->name_dimensions = \implode(',', $dimension_names);
         }
-
         if (null !== $cube_names) {
-            $params['query']['name_cubes'] = \implode(',', $cube_names);
+            $params->name_cubes = \implode(',', $cube_names);
         }
-
-        if (isset($options['include_elements'])) {
-            $params['query']['include_elements'] = $options['include_elements'];
-        }
-
-        if (isset($options['complete'])) {
-            $params['query']['complete'] = $options['complete'];
-        }
-
-        if (isset($options['show_attribute'])) {
-            $params['query']['show_attribute'] = $options['show_attribute'];
-        }
-
-        if (isset($options['include_local_subsets'])) {
-            $params['query']['include_local_subsets'] = $options['include_local_subsets'];
-        }
-
-        if (isset($options['include_global_subsets'])) {
-            $params['query']['include_global_subsets'] = $options['include_global_subsets'];
-        }
-
-        if (isset($options['include_local_views'])) {
-            $params['query']['include_local_views'] = $options['include_local_views'];
-        }
-
-        if (isset($options['include_global_views'])) {
-            $params['query']['include_global_views'] = $options['include_global_views'];
-        }
-
-        if (isset($options['include_dimension_rights'])) {
-            $params['query']['include_dimension_rights'] = $options['include_dimension_rights'];
-        }
-
-        if (isset($options['include_cube_rights'])) {
-            $params['query']['include_cube_rights'] = $options['include_cube_rights'];
-        }
-
-        if (isset($options['clear'])) {
-            $params['query']['clear'] = $options['clear'];
-        }
-
-        if (isset($options['languages'])) {
-            $params['query']['languages'] = $options['languages'];
-        }
-
-        if (isset($options['show_rule'])) {
-            $params['query']['show_rule'] = $options['show_rule'];
-        }
-
-        if (isset($options['script_create_clause'])) {
-            $params['query']['script_create_clause'] = $options['script_create_clause'];
-        }
-
-        if (isset($options['script_modify_clause'])) {
-            $params['query']['script_modify_clause'] = $options['script_modify_clause'];
-        }
-
-        $response = $this->getConnection()->requestRaw(self::API_DATABASE_GENERATE_SCRIPT, $params);
+        $response = $this->getConnection()->requestRaw(self::API_DATABASE_GENERATE_SCRIPT, $params->asArray());
 
         if (null === $response) {
             return '';
@@ -568,12 +501,12 @@ class Database implements IBase
      */
     public function getDimensionIdFromName(string $dimension_name): int
     {
-        if ($this->hasDimensionByName($dimension_name)) {
-            return $this->dimensionLookupByName[\strtolower($dimension_name)];
+        if (!$this->hasDimensionByName($dimension_name)) {
+            throw new \ErrorException('dimension name '.$dimension_name.' not found in database '.
+                $this->getDatabase()->getName());
         }
 
-        throw new \ErrorException('dimension name '.$dimension_name.' not found in database '.
-            $this->getDatabase()->getName());
+        return $this->dimensionLookupByName[\strtolower($dimension_name)];
     }
 
     /**
@@ -630,12 +563,12 @@ class Database implements IBase
      */
     public function getDimensionNameFromId(int $dimension_id): string
     {
-        if ($this->hasDimensionById($dimension_id)) {
-            return $this->dimensionLookupByID[$dimension_id][1];
+        if (!$this->hasDimensionById($dimension_id)) {
+            throw new \ErrorException('dimension id '.$dimension_id.' not found in database '.
+                $this->getDatabase()->getName());
         }
 
-        throw new \ErrorException('dimension id '.$dimension_id.' not found in database '.
-            $this->getDatabase()->getName());
+        return $this->dimensionLookupByID[$dimension_id][1];
     }
 
     /**
@@ -646,7 +579,7 @@ class Database implements IBase
      *
      * @return Database
      */
-    public static function getInstance(Connection $connection, string $database_name): Database
+    public static function getInstance(Connection $connection, string $database_name): self
     {
         return $connection->getDatabaseByName($database_name);
     }
@@ -738,14 +671,12 @@ class Database implements IBase
      */
     public function info(): array
     {
-        $database_info = $this->getConnection()->request(self::API_DATABASE_INFO, [
-            'query' => [
-                'database' => $this->getOlapObjectId(),
-                'show_permission' => 1,
-                'show_counters' => 1,
-                'mode' => 0,
-            ],
-        ]);
+        $params = new ApiDatabaseInfoParams();
+        $params->database = $this->getOlapObjectId();
+        $params->show_permission = true;
+        $params->show_counters = true;
+
+        $database_info = $this->getConnection()->request(self::API_DATABASE_INFO, $params->asArray());
 
         if (!isset($database_info[0])) {
             throw new \ErrorException('database information not found');
@@ -767,37 +698,33 @@ class Database implements IBase
     }
 
     /**
-     * @param null|bool                 $cached
-     * @param null|array<string,string> $options
+     * @param null|bool                   $cached
+     * @param null|ApiDatabaseCubesParams $params
      *
      * @throws \Exception
      *
      * @return array<int,array<string>>|array<int,string>
      */
-    public function listCubes(?bool $cached = null, ?array $options = null): array
+    public function listCubes(?bool $cached = null, ?ApiDatabaseCubesParams $params = null): array
     {
         $cached = $cached ?? true;
-
-        $options = (array) $options;
 
         if (true === $cached && null !== $this->cubeLookupByID) {
             return $this->cubeLookupByID;
         }
 
-        $cube_list = $this->getConnection()->request(self::API_DATABASE_CUBES, [
-            'query' => [
-                'database' => $this->getOlapObjectId(),
-                'show_normal' => $options['show_normal'] ?? 1,
-                'show_system' => $options['show_system'] ?? 1,
-                'show_attribute' => $options['show_attribute'] ?? 1,
-                'show_info' => $options['show_info'] ?? 1,
-                'show_gputype' => $options['show_gputype'] ?? 1,
-                'show_gpuflag' => $options['show_gpuflag'] ?? 1,
-                'show_audit' => $options['show_audit'] ?? 1,
-                'show_permission' => $options['show_permission'] ?? 1,
-                'show_zero' => 1,
-            ],
-        ]);
+        $params ??= new ApiDatabaseCubesParams();
+        $params->database = $this->getOlapObjectId();
+
+        $params->show_normal ??= true;
+        $params->show_system ??= true;
+        $params->show_attribute ??= true;
+        $params->show_info ??= true;
+        $params->show_gpuflag ??= true;
+        $params->show_audit ??= true;
+        $params->show_permission ??= true;
+
+        $cube_list = $this->getConnection()->request(self::API_DATABASE_CUBES, $params->asArray());
 
         $this->cubeLookupByID = [];
         $this->cubeLookupByName = [];
@@ -807,54 +734,37 @@ class Database implements IBase
             $this->cubeLookupByName[\strtolower($cube_row[1])] = (int) $cube_row[0];
         }
 
-        if ((bool) ($options['palo_compat'] ?? false)) {
-            $return = [];
-            \array_map(static function ($v) use (&$return) {
-                $return[$v[0]] = $v[1];
-            }, $this->cubeLookupByID);
-
-            return $return;
-        }
-
         return $this->cubeLookupByID;
     }
 
     /**
-     * @param null|bool                $cached
-     * @param null|array<string,mixed> $options
+     * @param null|bool                        $cached
+     * @param null|ApiDatabaseDimensionsParams $params
      *
      * @throws \Exception
      *
      * @return array<int,array<string>>|array<int,string>
      */
-    public function listDimensions(?bool $cached = null, ?array $options = null): array
+    public function listDimensions(?bool $cached = null, ?ApiDatabaseDimensionsParams $params = null): array
     {
         $cached = $cached ?? true;
-
-        $options = (array) $options;
 
         if (true === $cached && null !== $this->dimensionLookupByID) {
             return $this->dimensionLookupByID;
         }
 
-        $params = [
-            'query' => [
-                'database' => $this->getOlapObjectId(),
-                'show_normal' => $options['show_normal'] ?? 1,
-                'show_system' => $options['show_system'] ?? 1,
-                'show_attribute' => $options['show_attribute'] ?? 1,
-                'show_info' => $options['show_info'] ?? 1,
-                'show_permission' => $options['show_permission'] ?? 1,
-                'show_default_elements' => $options['show_default_elements'] ?? 1,
-                'show_count_by_type' => $options['show_count_by_type'] ?? 1,
-            ],
-        ];
+        $params ??= new ApiDatabaseDimensionsParams();
+        $params->database = $this->getOlapObjectId();
 
-        if (isset($options['name_element'])) {
-            $params['query']['name_element'] = $options['name_element'];
-        }
+        $params->show_normal ??= true;
+        $params->show_system ??= true;
+        $params->show_attribute ??= true;
+        $params->show_info ??= true;
+        $params->show_permission ??= true;
+        $params->show_default_elements ??= true;
+        $params->show_count_by_type ??= true;
 
-        $dimension_list = $this->getConnection()->request(self::API_DATABASE_DIMENSIONS, $params);
+        $dimension_list = $this->getConnection()->request(self::API_DATABASE_DIMENSIONS, $params->asArray());
 
         $this->dimensionLookupByID = [];
         $this->dimensionLookupByName = [];
@@ -862,15 +772,6 @@ class Database implements IBase
         foreach ($dimension_list as $dimension_row) {
             $this->dimensionLookupByID[(int) $dimension_row[0]] = (array) $dimension_row;
             $this->dimensionLookupByName[\strtolower($dimension_row[1])] = (int) $dimension_row[0];
-        }
-
-        if ((bool) ($options['palo_compat'] ?? false)) {
-            $return = [];
-            \array_map(static function ($v) use (&$return) {
-                $return[$v[0]] = $v[1];
-            }, $this->dimensionLookupByID);
-
-            return $return;
         }
 
         return $this->dimensionLookupByID;
@@ -883,13 +784,12 @@ class Database implements IBase
      */
     public function load(): bool
     {
-        $response = $this->getConnection()->request(self::API_DATABASE_LOAD, [
-            'query' => [
-                'database' => $this->getOlapObjectId(),
-            ],
-        ]);
+        $params = new ApiDatabaseLoadParams();
+        $params->database = $this->getOlapObjectId();
 
-        return '1' === ($response[0] ?? '0');
+        $response = $this->getConnection()->request(self::API_DATABASE_LOAD, $params->asArray());
+
+        return '1' === ($response[0][0] ?? '0');
     }
 
     /**
@@ -899,13 +799,12 @@ class Database implements IBase
      */
     public function rebuildMarkers(): bool
     {
-        $response = $this->getConnection()->request(self::API_DATABASE_REBUILD_MARKERS, [
-            'query' => [
-                'database' => $this->getOlapObjectId(),
-            ],
-        ]);
+        $params = new ApiDatabaseRebuildMarkersParams();
+        $params->database = $this->getOlapObjectId();
 
-        return '1' === ($response[0] ?? '0');
+        $response = $this->getConnection()->request(self::API_DATABASE_REBUILD_MARKERS, $params->asArray());
+
+        return '1' === ($response[0][0] ?? '0');
     }
 
     /**
@@ -913,7 +812,7 @@ class Database implements IBase
      *
      * @return Database
      */
-    public function reload(): Database
+    public function reload(): self
     {
         return $this->getConnection()->reload()
             ->getDatabaseById($this->getDatabase()->getOlapObjectId())
@@ -936,26 +835,21 @@ class Database implements IBase
             throw new \InvalidArgumentException('Unknown cube name '.$name_old.' given.');
         }
 
-        $response = $this->getConnection()->request(self::API_CUBE_RENAME, [
-            'query' => [
-                'database' => $this->getOlapObjectId(),
-                'name_cube' => $name_old,
-                'new_name' => $name_new,
-            ],
-        ]);
+        $params = new ApiCubeRenameParams();
+        $params->database = $this->getOlapObjectId();
+        $params->cube = $this->getCubeIdFromName($name_old);
+        $params->new_name = $name_new;
 
-        if ('0' === ($response[0] ?? '0')) {
+        $response = $this->getConnection()->request(self::API_CUBE_RENAME, $params->asArray());
+
+        if ('0' === ($response[0][0] ?? '0')) {
             throw new \ErrorException('Cube rename from '.$name_old.' to '.$name_new.' failed');
         }
 
         // @todo throw exception if rename was not successful
 
         // delete/replace references of old cube in data model
-        $cube_id = $this->getCubeIdFromName($name_old);
-        $cube_old = $this->getCubeById($cube_id);
-        unset($cube_old, $this->cubes[$cube_id]);
-
-        // @todo Database::renameCube() - reload database/cubes??
+        $this->listCubes(false);
 
         return $this->getCubeByName($name_new);
     }
@@ -976,78 +870,38 @@ class Database implements IBase
             throw new \InvalidArgumentException('Unknown dimension name '.$name_old.' given.');
         }
 
-        $response = $this->getConnection()->request(self::API_DIMENSION_RENAME, [
-            'query' => [
-                'database' => $this->getOlapObjectId(),
-                'name_dimension' => $name_old,
-                'new_name' => $name_new,
-            ],
-        ]);
+        $params = new ApiDimensionRenameParams();
+        $params->database = $this->getOlapObjectId();
+        $params->dimension = $this->getDimensionIdFromName($name_old);
+        $params->new_name = $name_new;
 
-        if ('0' === ($response[0] ?? '0')) {
+        $response = $this->getConnection()->request(self::API_DIMENSION_RENAME, $params->asArray());
+
+        if ('0' === ($response[0][0] ?? '0')) {
             throw new \ErrorException('Dimension rename from '.$name_old.' to '.$name_new.' failed');
         }
 
         // delete/replace references of old dimension in data model
-        $dimension_id = $this->getDimensionIdFromName($name_old);
-        $dimension_old = $this->getDimensionById($dimension_id);
-        unset($dimension_old, $this->dimensions[$dimension_id]);
-
-        // @TODO Database::renameDimension() - reload databases/dimensions??
+        $this->listDimensions(false);
 
         return $this->getDimensionByName($name_new);
     }
 
     /**
-     * @param null|array<string,string> $options
+     * @param null|ApiDatabaseSaveParams $params
      *
      * @throws \Exception
      *
      * @return bool
      */
-    public function save(?array $options = null): bool
+    public function save(?ApiDatabaseSaveParams $params = null): bool
     {
-        $params = [
-            'query' => [
-                'database' => $this->getOlapObjectId(),
-            ],
-        ];
+        $params ??= new ApiDatabaseSaveParams();
+        $params->database = $this->getOlapObjectId();
 
-        if (isset($options['external_identifier'])) {
-            $params['query']['external_identifier'] = $options['external_identifier'];
-        }
+        $response = $this->getConnection()->request(self::API_DATABASE_SAVE, $params->asArray());
 
-        if (isset($options['mode'])) {
-            $params['query']['mode'] = $options['mode'];
-        }
-
-        if (isset($options['show_system'])) {
-            $params['query']['show_system'] = $options['show_system'];
-        }
-
-        if (isset($options['include_archive'])) {
-            $params['query']['include_archive'] = $options['include_archive'];
-        }
-
-        if (isset($options['show_audit'])) {
-            $params['query']['show_audit'] = $options['show_audit'];
-        }
-
-        if (isset($options['include_csv'])) {
-            $params['query']['include_csv'] = $options['include_csv'];
-        }
-
-        if (isset($options['password'])) {
-            $params['query']['password'] = $options['password'];
-        }
-
-        if (isset($options['type'])) {
-            $params['query']['type'] = $options['type'];
-        }
-
-        $response = $this->getConnection()->request(self::API_DATABASE_SAVE, $params);
-
-        return '1' === ($response[0] ?? '0');
+        return '1' === ($response[0][0] ?? '0');
     }
 
     /**
@@ -1057,12 +911,11 @@ class Database implements IBase
      */
     public function unload(): bool
     {
-        $response = $this->getConnection()->request(self::API_DATABASE_UNLOAD, [
-            'query' => [
-                'database' => $this->getOlapObjectId(),
-            ],
-        ]);
+        $params = new ApiDatabaseUnloadParams();
+        $params->database = $this->getOlapObjectId();
 
-        return '1' === ($response[0] ?? '0');
+        $response = $this->getConnection()->request(self::API_DATABASE_UNLOAD, $params->asArray());
+
+        return '1' === ($response[0][0] ?? '0');
     }
 }

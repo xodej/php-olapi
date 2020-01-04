@@ -4,6 +4,19 @@ declare(strict_types=1);
 
 namespace Xodej\Olapi;
 
+use Xodej\Olapi\ApiRequestParams\ApiCellExportParams;
+use Xodej\Olapi\ApiRequestParams\ApiDimensionClearParams;
+use Xodej\Olapi\ApiRequestParams\ApiDimensionDfilterParams;
+use Xodej\Olapi\ApiRequestParams\ApiDimensionElementsParams;
+use Xodej\Olapi\ApiRequestParams\ApiDimensionGenerateScriptParams;
+use Xodej\Olapi\ApiRequestParams\ApiDimensionInfoParams;
+use Xodej\Olapi\ApiRequestParams\ApiElementAppendParams;
+use Xodej\Olapi\ApiRequestParams\ApiElementCreateBulkParams;
+use Xodej\Olapi\ApiRequestParams\ApiElementCreateParams;
+use Xodej\Olapi\ApiRequestParams\ApiElementDestroyBulkParams;
+use Xodej\Olapi\ApiRequestParams\ApiElementDestroyParams;
+use Xodej\Olapi\ApiRequestParams\ApiElementReplaceBulkParams;
+
 /**
  * Class Dimension.
  */
@@ -98,21 +111,18 @@ class Dimension implements IBase
         ?int $element_type = null,
         ?float $consolidation_factor = null
     ): array {
-        // @todo Dimension::addElement()
+        // @todo implement Dimension::addElement()
         $element_type = $element_type ?? Element::TYPE_NUMERIC;
         $consolidation_factor = $consolidation_factor ?? 1.0;
 
-        $response = $this->getConnection()->request(self::API_ELEMENT_CREATE, [
-            'query' => [
-                'database' => $this->getDatabase()->getOlapObjectId(),
-                'dimension' => $this->getOlapObjectId(),
-                'new_name' => $elementName,
-                'type' => $element_type,
-                'children' => '',
-                'weights' => '',
-                'squash_list' => '1',
-            ],
-        ]);
+        $params = new ApiElementCreateParams();
+        $params->database = $this->getDatabase()->getOlapObjectId();
+        $params->dimension = $this->getOlapObjectId();
+        $params->new_name = $elementName;
+        $params->type = $element_type;
+        $params->squash_list = true;
+
+        $response = $this->getConnection()->request(self::API_ELEMENT_CREATE, $params->asArray());
 
         if (null !== $parent_element) {
             // @todo Dimension::addElement() fetch parent element and append new Element to parent
@@ -134,17 +144,18 @@ class Dimension implements IBase
      */
     public function appendElement(string $element_name): GenericCollection
     {
-        // @todo Dimension::appendElement()
+        // @todo implement Dimension::appendElement()
+
+        $params = new ApiElementAppendParams();
+        $params->database = $this->getDatabase()->getOlapObjectId();
+        $params->dimension = $this->getOlapObjectId();
+        $params->element = $this->getElementIdFromName($element_name);
+
+        // $params->children = ;
+        // $params->weights = ;
+
         // if parent element is a Base element - do not consolidate you may loose data
-        return $this->getConnection()->request(self::API_ELEMENT_APPEND, [
-            'query' => [
-                'database' => $this->getDatabase()->getOlapObjectId(),
-                'dimension' => $this->getOlapObjectId(),
-                'element' => $this->getElementIdFromName($element_name),
-                'children' => '',
-                'weights' => '',
-            ],
-        ]);
+        return $this->getConnection()->request(self::API_ELEMENT_APPEND, $params->asArray());
     }
 
     /**
@@ -198,18 +209,15 @@ class Dimension implements IBase
      */
     public function clear(?int $type = null): bool
     {
-        $params = [
-            'query' => [
-                'database' => $this->getDatabase()->getOlapObjectId(),
-                'dimension' => $this->getOlapObjectId(),
-            ],
-        ];
+        $params = new ApiDimensionClearParams();
+        $params->database = $this->getDatabase()->getOlapObjectId();
+        $params->dimension = $this->getOlapObjectId();
 
         if (null !== $type) {
-            $params['query']['type'] = $type;
+            $params->type = $type;
         }
 
-        $response = $this->getConnection()->request(self::API_DIMENSION_CLEAR, $params);
+        $response = $this->getConnection()->request(self::API_DIMENSION_CLEAR, $params->asArray());
 
         return (bool) ($response[0] ?? false);
     }
@@ -257,7 +265,7 @@ class Dimension implements IBase
      * Create a set of elements
      * only existing children are allowed otherwise use /element/replace.
      *
-     * @param array $elements list of arrays defining new elements
+     * @param array<int, array<int, mixed>> $elements list of arrays defining new elements
      *
      * @example $d->createElements([['New Element Name', ELEMENT::TYPE_NUMERIC, ['child1','child2','child3'], [0.5,-1,1]], [..], ..]);
      *
@@ -292,18 +300,15 @@ class Dimension implements IBase
         }
 
         // send create API request
-        $params = [
-            'query' => [
-                'database' => $this->getDatabase()->getOlapObjectId(),
-                'dimension' => $this->getOlapObjectId(),
-                'name_elements' => \implode(',', $element_names),
-                'types' => \implode(',', $types),
-                'name_children' => \implode(':', $children),
-                'weights' => \implode(':', $weights),
-            ],
-        ];
+        $params = new ApiElementCreateBulkParams();
+        $params->database = $this->getDatabase()->getOlapObjectId();
+        $params->dimension = $this->getOlapObjectId();
+        $params->name_elements = \implode(',', $element_names);
+        $params->name_children = \implode(':', $children);
+        $params->types = \implode(',', $types);
+        $params->weights = \implode(':', $weights);
 
-        $response = $this->getConnection()->request(self::API_ELEMENT_CREATE_BULK, $params);
+        $response = $this->getConnection()->request(self::API_ELEMENT_CREATE_BULK, $params->asArray());
 
         if (0 === $response->count()) {
             return false;
@@ -353,19 +358,18 @@ class Dimension implements IBase
     {
         $element_ids = \array_map(static function ($v) {
             if (!\is_numeric($v)) {
-                throw new \ErrorException('element list contains non numeric value '.$v);
+                throw new \InvalidArgumentException('element list contains non numeric value '.$v);
             }
 
             return (int) $v;
         }, $element_ids);
 
-        $response = $this->getConnection()->request(self::API_ELEMENT_DESTROY_BULK, [
-            'query' => [
-                'database' => $this->getDatabase()->getOlapObjectId(),
-                'dimension' => $this->getOlapObjectId(),
-                'elements' => \implode(',', $element_ids),
-            ],
-        ]);
+        $params = new ApiElementDestroyBulkParams();
+        $params->database = $this->getDatabase()->getOlapObjectId();
+        $params->dimension = $this->getOlapObjectId();
+        $params->elements = \implode(',', $element_ids);
+
+        $response = $this->getConnection()->request(self::API_ELEMENT_DESTROY_BULK, $params->asArray());
 
         return (bool) ($response[0] ?? false);
     }
@@ -381,9 +385,8 @@ class Dimension implements IBase
      */
     public function deleteElementBulkByNames(array $element_names): bool
     {
-        $this_obj = $this;
-        $element_ids = \array_map(static function (string $e) use ($this_obj) {
-            return $this_obj->getElementIdFromName($e);
+        $element_ids = \array_map(static function (string $e) {
+            return $this->getElementIdFromName($e);
         }, $element_names);
 
         return $this->deleteElementBulkByIds($element_ids);
@@ -404,13 +407,12 @@ class Dimension implements IBase
             throw new \InvalidArgumentException('given element ID '.$element_id.' not found');
         }
 
-        $response = $this->getConnection()->request(self::API_ELEMENT_DESTROY, [
-            'query' => [
-                'database' => $this->getDatabase()->getOlapObjectId(),
-                'dimension' => $this->getOlapObjectId(),
-                'element' => $element_id,
-            ],
-        ]);
+        $params = new ApiElementDestroyParams();
+        $params->database = $this->getDatabase()->getOlapObjectId();
+        $params->dimension = $this->getOlapObjectId();
+        $params->element = $element_id;
+
+        $response = $this->getConnection()->request(self::API_ELEMENT_DESTROY, $params->asArray());
 
         return (bool) ($response[0][0] ?? false);
     }
@@ -436,12 +438,12 @@ class Dimension implements IBase
     /**
      * Filter dimension elements by OLAP dfilter expression.
      *
-     * @param string                    $cube_name cube name
-     * @param null|int                  $mode      one of the Dimension::DFILTER_X modes
-     * @param null|Area                 $area      area object
-     * @param null|string               $condition Condition on the value of numeric or string cells (default is no condition). A condition starts with >, >=, <, <=, ==, or != and is followed by a double or a string. Two condition can be combined by and, or, xor. If you specify a string value, the value has to be csv encoded. Do not forget to URL encode the complete condition string.
-     * @param null|float                $values    values for Top, Upper % and Lower % in this order
-     * @param null|array<string,string> $options   array of options
+     * @param string                         $cube_name cube name
+     * @param null|int                       $mode      one of the Dimension::DFILTER_X modes
+     * @param null|Area                      $area      area object
+     * @param null|string                    $condition Condition on the value of numeric or string cells (default is no condition). A condition starts with >, >=, <, <=, ==, or != and is followed by a double or a string. Two condition can be combined by and, or, xor. If you specify a string value, the value has to be csv encoded. Do not forget to URL encode the complete condition string.
+     * @param null|float                     $values    values for Top, Upper % and Lower % in this order
+     * @param null|ApiDimensionDfilterParams $params    array of options
      *
      * @throws \Exception
      *
@@ -453,17 +455,12 @@ class Dimension implements IBase
         ?Area $area = null,
         ?string $condition = null,
         ?float $values = null,
-        ?array $options = null
+        ?ApiDimensionDfilterParams $params = null
     ): GenericCollection {
-        $mode = $mode ?? self::DFILTER_ONLY_LEAVES;
-
-        $params = [
-            'query' => [
-                'database' => $this->getDatabase()->getOlapObjectId(),
-                'dimension' => $this->getOlapObjectId(),
-                'mode' => $mode,
-            ],
-        ];
+        $params ??= new ApiDimensionDfilterParams();
+        $params->database = $this->getDatabase()->getOlapObjectId();
+        $params->dimension = $this->getOlapObjectId();
+        $params->mode = $mode ?? self::DFILTER_ONLY_LEAVES;
 
         // @todo Dimension::dfilter() strtolower() for cube_name required?
         if (!\in_array($cube_name, $this->listCubes(), true)) {
@@ -471,83 +468,38 @@ class Dimension implements IBase
         }
 
         $cube = $this->getDatabase()->getCubeByName($cube_name);
-        $params['query']['cube'] = $cube->getOlapObjectId();
+        $params->cube = $cube->getOlapObjectId();
 
-        if (null === $area) {
-            $area = new Area($cube);
-        }
-        $params['query']['area'] = $area->getArea();
+        $area ??= new Area($cube);
+        $params->area = $area->getArea();
 
-        if (null !== $condition) {
-            $params['query']['condition'] = $condition;
-        }
+        $params->condition = $condition ?? null;
+        $params->values = $values ?? null;
 
-        if (null !== $values) {
-            $params['query']['values'] = $values;
-        }
-
-        if (isset($options['squash_list'])) {
-            $params['query']['squash_list'] = $options['squash_list'];
-        }
-
-        return $this->getConnection()->request(self::API_DIMENSION_DFILTER, $params);
+        return $this->getConnection()->request(self::API_DIMENSION_DFILTER, $params->asArray());
     }
 
     /**
-     * @param null|array<string,bool|float|int|string> $options
+     * @param null|ApiDimensionGenerateScriptParams $params
      *
      * @throws \ErrorException
      * @throws \Exception
      *
      * @return string
      */
-    public function exportAsScript(?array $options = null): string
+    public function exportAsScript(?ApiDimensionGenerateScriptParams $params = null): string
     {
-        $params = [
-            'query' => [
-                'database' => $this->getDatabase()->getOlapObjectId(),
-                'dimension' => $this->getOlapObjectId(),
-                'complete' => $options['complete'] ?? 1,
-                'show_attribute' => $options['show_attribute'] ?? 1,
-                'languages' => $options['languages'] ?? '*',
-            ],
-        ];
+        $params ??= new ApiDimensionGenerateScriptParams();
+        $params->database = $this->getDatabase()->getOlapObjectId();
+        $params->dimension = $this->getOlapObjectId();
 
-        if (isset($options['name_elements'])) {
-            $params['query']['name_elements'] = $options['name_elements'];
-        }
-
-        if (isset($options['elements'])) {
-            $params['query']['elements'] = $options['elements'];
-        }
-
-        if (isset($options['include_local_subsets'])) {
-            $params['query']['include_local_subsets'] = $options['include_local_subsets'];
-        }
-
-        if (isset($options['include_global_subsets'])) {
-            $params['query']['include_global_subsets'] = $options['include_global_subsets'];
-        }
-
-        if (isset($options['include_dimension_rights'])) {
-            $params['query']['include_dimension_rights'] = $options['include_dimension_rights'];
-        }
-
-        if (isset($options['clear'])) {
-            $params['query']['clear'] = $options['clear'];
-        }
-
-        if (isset($options['script_create_clause'])) {
-            $params['query']['script_create_clause'] = $options['script_create_clause'];
-        }
-
-        if (isset($options['script_modify_clause'])) {
-            $params['query']['script_modify_clause'] = $options['script_modify_clause'];
-        }
+        $params->complete ??= 1;
+        $params->show_attribute ??= true;
+        $params->languages ??= '*';
 
         /** @var resource $stream_resource */
         if (null === ($stream_resource = $this->getConnection()
-            ->requestRaw(self::API_DIMENSION_GENERATE_SCRIPT, $params))) {
+            ->requestRaw(self::API_DIMENSION_GENERATE_SCRIPT, $params->asArray()))) {
             throw new \ErrorException('failed to establish stream resource in Dimension::exportAsScript()');
         }
 
@@ -656,7 +608,7 @@ class Dimension implements IBase
         $attribute_cube = $this->getAttributeCube();
 
         // no filters (default)
-        $area_export = null;
+        $params = null;
 
         // apply filters from parameters if necessary
         if (null !== $element_names || null !== $attribute_names) {
@@ -671,11 +623,12 @@ class Dimension implements IBase
                 $area->addElements($attribute_dimension_name, $attribute_names);
             }
 
-            $area_export = ['area' => $area->getArea()];
+            $params = new ApiCellExportParams();
+            $params->area = $area->getArea();
         }
 
         // fetch data from cube
-        $attributes = $attribute_cube->arrayExport($area_export, true, null, 100000);
+        $attributes = $attribute_cube->arrayExport($params, true, null, 100000);
 
         // fetch indexes of table headers
         $keys = \array_flip($attributes[0]);
@@ -975,21 +928,15 @@ class Dimension implements IBase
      */
     public function getElementListOfNode(?string $element_name = null): GenericCollection
     {
-        $params = [
-            'query' => [
-                'database' => $this->getDatabase()->getOlapObjectId(),
-                'dimension' => $this->getOlapObjectId(),
-                // 'parent' => '',
-                'show_lock_info' => 1,
-                'show_permission' => 1,
-                'limit' => 0, // default
-            ],
-        ];
+        $params = new ApiDimensionElementsParams();
+        $params->database = $this->getDatabase()->getOlapObjectId();
+        $params->dimension = $this->getOlapObjectId();
+        $params->show_permission = true;
 
         // @todo what is the purpose of Dimension::getElementListOfNode()? what is it supposed to do?
         // @todo Dimension::getElementListOfNode() needs OlapIdentifier:: support
         if (null === $element_name) {
-            return $this->getConnection()->request(self::API_DIMENSION_ELEMENTS, $params);
+            return $this->getConnection()->request(self::API_DIMENSION_ELEMENTS, $params->asArray());
         }
 
         return $this->fullTraverse($element_name);
@@ -1269,32 +1216,27 @@ class Dimension implements IBase
     }
 
     /**
-     * @param null|bool                $cached
-     * @param null|array<string,mixed> $options
+     * @param null|bool                       $cached
+     * @param null|ApiDimensionElementsParams $params
      *
      * @throws \Exception
      *
      * @return null|array<int,array<string>>
      */
-    public function listElements(?bool $cached = null, ?array $options = null): ?array
+    public function listElements(?bool $cached = null, ?ApiDimensionElementsParams $params = null): ?array
     {
         $cached = $cached ?? true;
-
-        $options = (array) $options;
 
         if (true === $cached && null !== $this->elementLookupByID) {
             return $this->elementLookupByID;
         }
 
-        $element_list = $this->getConnection()->request(self::API_DIMENSION_ELEMENTS, [
-            'query' => [
-                'database' => $this->getDatabase()->getOlapObjectId(),
-                'dimension' => $this->getOlapObjectId(),
-                'show_lock_info' => 1,
-                'show_permission' => 1,
-                'limit' => 0, // default
-            ],
-        ]);
+        $params ??= new ApiDimensionElementsParams();
+        $params->database = $this->getDatabase()->getOlapObjectId();
+        $params->dimension = $this->getOlapObjectId();
+        $params->show_permission = true;
+
+        $element_list = $this->getConnection()->request(self::API_DIMENSION_ELEMENTS, $params->asArray());
 
         $this->elementLookupByID = [];
         $this->elementLookupByName = [];
@@ -1302,16 +1244,6 @@ class Dimension implements IBase
         foreach ($element_list as $element_row) {
             $this->elementLookupByID[(int) $element_row[0]] = $element_row;
             $this->elementLookupByName[\strtolower($element_row[1])] = (int) $element_row[0];
-        }
-
-        // CompatibilityLayer support
-        if ((bool) ($options['palo_compat'] ?? false)) {
-            $return = [];
-            \array_map(static function ($v) use (&$return) {
-                $return[$v[1]] = $v[0];
-            }, $this->elementLookupByID);
-
-            return $return;
         }
 
         return $this->elementLookupByID;
@@ -1389,7 +1321,7 @@ class Dimension implements IBase
                         \file_put_contents('php://stderr', 'node '.$node->getName().
                             ' is required by a different tree and is therefore skipped. Try force mode.');
                         // add all nodes of sub-tree to blacklist
-                        \array_map(static function ($descendant) use ($blacklist) {
+                        \array_map(static function ($descendant) use (&$blacklist) {
                             if ('consolidated' === $descendant['type']) {
                                 $blacklist[(int) $descendant['identifier']] = $descendant;
                             }
@@ -1424,26 +1356,34 @@ class Dimension implements IBase
             return false;
         }
 
-        $params = [
-            'query' => [
-                'database' => $this->getDatabase()->getOlapObjectId(),
-                'dimension' => $this->getOlapObjectId(),
-                'elements' => \implode(',', \array_map(static function (Element $v) {
-                    return $v->getOlapObjectId();
-                }, $remove_collection->getArrayCopy())),
-            ],
-        ];
-
+        $params = null;
+        $api_url = self::API_ELEMENT_REPLACE_BULK;
         if (!$delete) {
-            $params['query']['type'] = Element::TYPE_NUMERIC;
+            $params = new ApiElementReplaceBulkParams();
+            $params->database = $this->getDatabase()->getOlapObjectId();
+            $params->dimension = $this->getOlapObjectId();
+            $params->elements = \implode(',', \array_map(static function (Element $v) {
+                return $v->getOlapObjectId();
+            }, $remove_collection->getArrayCopy()));
+            $params->type = Element::TYPE_NUMERIC;
         }
 
-        $api_url = self::API_ELEMENT_REPLACE_BULK;
         if ($delete) {
+            $params = new ApiElementDestroyBulkParams();
+            $params->database = $this->getDatabase()->getOlapObjectId();
+            $params->dimension = $this->getOlapObjectId();
+            $params->elements = \implode(',', \array_map(static function (Element $v) {
+                return $v->getOlapObjectId();
+            }, $remove_collection->getArrayCopy()));
+
             $api_url = self::API_ELEMENT_DESTROY_BULK;
         }
 
-        $response = $this->getConnection()->request($api_url, $params);
+        if (null === $params) {
+            throw new \ErrorException('Internal logic error - parameter definition missing');
+        }
+
+        $response = $this->getConnection()->request($api_url, $params->asArray());
 
         return (bool) ($response[0] ?? false);
     }
@@ -1637,18 +1577,15 @@ class Dimension implements IBase
      */
     public function info(): GenericCollection
     {
-        $params = [
-            'query' => [
-                'database' => $this->getDatabase()->getOlapObjectId(),
-                'dimension' => $this->getOlapObjectId(),
-                'show_permission' => 1,
-                'show_counters' => 1,
-                'show_default_elements' => 1,
-                'show_count_by_type' => 1,
-            ],
-        ];
+        $params = new ApiDimensionInfoParams();
+        $params->database = $this->getDatabase()->getOlapObjectId();
+        $params->dimension = $this->getOlapObjectId();
+        $params->show_permission = true;
+        $params->show_counters = true;
+        $params->show_default_elements = true;
+        $params->show_count_by_type = true;
 
-        return $this->getConnection()->request(self::API_DIMENSION_INFO, $params);
+        return $this->getConnection()->request(self::API_DIMENSION_INFO, $params->asArray());
     }
 
     /**

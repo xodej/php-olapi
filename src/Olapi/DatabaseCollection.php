@@ -18,7 +18,7 @@ class DatabaseCollection extends GenericCollection
      *
      * @throws \Exception
      */
-    public function __construct($input = [], ?int $flags = null, ?string $iterator_class = null)
+    public function __construct(array $input = [], ?int $flags = null, ?string $iterator_class = null)
     {
         $flags = $flags ?? 0;
         $iterator_class = $iterator_class ?? 'ArrayIterator';

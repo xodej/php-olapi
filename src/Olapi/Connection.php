@@ -7,6 +7,20 @@ namespace Xodej\Olapi;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use Psr\Http\Message\ResponseInterface;
+use Xodej\Olapi\ApiRequestParams\ApiDatabaseCreateParams;
+use Xodej\Olapi\ApiRequestParams\ApiDatabaseDestroyParams;
+use Xodej\Olapi\ApiRequestParams\ApiDatabaseGenerateScriptParams;
+use Xodej\Olapi\ApiRequestParams\ApiDatabaseRenameParams;
+use Xodej\Olapi\ApiRequestParams\ApiEventBeginParams;
+use Xodej\Olapi\ApiRequestParams\ApiEventEndParams;
+use Xodej\Olapi\ApiRequestParams\ApiServerChangePasswordParams;
+use Xodej\Olapi\ApiRequestParams\ApiServerDatabasesParams;
+use Xodej\Olapi\ApiRequestParams\ApiServerInfoParams;
+use Xodej\Olapi\ApiRequestParams\ApiServerLicensesParams;
+use Xodej\Olapi\ApiRequestParams\ApiServerShutdownParams;
+use Xodej\Olapi\ApiRequestParams\ApiServerUserInfoParams;
+use Xodej\Olapi\ApiRequestParams\ApiSvsInfoParams;
+use Xodej\Olapi\ApiRequestParams\ApiSvsRestartParams;
 use Xodej\Olapi\Filter\DataFilter;
 
 /**
@@ -158,30 +172,22 @@ class Connection
      * @param null|string $external_identifier (Optional) Path to backup file where the database will be loaded from
      * @param null|string $password            (Optional) If in restore mode, password to provided encrypted archive with database
      *
-     * @throws \ErrorException
+     * @throws \Exception
      *
      * @return bool
      */
     public function createDatabase(string $database_name, ?string $external_identifier = null, ?string $password = null): bool
     {
-        $params = [
-            'query' => [
-                'new_name' => $database_name,
-                'type' => 0,
-            ],
-        ];
+        $params = new ApiDatabaseCreateParams();
+        $params->new_name = $database_name;
+        $params->type = 0;
+        $params->external_identifier = $external_identifier;
+        $params->password = $password;
 
-        if (null !== $external_identifier) {
-            $params['query']['external_identifier'] = $external_identifier;
-        }
+        $response = $this->request(self::API_DATABASE_CREATE, $params->asArray());
 
-        if (null !== $password) {
-            $params['query']['password'] = $password;
-        }
-
-        $response = $this->request(self::API_DATABASE_CREATE, $params);
-
-        // @todo Connection::createDatabase() - reload databases
+        // reload databases after creation
+        $this->reload();
 
         return (bool) ($response[0] ?? false);
     }
@@ -217,31 +223,14 @@ class Connection
             throw new \InvalidArgumentException('Unknown database ID '.$database_id.' given.');
         }
 
-        $response = $this->getConnection()->request(self::API_DATABASE_DESTROY, [
-            'query' => [
-                'database' => $database_id,
-            ],
-        ]);
+        $params = new ApiDatabaseDestroyParams();
+        $params->database = $database_id;
 
-        $flag_successful = ('1' === ($response[0][0] ?? '0'));
+        $response = $this->getConnection()->request(self::API_DATABASE_DESTROY, $params->asArray());
 
-        if (true === $flag_successful) {
-            if (isset($this->databases[$database_id])) {
-                unset($this->databases[$database_id]);
-            }
-            if (isset($this->databaseLookupByID[$database_id])) {
-                unset($this->databaseLookupByID[$database_id]);
-            }
+        $this->reload();
 
-            $database_name = $this->getDatabaseNameFromId($database_id);
-
-            if (null !== $database_name && isset($this->databaseLookupByName[\strtolower($database_name)])) {
-                unset($this->databaseLookupByName[\strtolower($database_name)]);
-            }
-        }
-        // @todo Database::deleteDimension() - reload dimensions
-
-        return $flag_successful;
+        return '1' === ($response[0][0] ?? '0');
     }
 
     /**
@@ -274,12 +263,11 @@ class Connection
      */
     public function eventBegin(string $user_sid, string $event_name): bool
     {
-        $response = $this->request(self::API_EVENT_BEGIN, [
-            'query' => [
-                'source' => $user_sid,
-                'event' => $event_name,
-            ],
-        ]);
+        $params = new ApiEventBeginParams();
+        $params->source = $user_sid;
+        $params->event = $event_name;
+
+        $response = $this->request(self::API_EVENT_BEGIN, $params->asArray());
 
         return (bool) ($response[0] ?? false);
     }
@@ -293,7 +281,8 @@ class Connection
      */
     public function eventEnd(): bool
     {
-        $response = $this->request(self::API_EVENT_END, []);
+        $params = new ApiEventEndParams();
+        $response = $this->request(self::API_EVENT_END, $params->asArray());
 
         return (bool) ($response[0] ?? false);
     }
@@ -301,19 +290,19 @@ class Connection
     /**
      * Returns database script.
      *
-     * @param string                    $database_name   database name
-     * @param null|array                $dimension_names (Optional) array of dimension names
-     * @param null|array                $cube_names      (Optional) array of cube names
-     * @param null|array<string,string> $options         (Optional) array of options
+     * @param string                               $database_name   database name
+     * @param null|array                           $dimension_names (Optional) array of dimension names
+     * @param null|array                           $cube_names      (Optional) array of cube names
+     * @param null|ApiDatabaseGenerateScriptParams $params          (Optional) array of options
      *
      * @throws \Exception
      *
      * @return string
      */
-    public function generateScript(string $database_name, ?array $dimension_names = null, ?array $cube_names = null, ?array $options = null): string
+    public function generateScript(string $database_name, ?array $dimension_names = null, ?array $cube_names = null, ?ApiDatabaseGenerateScriptParams $params = null): string
     {
         return $this->getDatabaseByName($database_name)
-            ->generateScript($dimension_names, $cube_names, $options)
+            ->generateScript($dimension_names, $cube_names, $params)
         ;
     }
 
@@ -546,21 +535,17 @@ class Connection
     /**
      * Returns array response of /server/info API call.
      *
-     * @param null|array{show_counters:int, show_enckey:int, show_user_info:int} $options (Optional) options
+     * @param ApiServerInfoParams $params
      *
      * @throws \ErrorException
      *
      * @return GenericCollection<array<string>>
      */
-    public function getInfo(?array $options = null): GenericCollection
+    public function getInfo(?ApiServerInfoParams $params = null): GenericCollection
     {
-        return $this->request(self::API_SERVER_INFO, [
-            'query' => [
-                'show_counters' => (int) ($options['show_counters'] ?? 0),
-                'show_enckey' => (int) ($options['show_enckey'] ?? 0),
-                'show_user_info' => (int) ($options['show_user_info'] ?? 0),
-            ],
-        ]);
+        $params = $params ?? new ApiServerInfoParams();
+
+        return $this->request(self::API_SERVER_INFO, $params->asArray());
     }
 
     /**
@@ -588,19 +573,17 @@ class Connection
     /**
      * Returns array response of /server/licenses API call.
      *
-     * @param null|array{mode:string} $options (Optional) options
+     * @param null|ApiServerLicensesParams $params (Optional) options
      *
      * @throws \ErrorException
      *
      * @return GenericCollection<array<string>>
      */
-    public function getLicenseInfos(?array $options = null): GenericCollection
+    public function getLicenseInfos(?ApiServerLicensesParams $params = null): GenericCollection
     {
-        return $this->request(self::API_SERVER_LICENSES, [
-            'query' => [
-                'mode' => $options['mode'] ?? 0,
-            ],
-        ]);
+        $params ??= new ApiServerLicensesParams();
+
+        return $this->request(self::API_SERVER_LICENSES, $params->asArray());
     }
 
     /**
@@ -723,13 +706,12 @@ class Connection
      */
     public function getUserInfo(): GenericCollection
     {
-        return $this->request(self::API_SERVER_USER_INFO, [
-            'query' => [
-                'show_permission' => 1,
-                'show_info' => 1,
-                'show_gpuflag' => 1,
-            ],
-        ]);
+        $params = new ApiServerUserInfoParams();
+        $params->show_permission = true;
+        $params->show_info = true;
+        $params->show_gpuflag = true;
+
+        return $this->request(self::API_SERVER_USER_INFO, $params->asArray());
     }
 
     /**
@@ -781,31 +763,28 @@ class Connection
     }
 
     /**
-     * @param null|bool                                                                             $cached
-     * @param null|array{show_normal:int, show_system:int, show_user_info:int, show_permission:int} $options
+     * @param null|bool                     $cached
+     * @param null|ApiServerDatabasesParams $params
      *
      * @throws \ErrorException
      *
      * @return null|array<int,array<string>>
      */
-    public function listDatabases(?bool $cached = null, ?array $options = null): ?array
+    public function listDatabases(?bool $cached = null, ?ApiServerDatabasesParams $params = null): ?array
     {
         $cached = $cached ?? true;
-
-        $options = (array) $options;
 
         if (true === $cached && null !== $this->databaseLookupByID) {
             return $this->databaseLookupByID;
         }
 
-        $database_list = $this->request(self::API_SERVER_DATABASES, [
-            'query' => [
-                'show_normal' => (int) ($options['show_normal'] ?? 1),
-                'show_system' => (int) ($options['show_system'] ?? 1),
-                'show_user_info' => (int) ($options['show_user_info'] ?? 1),
-                'show_permission' => (int) ($options['show_permission'] ?? 1),
-            ],
-        ]);
+        $params ??= new ApiServerDatabasesParams();
+        $params->show_normal = true;
+        $params->show_system = true;
+        $params->show_user_info = true;
+        $params->show_permission = true;
+
+        $database_list = $this->request(self::API_SERVER_DATABASES, $params->asArray());
 
         $this->databaseLookupByID = [];
         $this->databaseLookupByName = [];
@@ -815,32 +794,7 @@ class Connection
             $this->databaseLookupByName[\strtolower($database_row[1])] = (int) $database_row[0];
         }
 
-        // CompatibilityLayer support
-        if ((bool) ($options['palo_compat'] ?? false)) {
-            $return = [];
-            \array_map(static function ($v) use (&$return) {
-                $return[$v[1]] = $v[0];
-            }, $this->databaseLookupByID);
-
-            return $return;
-        }
-
         return $this->databaseLookupByID;
-    }
-
-    /**
-     * @param array                $params
-     * @param array<string,string> $options
-     *
-     * @return array
-     */
-    public static function mergeParams(array $params, array $options): array
-    {
-        foreach ($options as $opt_key => $opt_val) {
-            $params['query'][$opt_key] = $opt_val;
-        }
-
-        return $params;
     }
 
     /**
@@ -882,14 +836,11 @@ class Connection
      */
     public function renameDatabase(string $name_old, string $name_new): bool
     {
-        $db_id = $this->getDatabaseIdFromName($name_old);
+        $params = new ApiDatabaseRenameParams();
+        $params->database = $this->getDatabaseIdFromName($name_old);
+        $params->new_name = $name_new;
 
-        $response = $this->request(self::API_DATABASE_RENAME, [
-            'query' => [
-                'database' => $db_id,
-                'new_name' => $name_new,
-            ],
-        ]);
+        $response = $this->request(self::API_DATABASE_RENAME, $params->asArray());
 
         return (bool) ($response[0] ?? false);
     }
@@ -929,9 +880,11 @@ class Connection
             $response = $client->request('GET', $url, $params);
             $this->dataToken = $response->getHeader('X-PALO-SV')[0] ?? null;
 
+            if ($this->isDebugMode()) {
+                \file_put_contents('php://stderr', \print_r([\stream_get_contents($response->getBody()->detach())], true));
+            }
+
             return $this->parseCsvResponse($response);
-        } catch (GuzzleException $exception) {
-            \file_put_contents('php://stderr', $exception->getMessage());
         } catch (\Exception $exception) {
             \file_put_contents('php://stderr', $exception->getMessage());
         }
@@ -962,8 +915,6 @@ class Connection
             $this->dataToken = $response->getHeader('X-PALO-SV')[0] ?? null;
 
             return $response->getBody()->detach();
-        } catch (GuzzleException $exception) {
-            throw new \ErrorException($exception->getMessage());
         } catch (\Exception $exception) {
             throw new \ErrorException($exception->getMessage());
         }
@@ -1001,12 +952,11 @@ class Connection
      */
     public function setUserPassword(string $user_name, string $password_new): bool
     {
-        $response = $this->request(self::API_SERVER_CHANGE_PASSWORD, [
-            'query' => [
-                'user' => $user_name,
-                'password' => $password_new,
-            ],
-        ]);
+        $params = new ApiServerChangePasswordParams();
+        $params->user = $user_name;
+        $params->password = $password_new;
+
+        $response = $this->request(self::API_SERVER_CHANGE_PASSWORD, $params->asArray());
 
         return (bool) ($response[0] ?? false);
     }
@@ -1027,27 +977,35 @@ class Connection
      */
     public function svsInfo(): GenericCollection
     {
-        return $this->request(self::API_SVS_INFO, []);
+        $params = new ApiSvsInfoParams();
+
+        return $this->request(self::API_SVS_INFO, $params->asArray());
     }
 
     /**
-     * @param null|array{mode:string} $options
+     * @param null|ApiSvsRestartParams $params
      *
      * @throws \ErrorException
      *
      * @return bool
      */
-    public function svsRestart(?array $options = null): bool
+    public function svsRestart(?ApiSvsRestartParams $params = null): bool
     {
-        $params = [
-            'query' => [],
-        ];
+        $params ??= new ApiSvsRestartParams();
+        $response = $this->request(self::API_SVS_RESTART, $params->asArray());
 
-        if (isset($options['mode'])) {
-            $params['query']['mode'] = $options['mode'];
-        }
+        return (bool) ($response[0] ?? false);
+    }
 
-        $response = $this->request(self::API_SVS_RESTART, $params);
+    /**
+     * @throws \ErrorException
+     *
+     * @return bool
+     */
+    public function shutdownServer(): bool
+    {
+        $params = new ApiServerShutdownParams();
+        $response = $this->request(self::API_SERVER_SHUTDOWN, $params->asArray());
 
         return (bool) ($response[0] ?? false);
     }

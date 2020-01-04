@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Xodej\Olapi;
 
+use Xodej\Olapi\ApiRequestParams\ApiCellExportParams;
+
 /**
  * Class User.
  */
@@ -97,9 +99,10 @@ class User extends Element
             ->getCubeByName('#_USER_GROUP')
         ;
 
-        $user_groups = $cube_user_group->arrayExport([
-            'area' => $cube_user_group->createArea(['#_USER_' => [$this->getName()]]),
-        ], false);
+        $params = new ApiCellExportParams();
+        $params->area = $cube_user_group->createArea(['#_USER_' => [$this->getName()]]);
+
+        $user_groups = $cube_user_group->arrayExport($params, false);
 
         return \array_map(static function (array $v) {
             return $v[1];
