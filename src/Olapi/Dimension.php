@@ -765,12 +765,11 @@ class Dimension implements IBase
      *
      * @return string[]
      *
-     * @todo does not find duplicates
-     *
      * @see Dimension::testDuplicateDescendants()
      */
     public function getDuplicateBaseElementsOfNode(string $element_name): array
     {
+        // @todo does not find duplicates
         $base_elements = $this->traverse($element_name, 1, false);
 
         $base_elements = \array_map(static function (array $v) {
@@ -1202,7 +1201,6 @@ class Dimension implements IBase
      */
     public function listCubes(): array
     {
-        // @todo improve performance - use of in_array()
         $return = [];
         foreach ($this->getDatabase()->listCubes() as $cube_record) {
             if (\in_array($this->getOlapObjectId(), \explode(',', $cube_record[3]), false)) {

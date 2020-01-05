@@ -935,8 +935,6 @@ class Cube implements IBase
         $params->show_gpuflag ??= false;
         $params->show_audit ??= false;
         $params->show_zero ??= false;
-        $params->mode ??= false;
-        $params->timeout ??= false;
         $params->wait ??= false;
 
         return $this->getDatabase()->getConnection()->request(self::API_CUBE_INFO, $params->asArray());
@@ -1177,8 +1175,6 @@ class Cube implements IBase
      */
     public function setValue($value, array $dims, ?ApiCellReplaceParams $params = null): bool
     {
-        // @todo replace with call of Cube::setBulk()??
-
         $params ??= new ApiCellReplaceParams();
         $params->database = $this->getDatabase()->getOlapObjectId();
         $params->cube = $this->getOlapObjectId();
@@ -1345,9 +1341,9 @@ class Cube implements IBase
 
         $ret_obj = new class() {
             public $__stream__;
-            public $__lastpath__;
-            public $__progress__;
-            public $__complete__;
+            public ?string $__lastpath__ = null;
+            public float $__progress__;
+            public bool $__complete__;
 
             public function __destruct()
             {

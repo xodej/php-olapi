@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Xodej\Olapi;
 
+use Xodej\Olapi\ApiRequestParams\ApiCellExportParams;
+
 /**
  * Class Role.
  */
@@ -52,7 +54,7 @@ class Role extends Element
      *                  ste_mobile: string, ste_analyzer: string, ste_sessions: string, ste_settings: string, audit: string,
      *                  ste_perf: string, ste_packages: string, ste_repository: string, cell data hold: string}
      */
-    protected static $rights = [
+    protected static array $rights = [
         self::RIGHT_USER => 'N',
         self::RIGHT_PASSWORD => 'N',
         self::RIGHT_GROUP => 'N',
@@ -193,6 +195,64 @@ class Role extends Element
             ->getSystemDatabase()
             ->getCubeByName('#_GROUP_ROLE')
             ->setValue('1', [$group_name, $this->getName()])
+            ;
+    }
+
+    /**
+     * @throws \Exception
+     *
+     * @return string[]
+     */
+    public function getGroups(): array
+    {
+        $cube_group_role = $this->getConnection()
+            ->getSystemDatabase()
+            ->getCubeByName('#_GROUP_ROLE')
+        ;
+
+        $params = new ApiCellExportParams();
+        $params->area = $cube_group_role->createArea(['#_ROLE_' => [$this->getName()]]);
+
+        $role_groups = $cube_group_role->arrayExport($params, false);
+
+        return \array_map(static function (array $v) {
+            return $v[1];
+        }, $role_groups);
+    }
+
+    /**
+     * @param null|string[] $group_names
+     *
+     * @throws \Exception
+     *
+     * @return bool
+     */
+    public function removeGroups(?array $group_names = null): bool
+    {
+        if (null === $group_names) {
+            $group_names = $this->getGroups();
+        }
+
+        $active_groups = $this->getGroups();
+
+        $remove_groups = \array_intersect($group_names, $active_groups);
+
+        $values = [];
+        $paths = [];
+        foreach ($remove_groups as $remove_group) {
+            $values[] = null;
+            $paths[] = [$remove_group, $this->getName()];
+        }
+
+        // nothing to write to cube
+        if (0 === \count($values)) {
+            return false;
+        }
+
+        return $this->getConnection()
+            ->getSystemDatabase()
+            ->getCubeByName('#_GROUP_ROLE')
+            ->setBulk($values, $paths)
             ;
     }
 }

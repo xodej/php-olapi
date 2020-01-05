@@ -272,6 +272,20 @@ class SystemDatabase extends Database
     }
 
     /**
+     * Returns array of all role names.
+     *
+     * @throws \Exception
+     *
+     * @return string[]
+     */
+    public function getRoles(): array
+    {
+        return $this->getRoleDimension()
+            ->getAllBaseElements()
+            ;
+    }
+
+    /**
      * Returns role dimension object.
      *
      * @throws \Exception
@@ -315,8 +329,6 @@ class SystemDatabase extends Database
             throw new \InvalidArgumentException('failed to create group '.$group_name.': group already exist.');
         }
 
-        // @todo implement role attachments
-
         $group_dim = $this->getGroupDimension();
         $group_dim->addElement($group_name);
 
@@ -325,7 +337,10 @@ class SystemDatabase extends Database
         /** @var SystemDatabase $this_as_new_obj */
         $this_as_new_obj = $this->reload();
 
-        return $this_as_new_obj->getGroup($group_name);
+        $new_group = $this_as_new_obj->getGroup($group_name);
+        $new_group->setRole($roles);
+
+        return $new_group;
     }
 
     /**

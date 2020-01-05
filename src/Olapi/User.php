@@ -118,42 +118,7 @@ class User extends Element
      */
     public function setGroups(array $group_names): bool
     {
-        // do not allow to set groups that do not exist
-        foreach ($group_names as $group_name) {
-            if (!$this->getConnection()->getSystemDatabase()->hasGroup($group_name)) {
-                throw new \InvalidArgumentException('given group name '.$group_name.' does not exist');
-            }
-        }
-
-        $active_groups = $this->getGroups();
-
-        $values = [];
-        $paths = [];
-
-        // groups to remove
-        $remove_groups = \array_diff($active_groups, $group_names);
-        foreach ($remove_groups as $remove_group) {
-            $values[] = null;
-            $paths[] = [$this->getName(), $remove_group];
-        }
-
-        // groups to add
-        $new_groups = \array_diff($group_names, $active_groups);
-        foreach ($new_groups as $new_group) {
-            $values[] = 1;
-            $paths[] = [$this->getName(), $new_group];
-        }
-
-        // nothing to write to cube
-        if (0 === \count($values)) {
-            return false;
-        }
-
-        return $this->getConnection()
-            ->getSystemDatabase()
-            ->getCubeByName('#_USER_GROUP')
-            ->setBulk($values, $paths)
-        ;
+        return $this->removeGroups() && $this->addGroups($group_names);
     }
 
     /**
@@ -277,7 +242,7 @@ class User extends Element
      *
      * @return bool
      */
-    public function removeGroups(array $group_names = null): bool
+    public function removeGroups(?array $group_names = null): bool
     {
         if (null === $group_names) {
             $group_names = $this->getGroups();

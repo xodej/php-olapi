@@ -28,7 +28,7 @@ class GroupTest extends OlapiTestCase
         $group_obj = $database->getGroup('admin');
         // self::assertInstanceOf(Xodej\Olapi\Group::class, $group_obj);
 
-        $users = $group_obj->getUsers();
+        $users = $group_obj->getUsers(true);
         self::assertContains('admin', $users);
 
         $roles = $group_obj->getRoles();

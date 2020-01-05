@@ -14,12 +14,16 @@ class Group extends Element
     /**
      * Returns array of user names attached to the group.
      *
-     * @throws \Exception
+     * @param null|bool $include_technical_user
+     *
+     *@throws \Exception
      *
      * @return string[]
      */
-    public function getUsers(): array
+    public function getUsers(?bool $include_technical_user = null): array
     {
+        $include_technical_user ??= false;
+
         $cube_user_group = $this->getConnection()
             ->getSystemDatabase()
             ->getCubeByName('#_USER_GROUP')
@@ -30,12 +34,28 @@ class Group extends Element
 
         $user_groups = $cube_user_group->arrayExport($params, false);
 
-        return \array_map(
+        $user_names = \array_map(
             static function (array $v) {
                 return $v[0];
             },
             $user_groups
         );
+
+        // return all users including technical ones
+        if ($include_technical_user) {
+            return $user_names;
+        }
+
+        // return only non-technical user names
+        $technical_user_names = [
+            'admin' => true,
+            'etl' => true,
+            '_internal_suite' => true,
+        ];
+
+        return \array_filter($user_names, static function ($v) use ($technical_user_names) {
+            return !isset($technical_user_names[$v]);
+        });
     }
 
     /**
@@ -70,12 +90,43 @@ class Group extends Element
      *
      * @param string[] $user_names array of user names
      *
+     * @throws \Exception
+     *
      * @return bool
      */
     public function setUser(array $user_names): bool
     {
-        // @todo Group::setUser()
-        return false;
+        // @todo Group::setUser() clearUsers() check for success --> throw Exception on fail?
+        $this->clearUsers();
+
+        $valid_users = \array_flip($this->getConnection()->getSystemDatabase()->getUsers());
+
+        $paths = [];
+        $values = [];
+
+        foreach ($user_names as $user_name) {
+            if (\is_string($user_name)) {
+                throw new \InvalidArgumentException('Group::setUser() expects array of strings as parameter.');
+            }
+
+            if (!isset($valid_users[$user_name])) {
+                throw new \InvalidArgumentException(\sprintf('Group::setUser() received unknown user name %s.', $user_name));
+            }
+
+            $values[] = 1;
+            $paths[] = [$user_name, $this->getName()];
+        }
+
+        // nothing to write to cube
+        if (0 === \count($values)) {
+            return false;
+        }
+
+        return $this->getConnection()
+            ->getSystemDatabase()
+            ->getCubeByName('#_USER_GROUP')
+            ->setBulk($values, $paths)
+            ;
     }
 
     /**
@@ -83,12 +134,15 @@ class Group extends Element
      *
      * @param string $user_name user name
      *
+     * @throws \Exception
+     *
      * @return bool
      */
     public function addUser(string $user_name): bool
     {
-        // @todo Group::addUser()
-        return false;
+        $user = $this->getConnection()->getSystemDatabase()->getUser($user_name);
+
+        return $user->addGroups([$this->getName()]);
     }
 
     /**
@@ -96,12 +150,15 @@ class Group extends Element
      *
      * @param string $user_name user name
      *
+     * @throws \Exception
+     *
      * @return bool
      */
     public function hasUser(string $user_name): bool
     {
-        // @todo Group::hasUser()
-        return false;
+        $user_list = \array_flip($this->getUsers());
+
+        return isset($user_list[$user_name]);
     }
 
     /**
@@ -109,36 +166,90 @@ class Group extends Element
      *
      * @param string $user_name user name
      *
+     * @throws \Exception
+     *
      * @return bool
      */
     public function removeUser(string $user_name): bool
     {
-        // @todo Group::removeUser()
-        return false;
+        $user = $this->getConnection()->getSystemDatabase()->getUser($user_name);
+
+        return $user->removeGroups([$this->getName()]);
     }
 
     /**
      * Removes all users from group // removes group from all users.
      *
+     * @throws \Exception
+     *
      * @return bool
      */
     public function clearUsers(): bool
     {
-        // @todo Group::clearUsers()
-        return false;
+        $user_names = $this->getUsers();
+
+        $paths = [];
+        $values = [];
+
+        foreach ($user_names as $user_name) {
+            $values[] = null;
+            $paths[] = [$user_name, $this->getName()];
+        }
+
+        // nothing to write to cube
+        if (0 === \count($values)) {
+            return false;
+        }
+
+        return $this->getConnection()
+            ->getSystemDatabase()
+            ->getCubeByName('#_USER_GROUP')
+            ->setBulk($values, $paths)
+            ;
     }
 
     /**
      * Sets roles for a group.
      *
-     * @param string[] $role_name array of role names
+     * @param string[] $role_names array of role names
+     *
+     * @throws \Exception
      *
      * @return bool
      */
-    public function setRole(array $role_name): bool
+    public function setRole(array $role_names): bool
     {
-        // @todo Group::setRole()
-        return false;
+        // @todo Group::setRole() clearRoles() check for success --> throw Exception on fail?
+        $this->clearRoles();
+
+        $valid_roles = \array_flip($this->getConnection()->getSystemDatabase()->getRoles());
+
+        $paths = [];
+        $values = [];
+
+        foreach ($role_names as $role_name) {
+            if (\is_string($role_name)) {
+                throw new \InvalidArgumentException('Group::setRole() expects array of strings as parameter.');
+            }
+
+            if (!isset($valid_roles[$role_name])) {
+                throw new \InvalidArgumentException(\sprintf('Group::setRole() received unknown role name %s.', $role_name));
+            }
+
+            $values[] = 1;
+            $paths[] = [$this->getName(), $role_name];
+        }
+
+        // nothing to write to cube
+        if (0 === \count($values)) {
+            return false;
+        }
+
+        return $this->getConnection()
+            ->getSystemDatabase()
+            ->getCubeByName('#_GROUP_ROLE')
+            ->setBulk($values, $paths)
+            ;
     }
 
     /**
@@ -159,12 +270,15 @@ class Group extends Element
      *
      * @param string $role_name role name
      *
+     * @throws \Exception
+     *
      * @return bool
      */
     public function hasRole(string $role_name): bool
     {
-        // @todo Group::hasRole()
-        return false;
+        $role_list = \array_flip($this->getRoles());
+
+        return isset($role_list[$role_name]);
     }
 
     /**
@@ -172,23 +286,46 @@ class Group extends Element
      *
      * @param string $role_name role name
      *
+     * @throws \Exception
+     *
      * @return bool
      */
     public function removeRole(string $role_name): bool
     {
-        // @todo Group::removeRole()
-        return false;
+        $role = $this->getConnection()->getSystemDatabase()->getRole($role_name);
+
+        return $role->removeGroups([$this->getName()]);
     }
 
     /**
      * Removes all roles from group // removes group from all roles.
      *
+     * @throws \Exception
+     *
      * @return bool
      */
     public function clearRoles(): bool
     {
-        // @todo Group::clearRoles()
-        return false;
+        $role_names = $this->getRoles();
+
+        $paths = [];
+        $values = [];
+
+        foreach ($role_names as $role_name) {
+            $values[] = null;
+            $paths[] = [$this->getName(), $role_name];
+        }
+
+        // nothing to write to cube
+        if (0 === \count($values)) {
+            return false;
+        }
+
+        return $this->getConnection()
+            ->getSystemDatabase()
+            ->getCubeByName('#_GROUP_ROLE')
+            ->setBulk($values, $paths)
+            ;
     }
 
     /**
