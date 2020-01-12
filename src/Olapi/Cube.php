@@ -1146,7 +1146,7 @@ class Cube implements IBase
             throw new \InvalidArgumentException(sprintf('Cube::setBulk() requires equal amount of paths and values: received %d paths but %s values', $count_paths, $count_values));
         }
 
-        if (0 === $count_values || 0 === $count_paths) {
+        if (0 === $count_values) {
             throw new \InvalidArgumentException(sprintf('Cube::setBulk() requires non-zero amount of paths and values: received %d paths and %s values', $count_paths, $count_values));
         }
 
