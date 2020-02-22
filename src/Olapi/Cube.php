@@ -1394,7 +1394,7 @@ class Cube implements IBase
         $return = [];
         foreach ($dim_element_coordinates as $dim_index => $elem_name) {
             $dimension = $this->getDatabase()->getDimensionById($dimensions[$dim_index]);
-            $return[] = $dimension->getElementIdFromName($elem_name);
+            $return[] = $dimension->getElementIdFromName((string) $elem_name);
         }
 
         return \implode(',', $return);
