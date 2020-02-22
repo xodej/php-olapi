@@ -101,7 +101,7 @@ class ApiCubeInfoParams extends RequestParams
      */
     public ?int $timeout = null;
 
-	/**
+    /**
      * If 1 return also data_token (optional, default is 0)
      *
      * Jedox-Doc type: boolean

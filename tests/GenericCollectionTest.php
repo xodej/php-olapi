@@ -22,8 +22,8 @@ class GenericCollectionTest extends OlapiTestCase
         self::assertIsString($store->getHash());
 
         $new_order = $store->array_reverse();
-        self::assertEquals('b', $new_order[0]);
-        self::assertEquals('a', $new_order[1]);
+        self::assertSame('b', $new_order[0]);
+        self::assertSame('a', $new_order[1]);
 
         $this->expectException(\BadMethodCallException::class);
         $store->array_bad_emthod_name();

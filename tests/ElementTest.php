@@ -63,7 +63,7 @@ class ElementTest extends OlapiTestCase
         $admin_instance = Element::getInstance($user_dim, 'admin');
         self::assertInstanceOf(Element::class, $admin_instance);
         self::assertInstanceOf(User::class, $admin_instance);
-        self::assertEquals('admin', $admin_instance->getName());
+        self::assertSame('admin', $admin_instance->getName());
 
         self::assertTrue(self::$connection->getSystemDatabase()->resetLicenseAssociation());
     }

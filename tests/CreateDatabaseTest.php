@@ -96,7 +96,7 @@ class CreateDatabaseTest extends OlapiTestCase
         $connection = new Connection(self::OLAP_HOST_WITH_PORT, self::OLAP_USER, self::OLAP_PASS);
         $user = $connection->getUser();
         self::assertInstanceOf(User::class, $user);
-        self::assertEquals('admin', $user->getName());
+        self::assertSame('admin', $user->getName());
         $connection->close();
     }
 }

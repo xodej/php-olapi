@@ -87,7 +87,7 @@ class SystemDatabaseTest extends OlapiTestCase
         $database = $connection->getSystemDatabase();
 
         $user_olapi = $database->createUser('olapi_test', ['admin']);
-        self::assertEquals('olapi_test', $user_olapi->getName());
+        self::assertSame('olapi_test', $user_olapi->getName());
 
         self::assertTrue($user_olapi->setPassword('olapi_password'));
 

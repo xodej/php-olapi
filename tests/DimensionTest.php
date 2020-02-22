@@ -51,7 +51,7 @@ class DimensionTest extends OlapiTestCase
         ;
 
         self::assertIsString($user_dim->getFirstElement());
-        self::assertEquals('admin', $user_dim->getFirstElement());
+        self::assertSame('admin', $user_dim->getFirstElement());
 
         self::assertIsArray($user_dim->getTopElements());
         self::assertCount(8, $user_dim->getTopElements());
@@ -98,11 +98,11 @@ class DimensionTest extends OlapiTestCase
             ->getDimensionByName('Products')
         ;
 
-        self::assertEquals(3, $dim_prods->getMaxDepth(), 'Dimension::getMaxDepth() failed');
-        self::assertEquals(4, $dim_prods->getMaxIndent(), 'Dimension::getMaxIndent() failed');
-        self::assertEquals(3, $dim_prods->getMaxLevel(), 'Dimension::getMaxLevel() failed');
+        self::assertSame(3, $dim_prods->getMaxDepth(), 'Dimension::getMaxDepth() failed');
+        self::assertSame(4, $dim_prods->getMaxIndent(), 'Dimension::getMaxIndent() failed');
+        self::assertSame(3, $dim_prods->getMaxLevel(), 'Dimension::getMaxLevel() failed');
 
-        self::assertEquals(0, $dim_prods->getType(), 'Dimension::getType() failed');
+        self::assertSame(0, $dim_prods->getType(), 'Dimension::getType() failed');
     }
 
     /**

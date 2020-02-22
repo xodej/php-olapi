@@ -57,7 +57,7 @@ class CubeTest extends OlapiTestCase
         $cube = self::$connection->getCube('System/#_USER_GROUP');
 
         $admin_has_group_admin_wo_cache = $cube->getValue(['admin', 'admin']);
-        self::assertEquals(1, $admin_has_group_admin_wo_cache, 'admin does not have group admin w/o caching');
+        self::assertSame('1', $admin_has_group_admin_wo_cache, 'admin does not have group admin w/o caching');
 
         self::assertFalse($cube->cacheCollectionEnabled());
 
@@ -67,14 +67,14 @@ class CubeTest extends OlapiTestCase
         $cube->startCache();
         self::assertTrue($cube->cacheCollectionEnabled());
         $admin_has_group_admin = $cube->getValueC(['admin', 'admin']);
-        self::assertEquals('#NA', $admin_has_group_admin);
-        self::assertEquals(1, $cube->getCacheSize(), 'size of cache should be 1');
+        self::assertSame('#NA', $admin_has_group_admin);
+        self::assertSame(1, $cube->getCacheSize(), 'size of cache should be 1');
         $cube->endCache();
         self::assertFalse($cube->cacheCollectionEnabled());
 
-        self::assertEquals(0, $cube->getCacheSize(), 'size of cache should be 0');
+        self::assertSame(0, $cube->getCacheSize(), 'size of cache should be 0');
 
         $admin_has_group_admin = $cube->getValueC(['admin', 'admin']);
-        self::assertEquals(1, $admin_has_group_admin, 'admin does not have group admin with caching');
+        self::assertSame(1, $admin_has_group_admin, 'admin does not have group admin with caching');
     }
 }

@@ -59,7 +59,7 @@ class ConnectionTest extends OlapiTestCase
      */
     public function testLicenseInfos(): void
     {
-        self::assertEquals('THISI-SATRI-ALLIC-ENSEY', self::$connection->getLicenseInfos()[1][0]);
+        self::assertSame('THISI-SATRI-ALLIC-ENSEY', self::$connection->getLicenseInfos()[1][0]);
     }
 
     /**
