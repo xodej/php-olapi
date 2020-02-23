@@ -4,15 +4,13 @@ declare(strict_types=1);
 
 namespace Xodej\Olapi;
 
-use Xodej\Olapi\ApiRequestParams\ApiViewCalculateParams;
+use Xodej\Olapi\ApiRequestParams\ApiViewCalculate;
 
 /**
  * Class View.
  */
 class View implements IBase
 {
-    public const API_VIEW_CALCULATE = '/view/calculate';
-
     public const FLAG_SKIP_HEADER = 1;
     public const FLAG_SKIP_ROWS = 2;
     public const FLAG_SKIP_COLUMNS = 4;
@@ -103,20 +101,20 @@ class View implements IBase
             }, $this->subsets->getArrayCopy())).PHP_EOL);
         }
 
-        $params = new ApiViewCalculateParams();
-        $params->database = $this->getDatabase()->getOlapObjectId();
+        $request = new ApiViewCalculate();
+        $request->database = $this->getDatabase()->getOlapObjectId();
 
-        $params->view_subsets = \implode(';', \array_map(static function (Subset $v) {
+        $request->view_subsets = \implode(';', \array_map(static function (Subset $v) {
             return (string) $v;
         }, $this->subsets->getArrayCopy()));
 
-        $params->view_axes = \implode(';', \array_map(static function (Subset $v) {
+        $request->view_axes = \implode(';', \array_map(static function (Subset $v) {
             return '$'.\implode(';', [$v->getName(), '', '', 0]).'$';
         }, $this->subsets->getArrayCopy()));
 
-        $params->mode = self::FLAG_COMPRESS;
+        $request->mode = self::FLAG_COMPRESS;
 
-        $response = $this->getConnection()->request(self::API_VIEW_CALCULATE, $params->asArray());
+        $response = $this->getConnection()->request($request);
 
         if ($debug) {
             return $response;

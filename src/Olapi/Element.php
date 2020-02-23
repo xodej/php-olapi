@@ -4,20 +4,16 @@ declare(strict_types=1);
 
 namespace Xodej\Olapi;
 
-use Xodej\Olapi\ApiRequestParams\ApiCellExportParams;
-use Xodej\Olapi\ApiRequestParams\ApiElementInfoParams;
-use Xodej\Olapi\ApiRequestParams\ApiElementReplaceBulkParams;
-use Xodej\Olapi\ApiRequestParams\ApiElementReplaceParams;
+use Xodej\Olapi\ApiRequestParams\ApiCellExport;
+use Xodej\Olapi\ApiRequestParams\ApiElementInfo;
+use Xodej\Olapi\ApiRequestParams\ApiElementReplace;
+use Xodej\Olapi\ApiRequestParams\ApiElementReplaceBulk;
 
 /**
  * Class Element.
  */
 class Element implements IBase
 {
-    public const API_ELEMENT_INFO = '/element/info';
-    public const API_ELEMENT_REPLACE = '/element/replace';
-    public const API_ELEMENT_REPLACE_BULK = '/element/replace_bulk';
-
     public const TYPE_NUMERIC = 1;
     public const TYPE_STRING = 2;
     public const TYPE_CONSOLIDATED = 4;
@@ -229,10 +225,10 @@ class Element implements IBase
         $area = new Area($this->getDimension()->getAttributeCube());
         $area->addElements($this->getDimension()->getName(), [$this->getName()]);
 
-        $params = new ApiCellExportParams();
-        $params->area = $area->getArea();
+        $request = new ApiCellExport();
+        $request->area = $area->getArea();
 
-        return $this->getDimension()->getAttributeCube()->arrayExport($params, false);
+        return $this->getDimension()->getAttributeCube()->arrayExport($request, false);
     }
 
     /**
@@ -384,13 +380,13 @@ class Element implements IBase
      */
     public function getInfo(): GenericCollection
     {
-        $params = new ApiElementInfoParams();
-        $params->database = $this->getDatabase()->getOlapObjectId();
-        $params->dimension = $this->getDimension()->getOlapObjectId();
-        $params->element = $this->getOlapObjectId();
+        $request = new ApiElementInfo();
+        $request->database = $this->getDatabase()->getOlapObjectId();
+        $request->dimension = $this->getDimension()->getOlapObjectId();
+        $request->element = $this->getOlapObjectId();
 
         // @todo overwrite $this->metaInfo
-        return $this->getConnection()->request(self::API_ELEMENT_INFO, $params->asArray());
+        return $this->getConnection()->request($request);
     }
 
     /**
@@ -681,14 +677,14 @@ class Element implements IBase
     {
         // @todo implement Element:modify()
 
-        $params = new ApiElementReplaceParams();
-        $params->database = $this->getDatabase()->getOlapObjectId();
-        $params->dimension = $this->getDimension()->getOlapObjectId();
-        $params->element = $this->getOlapObjectId();
+        $request = new ApiElementReplace();
+        $request->database = $this->getDatabase()->getOlapObjectId();
+        $request->dimension = $this->getDimension()->getOlapObjectId();
+        $request->element = $this->getOlapObjectId();
 
         $element_type = $type ?? $this->getElementType(true);
 
-        $params->type = $element_type;
+        $request->type = $element_type;
 
         // it's a consolidated element but no children were given
         // set current children
@@ -702,12 +698,12 @@ class Element implements IBase
             }
 
             // @todo Element::modify() implement possible checks
-            $params->children = \implode(',', $children);
-            $params->weights = \implode(',', $weights);
-            $params->type = self::TYPE_CONSOLIDATED; // consolidated
+            $request->children = \implode(',', $children);
+            $request->weights = \implode(',', $weights);
+            $request->type = self::TYPE_CONSOLIDATED; // consolidated
         }
 
-        return $this->getConnection()->request(self::API_ELEMENT_REPLACE, $params->asArray());
+        return $this->getConnection()->request($request);
     }
 
     /**
@@ -768,13 +764,13 @@ class Element implements IBase
     {
         throw new \BadMethodCallException('Element::replaceBulk() not implemented');
         // @todo Element::replaceBulk()
-        $params = new ApiElementReplaceBulkParams();
-        $params->database = $this->getDatabase()->getOlapObjectId();
-        $params->dimension = $this->getDimension()->getOlapObjectId();
+        $request = new ApiElementReplaceBulk();
+        $request->database = $this->getDatabase()->getOlapObjectId();
+        $request->dimension = $this->getDimension()->getOlapObjectId();
 
         // $params->elements =
 
-        return $this->getConnection()->request(self::API_ELEMENT_REPLACE_BULK, $params->asArray());
+        return $this->getConnection()->request($request);
     }
 
     /**

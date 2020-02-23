@@ -4,72 +4,34 @@ declare(strict_types=1);
 
 namespace Xodej\Olapi;
 
-use Xodej\Olapi\ApiRequestParams\ApiCellCopyParams;
-use Xodej\Olapi\ApiRequestParams\ApiCellDrillthroughParams;
-use Xodej\Olapi\ApiRequestParams\ApiCellExportParams;
-use Xodej\Olapi\ApiRequestParams\ApiCellReplaceBulkParams;
-use Xodej\Olapi\ApiRequestParams\ApiCellReplaceParams;
-use Xodej\Olapi\ApiRequestParams\ApiCellValueParams;
-use Xodej\Olapi\ApiRequestParams\ApiCellValuesParams;
-use Xodej\Olapi\ApiRequestParams\ApiCubeClearParams;
-use Xodej\Olapi\ApiRequestParams\ApiCubeCommitParams;
-use Xodej\Olapi\ApiRequestParams\ApiCubeConvertParams;
-use Xodej\Olapi\ApiRequestParams\ApiCubeInfoParams;
-use Xodej\Olapi\ApiRequestParams\ApiCubeLoadParams;
-use Xodej\Olapi\ApiRequestParams\ApiCubeLockParams;
-use Xodej\Olapi\ApiRequestParams\ApiCubeRollbackParams;
-use Xodej\Olapi\ApiRequestParams\ApiCubeRulesParams;
-use Xodej\Olapi\ApiRequestParams\ApiCubeSaveParams;
-use Xodej\Olapi\ApiRequestParams\ApiHoldCreateParams;
-use Xodej\Olapi\ApiRequestParams\ApiHoldDestroyParams;
-use Xodej\Olapi\ApiRequestParams\ApiRuleCreateParams;
-use Xodej\Olapi\ApiRequestParams\ApiRuleDestroyParams;
-use Xodej\Olapi\ApiRequestParams\ApiRuleModifyParams;
-use Xodej\Olapi\ApiRequestParams\ApiRuleParseParams;
+use Xodej\Olapi\ApiRequestParams\ApiCellCopy;
+use Xodej\Olapi\ApiRequestParams\ApiCellDrillthrough;
+use Xodej\Olapi\ApiRequestParams\ApiCellExport;
+use Xodej\Olapi\ApiRequestParams\ApiCellReplace;
+use Xodej\Olapi\ApiRequestParams\ApiCellReplaceBulk;
+use Xodej\Olapi\ApiRequestParams\ApiCellValue;
+use Xodej\Olapi\ApiRequestParams\ApiCellValues;
+use Xodej\Olapi\ApiRequestParams\ApiCubeClear;
+use Xodej\Olapi\ApiRequestParams\ApiCubeCommit;
+use Xodej\Olapi\ApiRequestParams\ApiCubeConvert;
+use Xodej\Olapi\ApiRequestParams\ApiCubeInfo;
+use Xodej\Olapi\ApiRequestParams\ApiCubeLoad;
+use Xodej\Olapi\ApiRequestParams\ApiCubeLock;
+use Xodej\Olapi\ApiRequestParams\ApiCubeRollback;
+use Xodej\Olapi\ApiRequestParams\ApiCubeRules;
+use Xodej\Olapi\ApiRequestParams\ApiCubeSave;
+use Xodej\Olapi\ApiRequestParams\ApiHoldCreate;
+use Xodej\Olapi\ApiRequestParams\ApiHoldDestroy;
+use Xodej\Olapi\ApiRequestParams\ApiRuleCreate;
+use Xodej\Olapi\ApiRequestParams\ApiRuleDestroy;
+use Xodej\Olapi\ApiRequestParams\ApiRuleModify;
+use Xodej\Olapi\ApiRequestParams\ApiRuleParse;
 
 /**
  * Class Cube.
  */
 class Cube implements IBase
 {
-    public const API_CUBE_CLEAR = '/cube/clear';
-    public const API_CUBE_CLEAR_CACHE = '/cube/clear_cache';
-    public const API_CUBE_COMMIT = '/cube/commit';
-    public const API_CUBE_CONVERT = '/cube/convert';
-    public const API_CUBE_CREATE = '/cube/create';
-    public const API_CUBE_DESTROY = '/cube/destroy';
-    public const API_CUBE_GENERATE_SCRIPT = '/cube/generate_script';
-    public const API_CUBE_HOLDS = '/cube/holds';
-    public const API_CUBE_INFO = '/cube/info';
-    public const API_CUBE_LOAD = '/cube/load';
-    public const API_CUBE_LOCK = '/cube/lock';
-    public const API_CUBE_LOCKS = '/cube/locks';
-    public const API_CUBE_RENAME = '/cube/rename';
-    public const API_CUBE_ROLLBACK = '/cube/rollback';
-    public const API_CUBE_RULES = '/cube/rules';
-    public const API_CUBE_SAVE = '/cube/save';
-    public const API_CUBE_UNLOAD = '/cube/unload';
-
-    public const API_CELL_AREA = '/cell/area';
-    public const API_CELL_COPY = '/cell/copy';
-    public const API_CELL_DRILLTHROUGH = '/cell/drillthrough';
-    public const API_CELL_EXPORT = '/cell/export';
-    public const API_CELL_GOALSEEK = '/cell/goalseek';
-    public const API_CELL_REPLACE = '/cell/replace';
-    public const API_CELL_REPLACE_BULK = '/cell/replace_bulk';
-    public const API_CELL_VALUE = '/cell/value';
-    public const API_CELL_VALUES = '/cell/values';
-
-    public const API_RULE_CREATE = '/rule/create';
-    public const API_RULE_DESTROY = '/rule/destroy';
-    public const API_RULE_FUNCTIONS = '/rule/functions';
-    public const API_RULE_INFO = '/rule/info';
-    public const API_RULE_MODIFY = '/rule/modify';
-    public const API_RULE_PARSE = '/rule/parse';
-
-    public const API_HOLD_CREATE = '/hold/create';
-    public const API_HOLD_DESTROY = '/hold/destroy';
-
     public const DRILL_MODE_SVS = 1;
     public const DRILL_MODE_SVS_SECONDARY = 2;
     public const DRILL_MODE_AUDIT = 3;
@@ -121,17 +83,17 @@ class Cube implements IBase
     /**
      * Returns an array of cube data based on given request parameters.
      *
-     * @param null|ApiCellExportParams $params                array of request parameters
-     * @param null|bool                $show_headers          if true add headers as first array element
-     * @param null|bool                $replace_special_chars if true \t, \r and \n are replaced
-     * @param null|int                 $max_rows              number of rows to be returned (default: 10,000)
+     * @param null|ApiCellExport $params                array of request parameters
+     * @param null|bool          $show_headers          if true add headers as first array element
+     * @param null|bool          $replace_special_chars if true \t, \r and \n are replaced
+     * @param null|int           $max_rows              number of rows to be returned (default: 10,000)
      *
-     *@throws \ErrorException
+     * @throws \ErrorException
      *
-     * @return array<int,array<string>><
+     * @return array<int,array<string>>
      */
     public function arrayExport(
-        ?ApiCellExportParams $params = null,
+        ?ApiCellExport $params = null,
         ?bool $show_headers = null,
         ?bool $replace_special_chars = null,
         ?int $max_rows = null
@@ -192,13 +154,13 @@ class Cube implements IBase
             $complete = true;
         }
 
-        $params = new ApiCubeClearParams();
-        $params->database = $this->getDatabase()->getOlapObjectId();
-        $params->cube = $this->getOlapObjectId();
-        $params->area = $this->createArea((array) $element_list);
-        $params->complete = $complete;
+        $request = new ApiCubeClear();
+        $request->database = $this->getDatabase()->getOlapObjectId();
+        $request->cube = $this->getOlapObjectId();
+        $request->area = $this->createArea((array) $element_list);
+        $request->complete = $complete;
 
-        $response = $this->getConnection()->request(self::API_CUBE_CLEAR, $params->asArray());
+        $response = $this->getConnection()->request($request);
 
         return (bool) ($response[0] ?? false);
     }
@@ -214,12 +176,12 @@ class Cube implements IBase
      */
     public function commit(int $lock_id): bool
     {
-        $params = new ApiCubeCommitParams();
-        $params->database = $this->getDatabase()->getOlapObjectId();
-        $params->cube = $this->getOlapObjectId();
-        $params->lock = $lock_id;
+        $request = new ApiCubeCommit();
+        $request->database = $this->getDatabase()->getOlapObjectId();
+        $request->cube = $this->getOlapObjectId();
+        $request->lock = $lock_id;
 
-        $response = $this->getConnection()->request(self::API_CUBE_COMMIT, $params->asArray());
+        $response = $this->getConnection()->request($request);
 
         return (bool) ($response[0] ?? false);
     }
@@ -238,12 +200,12 @@ class Cube implements IBase
         // default is 0=normal cube type
         $cube_type ??= 0;
 
-        $params = new ApiCubeConvertParams();
-        $params->database = $this->getDatabase()->getOlapObjectId();
-        $params->cube = $this->getOlapObjectId();
-        $params->type = $cube_type;
+        $request = new ApiCubeConvert();
+        $request->database = $this->getDatabase()->getOlapObjectId();
+        $request->cube = $this->getOlapObjectId();
+        $request->type = $cube_type;
 
-        $response = $this->getConnection()->request(self::API_CUBE_CONVERT, $params->asArray());
+        $response = $this->getConnection()->request($request);
 
         return (bool) ($response[0] ?? false);
     }
@@ -255,7 +217,7 @@ class Cube implements IBase
      * @param string[]               $path_receiver
      * @param null|bool              $use_rules
      * @param null|mixed             $value
-     * @param null|ApiCellCopyParams $params
+     * @param null|ApiCellCopy       $request
      *
      * @throws \Exception
      *
@@ -266,17 +228,17 @@ class Cube implements IBase
         array $path_receiver,
         ?bool $use_rules = null,
         $value = null,
-        ?ApiCellCopyParams $params = null
+        ?ApiCellCopy $request = null
     ): bool {
-        $params ??= new ApiCellCopyParams();
-        $params->database = $this->getDatabase()->getOlapObjectId();
-        $params->cube = $this->getOlapObjectId();
-        $params->path = $this->buildPathFromElements($path_sender);
-        $params->path_to = $this->buildPathFromElements($path_receiver);
-        $params->use_rules ??= $use_rules;
-        $params->value ??= $value;
+        $request ??= new ApiCellCopy();
+        $request->database = $this->getDatabase()->getOlapObjectId();
+        $request->cube = $this->getOlapObjectId();
+        $request->path = $this->buildPathFromElements($path_sender);
+        $request->path_to = $this->buildPathFromElements($path_receiver);
+        $request->use_rules ??= $use_rules;
+        $request->value ??= $value;
 
-        $response = $this->getConnection()->request(self::API_CELL_COPY, $params->asArray());
+        $response = $this->getConnection()->request($request);
 
         return (bool) ($response[0] ?? false);
     }
@@ -305,12 +267,12 @@ class Cube implements IBase
      */
     public function createHold(Area $area): GenericCollection
     {
-        $params = new ApiHoldCreateParams();
-        $params->database = $this->getDatabase()->getOlapObjectId();
-        $params->cube = $this->getOlapObjectId();
-        $params->area = $area->getArea();
+        $request = new ApiHoldCreate();
+        $request->database = $this->getDatabase()->getOlapObjectId();
+        $request->cube = $this->getOlapObjectId();
+        $request->area = $area->getArea();
 
-        return $this->getDatabase()->getConnection()->request(self::API_HOLD_CREATE, $params->asArray());
+        return $this->getDatabase()->getConnection()->request($request);
     }
 
     /**
@@ -318,22 +280,22 @@ class Cube implements IBase
      *
      * @param string                   $definition
      * @param null|bool                $activate
-     * @param null|ApiRuleCreateParams $params
+     * @param null|ApiRuleCreate       $request
      *
      * @throws \Exception
      *
      * @return array
      */
-    public function createRule(string $definition, ?bool $activate = null, ?ApiRuleCreateParams $params = null): array
+    public function createRule(string $definition, ?bool $activate = null, ?ApiRuleCreate $request = null): array
     {
-        $params ??= new ApiRuleCreateParams();
-        $params->database = $this->getDatabase()->getOlapObjectId();
-        $params->cube = $this->getOlapObjectId();
-        $params->definition = $definition;
-        $params->activate = $activate ?? true;
+        $request ??= new ApiRuleCreate();
+        $request->database = $this->getDatabase()->getOlapObjectId();
+        $request->cube = $this->getOlapObjectId();
+        $request->definition = $definition;
+        $request->activate = $activate ?? true;
 
         return $this->getConnection()
-            ->request(self::API_RULE_CREATE, $params->asArray())
+            ->request($request)
             ->getArrayCopy()
             ;
     }
@@ -395,15 +357,15 @@ class Cube implements IBase
      */
     public function deleteRules(?array $rule_ids = null): bool
     {
-        $params = new ApiRuleDestroyParams();
-        $params->database = $this->getOlapObjectId();
-        $params->cube = $this->getOlapObjectId();
+        $request = new ApiRuleDestroy();
+        $request->database = $this->getOlapObjectId();
+        $request->cube = $this->getOlapObjectId();
 
         if (null !== $rule_ids && isset($rule_ids[0])) {
-            $params->rule = \implode(',', $rule_ids);
+            $request->rule = \implode(',', $rule_ids);
         }
 
-        $response = $this->getDatabase()->getConnection()->request(self::API_RULE_DESTROY, $params->asArray());
+        $response = $this->getDatabase()->getConnection()->request($request);
 
         return (bool) ($response[0] ?? false);
     }
@@ -418,17 +380,17 @@ class Cube implements IBase
      */
     public function destroyHold(?bool $complete = null, ?string $hold_identifier = null): bool
     {
-        $params = new ApiHoldDestroyParams();
-        $params->database = $this->getDatabase()->getOlapObjectId();
-        $params->cube = $this->getOlapObjectId();
-        $params->complete = $complete ?? false;
-        $params->hold = $hold_identifier;
+        $request = new ApiHoldDestroy();
+        $request->database = $this->getDatabase()->getOlapObjectId();
+        $request->cube = $this->getOlapObjectId();
+        $request->complete = $complete ?? false;
+        $request->hold = $hold_identifier;
 
-        if (false === $params->complete && null === $params->hold) {
+        if (false === $request->complete && null === $request->hold) {
             throw new \DomainException('Cube::destroyHold() requires $hold_identifier for non-complete deletes');
         }
 
-        $response = $this->getDatabase()->getConnection()->request(self::API_HOLD_DESTROY, $params->asArray());
+        $response = $this->getDatabase()->getConnection()->request($request);
 
         return (bool) ($response[0] ?? false);
     }
@@ -436,36 +398,36 @@ class Cube implements IBase
     /**
      * @param int[]|string[]                 $path
      * @param null|int                       $drill_mode
-     * @param null|ApiCellDrillthroughParams $params
+     * @param null|ApiCellDrillthrough       $request
      *
      * @throws \Exception
      *
      * @return GenericCollection
      */
-    public function drillthrough(array $path, ?int $drill_mode = null, ?ApiCellDrillthroughParams $params = null): GenericCollection
+    public function drillthrough(array $path, ?int $drill_mode = null, ?ApiCellDrillthrough $request = null): GenericCollection
     {
-        $params ??= new ApiCellDrillthroughParams();
-        $params->database = $this->getDatabase()->getOlapObjectId();
-        $params->cube = $this->getOlapObjectId();
-        $params->mode = $drill_mode ?? self::DRILL_MODE_SVS;
+        $request ??= new ApiCellDrillthrough();
+        $request->database = $this->getDatabase()->getOlapObjectId();
+        $request->cube = $this->getOlapObjectId();
+        $request->mode = $drill_mode ?? self::DRILL_MODE_SVS;
 
         if (\is_int($path[0]) || \is_numeric($path[0])) {
-            $params->path = \implode(',', $path);
+            $request->path = \implode(',', $path);
         } else {
-            $params->name_path = \implode(',', $path);
+            $request->name_path = \implode(',', $path);
         }
 
         // Audit cell history mode = 3
         if (self::DRILL_MODE_AUDIT === $drill_mode) {
-            $params->area = (new Area($this))->getArea();
-            $params->definition ??= 'USER-D';
-            $params->blocksize ??= 1000;
-            $params->value ??= 0;
-            $params->source ??= '';
-            $params->condition ??= '';
+            $request->area = (new Area($this))->getArea();
+            $request->definition ??= 'USER-D';
+            $request->blocksize ??= 1000;
+            $request->value ??= 0;
+            $request->source ??= '';
+            $request->condition ??= '';
         }
 
-        return $this->getDatabase()->getConnection()->request(self::API_CELL_DRILLTHROUGH, $params->asArray());
+        return $this->getDatabase()->getConnection()->request($request);
     }
 
     /**
@@ -483,12 +445,12 @@ class Cube implements IBase
             return;
         }
 
-        $params = new ApiCellValuesParams();
-        $params->database = $this->getDatabase()->getOlapObjectId();
-        $params->cube = $this->getOlapObjectId();
-        $params->paths = \implode(':', $this->cache);
+        $request = new ApiCellValues();
+        $request->database = $this->getDatabase()->getOlapObjectId();
+        $request->cube = $this->getOlapObjectId();
+        $request->paths = \implode(':', $this->cache);
 
-        $response = $this->getConnection()->request(self::API_CELL_VALUES, $params->asArray());
+        $response = $this->getConnection()->request($request);
 
         $index = -1;
         foreach ($this->cache as $path_hash => $value) {
@@ -506,7 +468,7 @@ class Cube implements IBase
     }
 
     /**
-     * @param null|ApiCellExportParams $params
+     * @param null|ApiCellExport       $request
      * @param null|bool                $show_headers
      * @param null|bool                $replace_special_chars
      *
@@ -516,7 +478,7 @@ class Cube implements IBase
      * @return bool|resource
      */
     public function export(
-        ?ApiCellExportParams $params = null,
+        ?ApiCellExport $request = null,
         ?bool $show_headers = null,
         ?bool $replace_special_chars = null
     ) {
@@ -526,7 +488,7 @@ class Cube implements IBase
         $database = $this->getDatabase();
         $dimensions = $this->listDimensions();
 
-        $data_stream = $this->streamExport($params);
+        $data_stream = $this->streamExport($request);
 
         if (!\is_resource($data_stream)) {
             throw new \ErrorException('failed to open data stream');
@@ -580,17 +542,15 @@ class Cube implements IBase
     }
 
     /**
-     * @param null|array $params
-     * @param null|bool  $show_headers
-     * @param null|bool  $replace_special_chars
-     *
-     *@throws \Exception
-     * @throws \ErrorException
-     *
+     * @param null|ApiCellExport $params
+     * @param null|bool $show_headers
+     * @param null|bool $replace_special_chars
      * @return \Generator
+     * @throws \Exception
+     * @throws \ErrorException
      */
     public function exportRowProcessor(
-        ?ApiCellExportParams $params = null,
+        ?ApiCellExport $params = null,
         ?bool $show_headers = null,
         ?bool $replace_special_chars = null
     ): \Generator {
@@ -747,12 +707,12 @@ class Cube implements IBase
      */
     public function getRules(?string $pattern = null, ?bool $use_identifier = null): GenericCollection
     {
-        $params = new ApiCubeRulesParams();
-        $params->database = $this->getDatabase()->getOlapObjectId();
-        $params->cube = $this->getOlapObjectId();
-        $params->use_identifier = $use_identifier ?? false;
+        $request = new ApiCubeRules();
+        $request->database = $this->getDatabase()->getOlapObjectId();
+        $request->cube = $this->getOlapObjectId();
+        $request->use_identifier = $use_identifier ?? false;
 
-        $response = $this->getConnection()->request(self::API_CUBE_RULES, $params->asArray());
+        $response = $this->getConnection()->request($request);
 
         if (null === $pattern) {
             return $response;
@@ -814,19 +774,19 @@ class Cube implements IBase
      */
     public function getValueAsCollection(array $dims, ?bool $use_keys = null): GenericCollection
     {
-        $params = new ApiCellValueParams();
-        $params->database = $this->getDatabase()->getOlapObjectId();
-        $params->cube = $this->getOlapObjectId();
-        $params->path = $this->buildPathFromElements($dims, $use_keys ?? false);
-        $params->show_lock_info = true;
-        $params->show_rule = true;
+        $request = new ApiCellValue();
+        $request->database = $this->getDatabase()->getOlapObjectId();
+        $request->cube = $this->getOlapObjectId();
+        $request->path = $this->buildPathFromElements($dims, $use_keys ?? false);
+        $request->show_lock_info = true;
+        $request->show_rule = true;
 
-        return $this->getConnection()->request(self::API_CELL_VALUE, $params->asArray());
+        return $this->getConnection()->request($request);
     }
 
     /**
-     * @param array     $dims
-     * @param null|bool $use_keys
+     * @param array $dims
+     * @param bool|null $use_keys
      *
      * @throws \Exception
      *
@@ -874,15 +834,15 @@ class Cube implements IBase
      */
     public function getValueRaw(array $dims, ?bool $use_keys = null): string
     {
-        $params = new ApiCellValueParams();
-        $params->database = $this->getDatabase()->getOlapObjectId();
-        $params->cube = $this->getOlapObjectId();
-        $params->path = $this->buildPathFromElements($dims, $use_keys ?? false);
+        $request = new ApiCellValue();
+        $request->database = $this->getDatabase()->getOlapObjectId();
+        $request->cube = $this->getOlapObjectId();
+        $request->path = $this->buildPathFromElements($dims, $use_keys ?? false);
 
-        $params->show_lock_info = true;
-        $params->show_rule = true;
+        $request->show_lock_info = true;
+        $request->show_rule = true;
 
-        return (string) \fgets($this->getConnection()->requestRaw(self::API_CELL_VALUE, $params->asArray()));
+        return (string) \fgets($this->getConnection()->requestRaw($request->url(), $request->asArray()));
     }
 
     /**
@@ -918,26 +878,26 @@ class Cube implements IBase
     /**
      * Shows cube data.
      *
-     * @param null|ApiCubeInfoParams $params
+     * @param null|ApiCubeInfo $request
      *
      * @throws \Exception
      *
      * @return GenericCollection<array<string>>
      */
-    public function info(?ApiCubeInfoParams $params = null): GenericCollection
+    public function info(?ApiCubeInfo $request = null): GenericCollection
     {
-        $params ??= new ApiCubeInfoParams();
-        $params->database = $this->getDatabase()->getOlapObjectId();
-        $params->cube = $this->getOlapObjectId();
+        $request ??= new ApiCubeInfo();
+        $request->database = $this->getDatabase()->getOlapObjectId();
+        $request->cube = $this->getOlapObjectId();
 
-        $params->show_permission ??= false;
-        $params->show_counters ??= false;
-        $params->show_gpuflag ??= false;
-        $params->show_audit ??= false;
-        $params->show_zero ??= false;
-        $params->wait ??= false;
+        $request->show_permission ??= false;
+        $request->show_counters ??= false;
+        $request->show_gpuflag ??= false;
+        $request->show_audit ??= false;
+        $request->show_zero ??= false;
+        $request->wait ??= false;
 
-        return $this->getDatabase()->getConnection()->request(self::API_CUBE_INFO, $params->asArray());
+        return $this->getDatabase()->getConnection()->request($request);
     }
 
     /**
@@ -971,19 +931,19 @@ class Cube implements IBase
     /**
      * Lists the locked cube areas.
      *
-     * @param null|ApiCubeLockParams $params
+     * @param null|ApiCubeLock $request
      *
      * @throws \Exception
      *
      * @return GenericCollection<array<string>>
      */
-    public function listLocks(?ApiCubeLockParams $params = null): GenericCollection
+    public function listLocks(?ApiCubeLock $request = null): GenericCollection
     {
-        $params ??= new ApiCubeLockParams();
-        $params->database = $this->getDatabase()->getOlapObjectId();
-        $params->cube = $this->getOlapObjectId();
+        $request ??= new ApiCubeLock();
+        $request->database = $this->getDatabase()->getOlapObjectId();
+        $request->cube = $this->getOlapObjectId();
 
-        return $this->getDatabase()->getConnection()->request(self::API_CUBE_LOCKS, $params->asArray());
+        return $this->getDatabase()->getConnection()->request($request);
     }
 
     /**
@@ -993,11 +953,11 @@ class Cube implements IBase
      */
     public function load(): bool
     {
-        $params = new ApiCubeLoadParams();
-        $params->database = $this->getDatabase()->getOlapObjectId();
-        $params->cube = $this->getOlapObjectId();
+        $request = new ApiCubeLoad();
+        $request->database = $this->getDatabase()->getOlapObjectId();
+        $request->cube = $this->getOlapObjectId();
 
-        $response = $this->getDatabase()->getConnection()->request(self::API_CUBE_LOAD, $params->asArray());
+        $response = $this->getDatabase()->getConnection()->request($request);
 
         return (bool) ($response[0] ?? false);
     }
@@ -1013,18 +973,18 @@ class Cube implements IBase
      */
     public function lock(?array $area = null): GenericCollection
     {
-        $params = new ApiCubeLockParams();
-        $params->database = $this->getDatabase()->getOlapObjectId();
-        $params->cube = $this->getOlapObjectId();
+        $request = new ApiCubeLock();
+        $request->database = $this->getDatabase()->getOlapObjectId();
+        $request->cube = $this->getOlapObjectId();
 
         $complete = true;
         if (null !== $area) {
-            $params->area = $this->createArea($area);
+            $request->area = $this->createArea($area);
             $complete = false;
         }
-        $params->complete = $complete;
+        $request->complete = $complete;
 
-        return $this->getConnection()->request(self::API_CUBE_LOCK, $params->asArray());
+        return $this->getConnection()->request($request);
     }
 
     /**
@@ -1039,14 +999,14 @@ class Cube implements IBase
      */
     public function moveRules(array $rule_identifiers, float $rule_position): GenericCollection
     {
-        $params = new ApiRuleModifyParams();
-        $params->database = $this->getDatabase()->getOlapObjectId();
-        $params->cube = $this->getOlapObjectId();
+        $request = new ApiRuleModify();
+        $request->database = $this->getDatabase()->getOlapObjectId();
+        $request->cube = $this->getOlapObjectId();
 
-        $params->rule = \implode(',', $rule_identifiers);
-        $params->position = $rule_position;
+        $request->rule = \implode(',', $rule_identifiers);
+        $request->position = $rule_position;
 
-        return $this->getDatabase()->getConnection()->request(self::API_RULE_MODIFY, $params->asArray());
+        return $this->getDatabase()->getConnection()->request($request);
     }
 
     /**
@@ -1060,13 +1020,13 @@ class Cube implements IBase
      */
     public function parseRule(string $definition): GenericCollection
     {
-        $params = new ApiRuleParseParams();
-        $params->database = $this->getDatabase()->getOlapObjectId();
-        $params->cube = $this->getOlapObjectId();
+        $request = new ApiRuleParse();
+        $request->database = $this->getDatabase()->getOlapObjectId();
+        $request->cube = $this->getOlapObjectId();
 
-        $params->definition = $definition;
+        $request->definition = $definition;
 
-        return $this->getConnection()->request(self::API_RULE_PARSE, $params->asArray());
+        return $this->getConnection()->request($request);
     }
 
     /**
@@ -1094,14 +1054,14 @@ class Cube implements IBase
      */
     public function rollback(int $lock_id, ?int $steps = null): bool
     {
-        $params = new ApiCubeRollbackParams();
-        $params->database = $this->getDatabase()->getOlapObjectId();
-        $params->cube = $this->getOlapObjectId();
+        $request = new ApiCubeRollback();
+        $request->database = $this->getDatabase()->getOlapObjectId();
+        $request->cube = $this->getOlapObjectId();
 
-        $params->lock = $lock_id;
-        $params->steps = $steps;
+        $request->lock = $lock_id;
+        $request->steps = $steps;
 
-        $response = $this->getConnection()->request(self::API_CUBE_ROLLBACK, $params->asArray());
+        $response = $this->getConnection()->request($request);
 
         return (bool) ($response[0] ?? false);
     }
@@ -1111,17 +1071,15 @@ class Cube implements IBase
      *
      * @throws \Exception
      *
-     * @return bool
-     *
      * @deprecated use Database:save() instead
      */
     public function save(): bool
     {
-        $params = new ApiCubeSaveParams();
-        $params->database = $this->getDatabase()->getOlapObjectId();
-        $params->cube = $this->getOlapObjectId();
+        $request = new ApiCubeSave();
+        $request->database = $this->getDatabase()->getOlapObjectId();
+        $request->cube = $this->getOlapObjectId();
 
-        $response = $this->getDatabase()->getConnection()->request(self::API_CUBE_SAVE, $params->asArray());
+        $response = $this->getDatabase()->getConnection()->request($request);
 
         return (bool) ($response[0] ?? false);
     }
@@ -1129,15 +1087,15 @@ class Cube implements IBase
     /**
      * Write data into cube in bulk mode.
      *
-     * @param array<mixed>                  $values     array of values
-     * @param array<array<string>>          $dims_multi array of coordinates (dimension names)
-     * @param null|ApiCellReplaceBulkParams $params     array of options
+     * @param array<mixed>            $values     array of values
+     * @param array<array<string>>    $dims_multi array of coordinates (dimension names)
+     * @param null|ApiCellReplaceBulk $request    array of options
      *
      * @throws \Exception
      *
      * @return bool
      */
-    public function setBulk(array $values, array $dims_multi, ?ApiCellReplaceBulkParams $params = null): bool
+    public function setBulk(array $values, array $dims_multi, ?ApiCellReplaceBulk $request = null): bool
     {
         $count_values = \count($values);
         $count_paths = \count($dims_multi);
@@ -1150,16 +1108,16 @@ class Cube implements IBase
             throw new \InvalidArgumentException(sprintf('Cube::setBulk() requires non-zero amount of paths and values: received %d paths and %s values', $count_paths, $count_values));
         }
 
-        $params ??= new ApiCellReplaceBulkParams();
-        $params->database = $this->getDatabase()->getOlapObjectId();
-        $params->cube = $this->getOlapObjectId();
+        $request ??= new ApiCellReplaceBulk();
+        $request->database = $this->getDatabase()->getOlapObjectId();
+        $request->cube = $this->getOlapObjectId();
 
-        $params->paths = \implode(':', \array_map([$this, 'buildPathFromElements'], $dims_multi));
-        $params->values = \implode(':', \array_map(static function (?string $v) {
+        $request->paths = \implode(':', \array_map([$this, 'buildPathFromElements'], $dims_multi));
+        $request->values = \implode(':', \array_map(static function (?string $v) {
             return Util::strputcsv([($v ?? '')]);
         }, $values));
 
-        $response = $this->getConnection()->request(self::API_CELL_REPLACE_BULK, $params->asArray());
+        $response = $this->getConnection()->request($request);
 
         return (bool) ($response[0] ?? false);
     }
@@ -1167,22 +1125,22 @@ class Cube implements IBase
     /**
      * @param mixed                     $value
      * @param string[]                  $dims
-     * @param null|ApiCellReplaceParams $params
+     * @param null|ApiCellReplace       $request
      *
      * @throws \Exception
      *
      * @return bool
      */
-    public function setValue($value, array $dims, ?ApiCellReplaceParams $params = null): bool
+    public function setValue($value, array $dims, ?ApiCellReplace $request = null): bool
     {
-        $params ??= new ApiCellReplaceParams();
-        $params->database = $this->getDatabase()->getOlapObjectId();
-        $params->cube = $this->getOlapObjectId();
+        $request ??= new ApiCellReplace();
+        $request->database = $this->getDatabase()->getOlapObjectId();
+        $request->cube = $this->getOlapObjectId();
 
-        $params->path = $this->buildPathFromElements($dims);
-        $params->value = $value;
+        $request->path = $this->buildPathFromElements($dims);
+        $request->value = $value;
 
-        $response = $this->getConnection()->request(self::API_CELL_REPLACE, $params->asArray());
+        $response = $this->getConnection()->request($request);
 
         return (bool) ($response[0] ?? false);
     }
@@ -1211,7 +1169,7 @@ class Cube implements IBase
     }
 
     /**
-     * @param null|ApiCellExportParams $params
+     * @param null|ApiCellExport $request
      *
      * @throws \Exception
      *
@@ -1219,7 +1177,7 @@ class Cube implements IBase
      *
      * @example file_put_contents('x.csv', $cube->export());
      */
-    public function streamExport(?ApiCellExportParams $params = null)
+    public function streamExport(?ApiCellExport $request = null)
     {
         // init the return stream with 10MB in memory size
         // if exceeds 10MB it's swapped into file on disk
@@ -1234,7 +1192,7 @@ class Cube implements IBase
 
         // incrementally fetch data from server
         do {
-            $result = $this->doRawRequest($params, $coord_path);
+            $result = $this->doRawRequest($request, $coord_path);
             \stream_copy_to_stream($result->__stream__, $ret_stream);
             // \fseek($ret_stream, 0, SEEK_END);
             $coord_path = $result->__lastpath__;
@@ -1255,7 +1213,7 @@ class Cube implements IBase
     }
 
     /**
-     * @param null|ApiCellExportParams $params
+     * @param null|ApiCellExport       $request
      * @param null|string              $coord_path
      *
      * @throws \ErrorException
@@ -1263,7 +1221,7 @@ class Cube implements IBase
      *
      * @return \stdClass
      */
-    protected function doRawRequest(?ApiCellExportParams $params = null, ?string $coord_path = null): object
+    protected function doRawRequest(?ApiCellExport $request = null, ?string $coord_path = null): object
     {
         // init the return stream with 10MB in memory size
         // if exceeds 10MB it's swapped into file on disk
@@ -1273,25 +1231,25 @@ class Cube implements IBase
             throw new \ErrorException('failed to open temp stream');
         }
 
-        $params ??= new ApiCellExportParams();
-        $params->database = $this->getDatabase()->getOlapObjectId();
-        $params->cube = $this->getOlapObjectId();
-        $params->blocksize ??= 10000;
+        $request ??= new ApiCellExport();
+        $request->database = $this->getDatabase()->getOlapObjectId();
+        $request->cube = $this->getOlapObjectId();
+        $request->blocksize ??= 10000;
 
-        $params->area ??= \implode(',', \array_fill(0, \count($this->listDimensions()), '*'));
+        $request->area ??= \implode(',', \array_fill(0, \count($this->listDimensions()), '*'));
 
-        $params->use_rules ??= false;
-        $params->base_only ??= true;
-        $params->skip_empty ??= true;
-        $params->type ??= 0;
-        $params->show_rule ??= false;
+        $request->use_rules ??= false;
+        $request->base_only ??= true;
+        $request->skip_empty ??= true;
+        $request->type ??= 0;
+        $request->show_rule ??= false;
 
         // use the path as offset only for
         // subsequent runs not the first run
-        $params->path ??= $coord_path;
+        $request->path ??= $coord_path;
 
         // make the API call and fetch the response as stream resource
-        $stream = $this->getConnection()->requestRaw(self::API_CELL_EXPORT, $params->asArray());
+        $stream = $this->getConnection()->requestRaw($request->url(), $request->asArray());
 
         if (null === $stream) {
             throw new \ErrorException('HTTP request to OLAP resulted in error');
@@ -1362,12 +1320,12 @@ class Cube implements IBase
     }
 
     /**
-     * @param string[]  $dim_element_coordinates
-     * @param null|bool $use_keys
-     *
-     * @throws \Exception
+     * @param string[] $dim_element_coordinates
+     * @param bool|null $use_keys
      *
      * @return string
+     *
+     * @throws \Exception
      */
     protected function buildPathFromElements(array $dim_element_coordinates, ?bool $use_keys = null): string
     {

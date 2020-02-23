@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Xodej\Olapi;
 
-use Xodej\Olapi\ApiRequestParams\ApiCellExportParams;
+use Xodej\Olapi\ApiRequestParams\ApiCellExport;
 
 /**
  * Class Role.
@@ -210,10 +210,10 @@ class Role extends Element
             ->getCubeByName('#_GROUP_ROLE')
         ;
 
-        $params = new ApiCellExportParams();
-        $params->area = $cube_group_role->createArea(['#_ROLE_' => [$this->getName()]]);
+        $request = new ApiCellExport();
+        $request->area = $cube_group_role->createArea(['#_ROLE_' => [$this->getName()]]);
 
-        $role_groups = $cube_group_role->arrayExport($params, false);
+        $role_groups = $cube_group_role->arrayExport($request, false);
 
         return \array_map(static function (array $v) {
             return $v[1];

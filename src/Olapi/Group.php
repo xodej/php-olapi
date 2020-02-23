@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Xodej\Olapi;
 
-use Xodej\Olapi\ApiRequestParams\ApiCellExportParams;
+use Xodej\Olapi\ApiRequestParams\ApiCellExport;
 
 /**
  * Class Group.
@@ -16,7 +16,7 @@ class Group extends Element
      *
      * @param null|bool $include_technical_user
      *
-     *@throws \Exception
+     * @throws \Exception
      *
      * @return string[]
      */
@@ -29,10 +29,10 @@ class Group extends Element
             ->getCubeByName('#_USER_GROUP')
         ;
 
-        $params = new ApiCellExportParams();
-        $params->area = $cube_user_group->createArea(['#_GROUP_' => [$this->getName()]]);
+        $request = new ApiCellExport();
+        $request->area = $cube_user_group->createArea(['#_GROUP_' => [$this->getName()]]);
 
-        $user_groups = $cube_user_group->arrayExport($params, false);
+        $user_groups = $cube_user_group->arrayExport($request, false);
 
         $user_names = \array_map(
             static function (array $v) {
@@ -72,10 +72,10 @@ class Group extends Element
             ->getCubeByName('#_GROUP_ROLE')
         ;
 
-        $params = new ApiCellExportParams();
-        $params->area = $cube_group_role->createArea(['#_GROUP_' => [$this->getName()]]);
+        $request = new ApiCellExport();
+        $request->area = $cube_group_role->createArea(['#_GROUP_' => [$this->getName()]]);
 
-        $group_roles = $cube_group_role->arrayExport($params, false);
+        $group_roles = $cube_group_role->arrayExport($request, false);
 
         return \array_map(
             static function (array $v) {

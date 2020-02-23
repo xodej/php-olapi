@@ -7,20 +7,21 @@ namespace Xodej\Olapi;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use Psr\Http\Message\ResponseInterface;
-use Xodej\Olapi\ApiRequestParams\ApiDatabaseCreateParams;
-use Xodej\Olapi\ApiRequestParams\ApiDatabaseDestroyParams;
-use Xodej\Olapi\ApiRequestParams\ApiDatabaseGenerateScriptParams;
-use Xodej\Olapi\ApiRequestParams\ApiDatabaseRenameParams;
-use Xodej\Olapi\ApiRequestParams\ApiEventBeginParams;
-use Xodej\Olapi\ApiRequestParams\ApiEventEndParams;
-use Xodej\Olapi\ApiRequestParams\ApiServerChangePasswordParams;
-use Xodej\Olapi\ApiRequestParams\ApiServerDatabasesParams;
-use Xodej\Olapi\ApiRequestParams\ApiServerInfoParams;
-use Xodej\Olapi\ApiRequestParams\ApiServerLicensesParams;
-use Xodej\Olapi\ApiRequestParams\ApiServerShutdownParams;
-use Xodej\Olapi\ApiRequestParams\ApiServerUserInfoParams;
-use Xodej\Olapi\ApiRequestParams\ApiSvsInfoParams;
-use Xodej\Olapi\ApiRequestParams\ApiSvsRestartParams;
+use Xodej\Olapi\ApiRequestParams\ApiDatabaseCreate;
+use Xodej\Olapi\ApiRequestParams\ApiDatabaseDestroy;
+use Xodej\Olapi\ApiRequestParams\ApiDatabaseGenerateScript;
+use Xodej\Olapi\ApiRequestParams\ApiDatabaseRename;
+use Xodej\Olapi\ApiRequestParams\ApiEventBegin;
+use Xodej\Olapi\ApiRequestParams\ApiEventEnd;
+use Xodej\Olapi\ApiRequestParams\ApiServerChangePassword;
+use Xodej\Olapi\ApiRequestParams\ApiServerDatabases;
+use Xodej\Olapi\ApiRequestParams\ApiServerInfo;
+use Xodej\Olapi\ApiRequestParams\ApiServerLicenses;
+use Xodej\Olapi\ApiRequestParams\ApiServerShutdown;
+use Xodej\Olapi\ApiRequestParams\ApiServerUserInfo;
+use Xodej\Olapi\ApiRequestParams\ApiSvsInfo;
+use Xodej\Olapi\ApiRequestParams\ApiSvsRestart;
+use Xodej\Olapi\ApiRequestParams\IRequest;
 use Xodej\Olapi\Filter\DataFilter;
 
 /**
@@ -28,36 +29,6 @@ use Xodej\Olapi\Filter\DataFilter;
  */
 class Connection
 {
-    public const API_SERVER_ACTIVATE_LICENSE = '/server/activate_license';
-    public const API_SERVER_BENCHMARK = '/server/benchmark';
-    public const API_SERVER_CHANGE_PASSWORD = '/server/change_password';
-    public const API_SERVER_DATABASES = '/server/databases';
-    public const API_SERVER_INFO = '/server/info';
-    public const API_SERVER_LICENSES = '/server/licenses';
-    public const API_SERVER_LOAD = '/server/load';
-    public const API_SERVER_LOCKS = '/server/locks';
-    public const API_SERVER_LOGIN = '/server/login';
-    public const API_SERVER_LOGOUT = '/server/logout';
-    public const API_SERVER_SAVE = '/server/save';
-    public const API_SERVER_SHUTDOWN = '/server/shutdown';
-    public const API_SERVER_USER_INFO = '/server/user_info';
-
-    public const API_DATABASE_CREATE = '/database/create';
-    public const API_DATABASE_DESTROY = '/database/destroy';
-    public const API_DATABASE_LOAD = '/database/load';
-    public const API_DATABASE_RENAME = '/database/rename';
-    public const API_DATABASE_SAVE = '/database/save';
-    public const API_DATABASE_UNLOAD = '/database/unload';
-
-    public const API_SVS_INFO = '/svs/info';
-    public const API_SVS_RESTART = '/svs/restart';
-    public const API_SVS_EDIT = '/svs/edit';
-
-    public const API_EVENT_BEGIN = '/event/begin';
-    public const API_EVENT_END = '/event/end';
-
-    public const API_SAML_META_SP = '/meta-sp';
-
     public static bool $debugMode = false;
 
     private ?string $host = null;
@@ -150,7 +121,7 @@ class Connection
         }
 
         // @var Client $client
-        $client->get(self::API_SERVER_LOGOUT, [
+        $client->get('/server/logout', [
             'query' => [
                 'sid' => $this->getSessionId(),
                 'type' => 1,
@@ -178,13 +149,13 @@ class Connection
      */
     public function createDatabase(string $database_name, ?string $external_identifier = null, ?string $password = null): bool
     {
-        $params = new ApiDatabaseCreateParams();
-        $params->new_name = $database_name;
-        $params->type = 0;
-        $params->external_identifier = $external_identifier;
-        $params->password = $password;
+        $request = new ApiDatabaseCreate();
+        $request->new_name = $database_name;
+        $request->type = 0;
+        $request->external_identifier = $external_identifier;
+        $request->password = $password;
 
-        $response = $this->request(self::API_DATABASE_CREATE, $params->asArray());
+        $response = $this->request($request);
 
         // reload databases after creation
         $this->reload();
@@ -223,10 +194,10 @@ class Connection
             throw new \InvalidArgumentException('Unknown database ID '.$database_id.' given.');
         }
 
-        $params = new ApiDatabaseDestroyParams();
-        $params->database = $database_id;
+        $request = new ApiDatabaseDestroy();
+        $request->database = $database_id;
 
-        $response = $this->getConnection()->request(self::API_DATABASE_DESTROY, $params->asArray());
+        $response = $this->getConnection()->request($request);
 
         $this->reload();
 
@@ -263,11 +234,11 @@ class Connection
      */
     public function eventBegin(string $user_sid, string $event_name): bool
     {
-        $params = new ApiEventBeginParams();
-        $params->source = $user_sid;
-        $params->event = $event_name;
+        $request = new ApiEventBegin();
+        $request->source = $user_sid;
+        $request->event = $event_name;
 
-        $response = $this->request(self::API_EVENT_BEGIN, $params->asArray());
+        $response = $this->request($request);
 
         return (bool) ($response[0] ?? false);
     }
@@ -281,8 +252,8 @@ class Connection
      */
     public function eventEnd(): bool
     {
-        $params = new ApiEventEndParams();
-        $response = $this->request(self::API_EVENT_END, $params->asArray());
+        $request = new ApiEventEnd();
+        $response = $this->request($request);
 
         return (bool) ($response[0] ?? false);
     }
@@ -290,19 +261,19 @@ class Connection
     /**
      * Returns database script.
      *
-     * @param string                               $database_name   database name
-     * @param null|array                           $dimension_names (Optional) array of dimension names
-     * @param null|array                           $cube_names      (Optional) array of cube names
-     * @param null|ApiDatabaseGenerateScriptParams $params          (Optional) array of options
+     * @param string                         $database_name   database name
+     * @param null|array                     $dimension_names (Optional) array of dimension names
+     * @param null|array                     $cube_names      (Optional) array of cube names
+     * @param null|ApiDatabaseGenerateScript $request          (Optional) array of options
      *
      * @throws \Exception
      *
      * @return string
      */
-    public function generateScript(string $database_name, ?array $dimension_names = null, ?array $cube_names = null, ?ApiDatabaseGenerateScriptParams $params = null): string
+    public function generateScript(string $database_name, ?array $dimension_names = null, ?array $cube_names = null, ?ApiDatabaseGenerateScript $request = null): string
     {
         return $this->getDatabaseByName($database_name)
-            ->generateScript($dimension_names, $cube_names, $params)
+            ->generateScript($dimension_names, $cube_names, $request)
         ;
     }
 
@@ -535,17 +506,17 @@ class Connection
     /**
      * Returns array response of /server/info API call.
      *
-     * @param ApiServerInfoParams $params
+     * @param ApiServerInfo $request
      *
      * @throws \ErrorException
      *
      * @return GenericCollection<array<string>>
      */
-    public function getInfo(?ApiServerInfoParams $params = null): GenericCollection
+    public function getInfo(?ApiServerInfo $request = null): GenericCollection
     {
-        $params = $params ?? new ApiServerInfoParams();
+        $request = $request ?? new ApiServerInfo();
 
-        return $this->request(self::API_SERVER_INFO, $params->asArray());
+        return $this->request($request);
     }
 
     /**
@@ -573,17 +544,17 @@ class Connection
     /**
      * Returns array response of /server/licenses API call.
      *
-     * @param null|ApiServerLicensesParams $params (Optional) options
+     * @param null|ApiServerLicenses $request (Optional) options
      *
      * @throws \ErrorException
      *
      * @return GenericCollection<array<string>>
      */
-    public function getLicenseInfos(?ApiServerLicensesParams $params = null): GenericCollection
+    public function getLicenseInfos(?ApiServerLicenses $request = null): GenericCollection
     {
-        $params ??= new ApiServerLicensesParams();
+        $request ??= new ApiServerLicenses();
 
-        return $this->request(self::API_SERVER_LICENSES, $params->asArray());
+        return $this->request($request);
     }
 
     /**
@@ -706,12 +677,12 @@ class Connection
      */
     public function getUserInfo(): GenericCollection
     {
-        $params = new ApiServerUserInfoParams();
-        $params->show_permission = true;
-        $params->show_info = true;
-        $params->show_gpuflag = true;
+        $request = new ApiServerUserInfo();
+        $request->show_permission = true;
+        $request->show_info = true;
+        $request->show_gpuflag = true;
 
-        return $this->request(self::API_SERVER_USER_INFO, $params->asArray());
+        return $this->request($request);
     }
 
     /**
@@ -764,13 +735,13 @@ class Connection
 
     /**
      * @param null|bool                     $cached
-     * @param null|ApiServerDatabasesParams $params
+     * @param null|ApiServerDatabases       $request
      *
      * @throws \ErrorException
      *
      * @return null|array<int,array<string>>
      */
-    public function listDatabases(?bool $cached = null, ?ApiServerDatabasesParams $params = null): ?array
+    public function listDatabases(?bool $cached = null, ?ApiServerDatabases $request = null): ?array
     {
         $cached = $cached ?? true;
 
@@ -778,13 +749,13 @@ class Connection
             return $this->databaseLookupByID;
         }
 
-        $params ??= new ApiServerDatabasesParams();
-        $params->show_normal = true;
-        $params->show_system = true;
-        $params->show_user_info = true;
-        $params->show_permission = true;
+        $request ??= new ApiServerDatabases();
+        $request->show_normal = true;
+        $request->show_system = true;
+        $request->show_user_info = true;
+        $request->show_permission = true;
 
-        $database_list = $this->request(self::API_SERVER_DATABASES, $params->asArray());
+        $database_list = $this->request($request);
 
         $this->databases = new DatabaseCollection();
         $this->databaseLookupByID = [];
@@ -834,29 +805,33 @@ class Connection
      */
     public function renameDatabase(string $name_old, string $name_new): bool
     {
-        $params = new ApiDatabaseRenameParams();
-        $params->database = $this->getDatabaseIdFromName($name_old);
-        $params->new_name = $name_new;
+        $request = new ApiDatabaseRename();
+        $request->database = $this->getDatabaseIdFromName($name_old);
+        $request->new_name = $name_new;
 
-        $response = $this->request(self::API_DATABASE_RENAME, $params->asArray());
+        $response = $this->request($request);
 
         return (bool) ($response[0] ?? false);
     }
 
     /**
-     * @param string     $url
-     * @param null|array $params
+     * @param IRequest $request
      *
      * @throws \ErrorException
      *
      * @return GenericCollection
      */
-    public function request(string $url, ?array $params = null): GenericCollection
+    public function request(IRequest $request): GenericCollection
     {
         if (null === ($client = $this->getClient())) {
             throw new \ErrorException('HTTP client not initialized. Cancelled HTTP request.');
         }
 
+        if (null === ($url = $request->url())) {
+            throw new \InvalidArgumentException('URL missing in request');
+        }
+
+        $params = $request->asArray();
         if (null === $params) {
             $params = [];
         }
@@ -950,11 +925,11 @@ class Connection
      */
     public function setUserPassword(string $user_name, string $password_new): bool
     {
-        $params = new ApiServerChangePasswordParams();
-        $params->user = $user_name;
-        $params->password = $password_new;
+        $request = new ApiServerChangePassword();
+        $request->user = $user_name;
+        $request->password = $password_new;
 
-        $response = $this->request(self::API_SERVER_CHANGE_PASSWORD, $params->asArray());
+        $response = $this->request($request);
 
         return (bool) ($response[0] ?? false);
     }
@@ -975,22 +950,22 @@ class Connection
      */
     public function svsInfo(): GenericCollection
     {
-        $params = new ApiSvsInfoParams();
+        $request = new ApiSvsInfo();
 
-        return $this->request(self::API_SVS_INFO, $params->asArray());
+        return $this->request($request);
     }
 
     /**
-     * @param null|ApiSvsRestartParams $params
+     * @param null|ApiSvsRestart $request
      *
      * @throws \ErrorException
      *
      * @return bool
      */
-    public function svsRestart(?ApiSvsRestartParams $params = null): bool
+    public function svsRestart(?ApiSvsRestart $request = null): bool
     {
-        $params ??= new ApiSvsRestartParams();
-        $response = $this->request(self::API_SVS_RESTART, $params->asArray());
+        $request ??= new ApiSvsRestart();
+        $response = $this->request($request);
 
         return (bool) ($response[0] ?? false);
     }
@@ -1002,8 +977,8 @@ class Connection
      */
     public function shutdownServer(): bool
     {
-        $params = new ApiServerShutdownParams();
-        $response = $this->request(self::API_SERVER_SHUTDOWN, $params->asArray());
+        $request = new ApiServerShutdown();
+        $response = $this->request($request);
 
         return (bool) ($response[0] ?? false);
     }
@@ -1061,7 +1036,7 @@ class Connection
                 \file_put_contents('php://stderr', 'Connection: '.$this->host.' / user: '.$this->user.\PHP_EOL);
             }
 
-            $response = $this->client->request('POST', self::API_SERVER_LOGIN, [
+            $response = $this->client->request('POST', '/server/login', [
                 'form_params' => [
                     'user' => $this->user,
                     'extern_password' => $this->pass,
