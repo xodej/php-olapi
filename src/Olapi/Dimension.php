@@ -66,8 +66,8 @@ class Dimension implements IBase
      * Adds a new element to a dimension.
      *
      * @param string      $elementName          element name
-     * @param null|string $parent_element       parent element name
      * @param null|int    $element_type         element type Element::TYPE_x
+     * @param null|string $parent_element       parent element name
      * @param null|float  $consolidation_factor consolidation factor
      *
      * @throws \Exception
@@ -76,11 +76,11 @@ class Dimension implements IBase
      */
     public function addElement(
         string $elementName,
-        ?string $parent_element = null,
         ?int $element_type = null,
+        ?string $parent_element = null,
         ?float $consolidation_factor = null
     ): array {
-        // @todo implement Dimension::addElement()
+        // @see Dimension::createElement()
         $element_type = $element_type ?? Element::TYPE_NUMERIC;
         $consolidation_factor = $consolidation_factor ?? 1.0;
 
@@ -192,18 +192,6 @@ class Dimension implements IBase
     }
 
     /**
-     * Create new dimension.
-     *
-     * @throws \Exception
-     *
-     * @return bool
-     */
-    public function create(): bool
-    {
-        return $this->getDatabase()->createDimension($this->getName());
-    }
-
-    /**
      * Create a new element.
      *
      * @param string        $element_name element name
@@ -223,11 +211,12 @@ class Dimension implements IBase
         ?array $children = null,
         ?array $weights = null
     ): bool {
+        // @see Dimension::addElement()
         $element_type = $element_type ?? 1;
         $children = $children ?? [];
         $weights = $weights ?? [];
 
-        return $this->createElements([$element_name, $element_type, $children, $weights]);
+        return $this->createElements([[$element_name, $element_type, $children, $weights]]);
     }
 
     /**
@@ -295,7 +284,16 @@ class Dimension implements IBase
      */
     public function delete(): bool
     {
-        return $this->getDatabase()->deleteDimension($this->getName());
+        // if delete was successful invalidate PHP object representation
+        if ($this->getDatabase()->deleteDimension($this->getName())) {
+            $this->metaInfo = [];
+            $this->elementLookupByID = null;
+            $this->elementLookupByName = null;
+            $this->elements = new ElementCollection();
+            return true;
+        }
+
+        return false;
     }
 
     /**
