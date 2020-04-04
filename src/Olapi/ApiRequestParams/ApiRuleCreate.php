@@ -51,7 +51,7 @@ class ApiRuleCreate extends ApiAbstractRequest
      *
      * Jedox-Doc type: integer
      */
-    public ?int $activate = null;
+    public ?bool $activate = null;
 
     /**
      * Urlencoded external identifier.
