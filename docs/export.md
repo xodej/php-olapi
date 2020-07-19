@@ -30,6 +30,10 @@ file_put_contents('export.csv', $cube->export());
 ## Export only parts of the cube
 
 ```php
+use Xodej\Olapi\ApiRequestParams\ApiCellExport;
+
+// .. code ..
+
 // fetch cube from database
 $cube = $conn->getCube('Biker/Balance');
 
@@ -38,13 +42,21 @@ $area = $cube->createArea([
     'Versions' => ['Actual', 'Budget']
 ]);
 
+// create parameters for export API call
+$export_params = new ApiCellExport();
+$export_params->area = $area;
+
 // export cube data into export.csv (base elements only)
-file_put_contents('export.csv', $cube->export(['area' => $area]));
+file_put_contents('export.csv', $cube->export($export_params));
 ```
 
 ## Export as array
 
 ```php
+use Xodej\Olapi\ApiRequestParams\ApiCellExport;
+
+// .. code ..
+
 // fetch cube from database
 $cube = $conn->getCube('Biker/Balance');
 
@@ -53,13 +65,21 @@ $area = $cube->createArea([
     'Versions' => ['Actual', 'Budget']
 ]);
 
+// create parameters for export API call
+$export_params = new ApiCellExport();
+$export_params->area = $area;
+
 // export cube data as array (base elements only)
-$data = $cube->exportAsArray(['area' => $area]);
+$data = $cube->arrayExport($export_params);
 ```
 
 ## Export specials
 
 ```php
+use Xodej\Olapi\ApiRequestParams\ApiCellExport;
+
+// .. code ..
+
 // fetch cube from database
 $cube = $conn->getCube('Biker/Balance');
 
@@ -68,15 +88,17 @@ $area = $cube->createArea([
     'Versions' => ['Actual', 'Budget']
 ]);
 
+// create parameters for export API call
+$export_params = new ApiCellExport();
+$export_params->area = $area;
+$export_params->base_only = false;
+$export_params->use_rules = true;
+
 // export cube data into export.csv
-file_put_contents('export.csv', $cube->export([
-    'area'      => $area,
-    'base_only' => false,
-    'use_rules' => true
-]));
+file_put_contents('export.csv', $cube->export($export_params));
 ```
 
 ```php
 // fetch dimension from database
-$dim = $db->getDimension('Profit_Loss');
+$dim = $conn->getDatabase('Biker')->getDimension('Profit_Loss');
 ```

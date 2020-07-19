@@ -16,15 +16,8 @@ include_once __DIR__.'/OlapiTestCase.php';
  */
 class DimensionTest extends OlapiTestCase
 {
-    /**
-     * @var Connection
-     */
-    private static $connection;
+    private static ?Connection $connection;
 
-    /**
-     * @throws \ErrorException
-     * @throws \GuzzleHttp\Exception\GuzzleException
-     */
     public static function setUpBeforeClass(): void
     {
         parent::setUpBeforeClass();

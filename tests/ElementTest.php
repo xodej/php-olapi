@@ -9,6 +9,8 @@ include_once __DIR__.'/OlapiTestCase.php';
 use Xodej\Olapi\Connection;
 use Xodej\Olapi\Element;
 use Xodej\Olapi\User;
+use Xodej\Olapi\Role;
+use Xodej\Olapi\Group;
 
 /**
  * Class ElementTest.
@@ -18,10 +20,7 @@ use Xodej\Olapi\User;
  */
 class ElementTest extends OlapiTestCase
 {
-    /**
-     * @var Connection
-     */
-    private static $connection;
+    private static ?Connection $connection;
 
     public static function setUpBeforeClass(): void
     {
@@ -40,7 +39,6 @@ class ElementTest extends OlapiTestCase
 
     /**
      * @throws \ErrorException
-     * @throws \GuzzleHttp\Exception\GuzzleException
      * @throws \Exception
      */
     public function testElementExist(): void
@@ -50,7 +48,13 @@ class ElementTest extends OlapiTestCase
 
         self::assertTrue($user_dim->hasElementByName('admin'));
 
+        // check with implicit User from Dimension::getElementById()
         $admin_elem = $user_dim->getElementByName('admin');
+        self::assertInstanceOf(Element::class, $admin_elem);
+        self::assertInstanceOf(User::class, $admin_elem);
+
+        // check explicit User from SystemDatabase::getUser()
+        $admin_elem = $sys_db->getUser('admin');
         self::assertInstanceOf(Element::class, $admin_elem);
         self::assertInstanceOf(User::class, $admin_elem);
 
@@ -61,9 +65,30 @@ class ElementTest extends OlapiTestCase
         self::assertInstanceOf(User::class, $admin_elem_by_id);
 
         $admin_instance = Element::getInstance($user_dim, 'admin');
-        self::assertInstanceOf(Element::class, $admin_instance);
         self::assertInstanceOf(User::class, $admin_instance);
         self::assertSame('admin', $admin_instance->getName());
+
+        $role_dim = $sys_db->getRoleDimension();
+        // check with implicit Role from Dimension::getElementById()
+        $admin_role = $role_dim->getElementByName('admin');
+        self::assertInstanceOf(Element::class, $admin_role);
+        self::assertInstanceOf(Role::class, $admin_role);
+
+        // check explicit Role from SystemDatabase::getRole()
+        $admin_role = $sys_db->getRole('admin');
+        self::assertInstanceOf(Element::class, $admin_role);
+        self::assertInstanceOf(Role::class, $admin_role);
+
+        $group_dim = $sys_db->getGroupDimension();
+        // check with implicit Group from Dimension::getElementById()
+        $admin_group = $group_dim->getElementByName('admin');
+        self::assertInstanceOf(Element::class, $admin_group);
+        self::assertInstanceOf(Group::class, $admin_group);
+
+        // check explicit Group from SystemDatabase::getGroup()
+        $admin_group = $sys_db->getGroup('admin');
+        self::assertInstanceOf(Element::class, $admin_group);
+        self::assertInstanceOf(Group::class, $admin_group);
 
         self::assertTrue(self::$connection->getSystemDatabase()->resetLicenseAssociation());
     }

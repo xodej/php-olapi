@@ -79,7 +79,7 @@ class Group extends Element
 
         return \array_map(
             static function (array $v) {
-                return $v[1];
+                return $v[1]; // @todo check if $v[0] instead of $v[1]
             },
             $group_roles
         );

@@ -74,9 +74,9 @@ class ApiCellReplaceBulk extends ApiAbstractRequest
     public ?bool $add = null;
 
     /**
-     * Optional splash mode for setting values if the comma separated list of
-     * elements contains consolidated elements. (0=no splashing, 1=default, 2=add,
-     * 3=set).
+     * Optional splash type for setting values if the comma separated list of
+     * elements contains consolidated elements. (0=no splashing, 1=default, 2=add
+     * to base cells, 3=set to base cells)
      *
      * Jedox-Doc type: integer
      */

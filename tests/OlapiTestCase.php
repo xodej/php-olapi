@@ -16,7 +16,7 @@ use PHPUnit\Framework\TestCase;
  */
 abstract class OlapiTestCase extends TestCase
 {
-    public const OLAP_HOST_WITH_PORT = 'http://127.0.0.1:7777';
+    public const OLAP_HOST_WITH_PORT = 'http://localhost:7777';
 
     public const OLAP_USER = 'admin';
     public const OLAP_PASS = 'admin';

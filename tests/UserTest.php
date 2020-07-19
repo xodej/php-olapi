@@ -18,8 +18,6 @@ use Xodej\Olapi\Connection;
 class UserTest extends OlapiTestCase
 {
     /**
-     * @throws \ErrorException
-     * @throws \GuzzleHttp\Exception\GuzzleException
      * @throws \Exception
      */
     public function testSystemDatabaseExists(): void
@@ -27,7 +25,6 @@ class UserTest extends OlapiTestCase
         $connection = new Connection(self::OLAP_HOST_WITH_PORT, self::OLAP_USER, self::OLAP_PASS);
         $database = $connection->getSystemDatabase();
         $user_obj = $database->getUser('admin');
-        self::assertInstanceOf(Xodej\Olapi\User::class, $user_obj);
 
         $pw_hash = $user_obj->getPasswordHash();
         self::assertIsString($pw_hash);

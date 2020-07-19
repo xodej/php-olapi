@@ -39,10 +39,10 @@ class SystemDatabase extends Database
      */
     public function getUser(string $user_name): User
     {
-        // @noinspection PhpIncompatibleReturnTypeInspection
-        return $this->getUserDimension()
-            ->getElement($user_name)
-        ;
+        $user_dim = $this->getUserDimension();
+        $user_id = $user_dim->getElementIdFromName($user_name);
+
+        return new User($user_dim, $user_dim->getElementListRecordById($user_id));
     }
 
     /**
@@ -136,10 +136,10 @@ class SystemDatabase extends Database
      */
     public function getGroup(string $group_name): Group
     {
-        // @noinspection PhpIncompatibleReturnTypeInspection
-        return $this->getGroupDimension()
-            ->getElementByName($group_name)
-        ;
+        $group_dim = $this->getGroupDimension();
+        $group_id = $group_dim->getElementIdFromName($group_name);
+
+        return new Group($group_dim, $group_dim->getElementListRecordById($group_id));
     }
 
     /**
@@ -265,10 +265,10 @@ class SystemDatabase extends Database
      */
     public function getRole(string $role_name): Role
     {
-        // @noinspection PhpIncompatibleReturnTypeInspection
-        return $this->getRoleDimension()
-            ->getElementByName($role_name)
-            ;
+        $role_dim = $this->getRoleDimension();
+        $role_id = $role_dim->getElementIdFromName($role_name);
+
+        return new Role($role_dim, $role_dim->getElementListRecordById($role_id));
     }
 
     /**
@@ -316,14 +316,14 @@ class SystemDatabase extends Database
     /**
      * Creates and returns new group object with given roles.
      *
-     * @param string        $group_name group name
-     * @param null|string[] $roles      roles
+     * @param string   $group_name group name
+     * @param string[] $roles      roles
      *
      * @throws \Exception
      *
      * @return Group
      */
-    public function createGroup(string $group_name, ?array $roles = null): Group
+    public function createGroup(string $group_name, array $roles): Group
     {
         if ($this->hasGroup($group_name)) {
             throw new \InvalidArgumentException('failed to create group '.$group_name.': group already exist.');
@@ -346,8 +346,8 @@ class SystemDatabase extends Database
     /**
      * Creates and returns new role object with given rights permissions.
      *
-     * @param string        $role_name          role name
-     * @param null|string[] $rights_permissions rights permissions
+     * @param string                    $role_name          role name
+     * @param null|array<string,string> $rights_permissions rights permissions
      *
      * @throws \Exception
      *

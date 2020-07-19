@@ -63,22 +63,41 @@ class ApiCellReplace extends ApiAbstractRequest
     public ?Any $value = null;
 
     /**
-     * If 0 (the default), then a numeric value given is stored in the cube. If 1,
-     * then a numeric value given is added to the existing value or set if no
-     * value currently exists. Setting add to 1, requires splash mode 0 or 1.
+     * Used only when mode is 0. If 0 (default), then a numeric value given is
+     * stored in the cube. If 1, then a numeric value given is added to the
+     * existing value or set if no value currently exists. Setting add to 1,
+     * requires splash type 0 or 1.
      *
      * Jedox-Doc type: boolean
      */
     public ?bool $add = null;
 
     /**
-     * Optional splash mode for setting values if the comma separated list of
-     * elements contains consolidated elements. (0=no splashing, 1=default, 2=add,
-     * 3=set).
+     * Used only when mode is 0. Optional splash type for setting values if the
+     * comma separated list of elements contains consolidated elements. (0=no
+     * splashing, 1=default, 2=add to base cells, 3=set to base cells)
      *
      * Jedox-Doc type: integer
      */
     public ?int $splash = null;
+
+    /**
+     * Used only when mode is 1. If 1, then copy, like and predict commands write
+     * rule based cell values (default is 0).
+     *
+     * Jedox-Doc type: boolean
+     */
+    public ?bool $use_rules = null;
+
+    /**
+     * If 0 (default) the value is written to the cube. If 1 then the value is
+     * checked to see if it contains a command (#, ##, !, !!, ?, copy, like,
+     * predict, from, to, hold), which is then executed. If the value does not
+     * contain a command then it is written to the cube as in mode 0.
+     *
+     * Jedox-Doc type: integer
+     */
+    public ?int $mode = null;
 
     /**
      * Optional colon separated list of paths. Each path is a comma separated list

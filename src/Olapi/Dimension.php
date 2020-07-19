@@ -290,6 +290,7 @@ class Dimension implements IBase
             $this->elementLookupByID = null;
             $this->elementLookupByName = null;
             $this->elements = new ElementCollection();
+
             return true;
         }
 
@@ -447,8 +448,6 @@ class Dimension implements IBase
     }
 
     /**
-     * @param null|ApiDimensionGenerateScript $request
-     *
      * @throws \ErrorException
      * @throws \Exception
      *
@@ -703,8 +702,6 @@ class Dimension implements IBase
     }
 
     /**
-     * @param null|bool $live
-     *
      * @throws \Exception
      *
      * @return string
@@ -816,8 +813,6 @@ class Dimension implements IBase
     /**
      * Returns element object by element ID.
      *
-     * @param string $eName
-     *
      * @throws \Exception
      * @throws \ErrorException
      *
@@ -835,8 +830,6 @@ class Dimension implements IBase
     }
 
     /**
-     * @param string $element_name
-     *
      * @throws \Exception
      *
      * @return int
@@ -886,8 +879,6 @@ class Dimension implements IBase
     }
 
     /**
-     * @param null|string $element_name
-     *
      * @throws \Exception
      *
      * @return GenericCollection<array<string>>
@@ -909,8 +900,6 @@ class Dimension implements IBase
     }
 
     /**
-     * @param string $element_name
-     *
      * @throws \Exception
      *
      * @return array<string>
@@ -921,8 +910,6 @@ class Dimension implements IBase
     }
 
     /**
-     * @param int $element_id
-     *
      * @throws \InvalidArgumentException
      * @throws \Exception
      *
@@ -938,8 +925,6 @@ class Dimension implements IBase
     }
 
     /**
-     * @param string $element_name
-     *
      * @throws \Exception
      *
      * @return array<string>
@@ -954,8 +939,6 @@ class Dimension implements IBase
     }
 
     /**
-     * @param int $elementId
-     *
      * @throws \Exception
      *
      * @return string
@@ -984,9 +967,6 @@ class Dimension implements IBase
     }
 
     /**
-     * @param Database $database
-     * @param string   $dimension_name
-     *
      * @throws \Exception
      *
      * @return Dimension
@@ -1044,7 +1024,6 @@ class Dimension implements IBase
      * Create a parent child list for given node.
      *
      * @param null|string|string[] $nodes
-     * @param null|int             $level
      *
      * @throws \Exception
      *
@@ -1108,8 +1087,6 @@ class Dimension implements IBase
     }
 
     /**
-     * @param Element $node
-     *
      * @throws \Exception
      *
      * @return string
@@ -1120,8 +1097,6 @@ class Dimension implements IBase
     }
 
     /**
-     * @param string $element_name
-     *
      * @return bool
      *
      * @see Dimension::hasElementByName() alias
@@ -1132,8 +1107,6 @@ class Dimension implements IBase
     }
 
     /**
-     * @param int $element_id
-     *
      * @return bool
      */
     public function hasElementById(int $element_id): bool
@@ -1142,8 +1115,6 @@ class Dimension implements IBase
     }
 
     /**
-     * @param string $element_name
-     *
      * @return bool
      */
     public function hasElementByName(string $element_name): bool
@@ -1179,9 +1150,6 @@ class Dimension implements IBase
     }
 
     /**
-     * @param null|bool                       $cached
-     * @param null|ApiDimensionElements $request
-     *
      * @throws \Exception
      *
      * @return null|array<int,array<string>>
@@ -1226,14 +1194,6 @@ class Dimension implements IBase
     }
 
     /**
-     * @param Element                $node
-     * @param null|bool              $delete
-     * @param null|bool              $force
-     * @param null|int               $level
-     * @param null|GenericCollection $remove_collection
-     * @param null|GenericCollection $tree_elements
-     * @param null|GenericCollection $blacklist
-     *
      * @throws \Exception
      *
      * @return bool
@@ -1351,7 +1311,6 @@ class Dimension implements IBase
 
     /**
      * @param Element|string $element
-     * @param null|bool      $full_path
      *
      * @throws \Exception
      *
@@ -1550,11 +1509,7 @@ class Dimension implements IBase
     }
 
     /**
-     * @param Element                $element
-     * @param null|GenericCollection $return
-     * @param null|bool              $full_path
-     * @param null|int               $level
-     * @param null|string[]          $ancestors
+     * @param null|string[] $ancestors
      *
      * @throws \Exception
      *
@@ -1648,8 +1603,9 @@ class Dimension implements IBase
     /**
      * @param Element $node element object
      *
-     * @return string
      * @throws \Exception
+     *
+     * @return string
      *
      * @internal
      */

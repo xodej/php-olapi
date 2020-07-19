@@ -20,6 +20,14 @@ class ApiServerInfo extends ApiAbstractRequest
     public bool $show_counters = false;
 
     /**
+     * If 1 then new SemVer version is returned as build_number (optional, default
+     * is 0)
+     *
+     * Jedox-Doc type: boolean
+     */
+    public ?bool $show_new_version = null;
+
+    /**
      * If 1 then RSA public key is also returned (optional, default is 0).
      *
      * Jedox-Doc type: boolean

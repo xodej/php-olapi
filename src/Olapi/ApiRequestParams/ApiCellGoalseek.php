@@ -41,8 +41,8 @@ class ApiCellGoalseek extends ApiAbstractRequest
     public ?string $name_cube = null;
 
     /**
-     * Comma separated list of element identifiers. Mode 0-2: Target cell path.
-     * Mode 3: Source cell of transfer.
+     * Comma separated list of element identifiers. Type 0-2: Target cell path.
+     * Type 3-4: Source cell of transfer.
      *
      * Jedox-Doc type: path
      */
@@ -50,7 +50,7 @@ class ApiCellGoalseek extends ApiAbstractRequest
 
     /**
      * Comma separated list of element names. Used only if path parameter is
-     * omitted. Mode 0-2: Target cell path. Mode 3: Source cell of transfer.
+     * omitted. Type 0-2: Target cell path. Type 3-4: Source cell of transfer.
      *
      * Jedox-Doc type: npath
      */
@@ -58,7 +58,7 @@ class ApiCellGoalseek extends ApiAbstractRequest
 
     /**
      * The type of goal-seek algorithm. 0 complete allocation, 1 equal, 2
-     * relative, 3 transfer (0 default).
+     * relative, 3 transfer, 4 full transfer (0 default).
      *
      * Jedox-Doc type: integer
      */
@@ -66,8 +66,9 @@ class ApiCellGoalseek extends ApiAbstractRequest
 
     /**
      * Comma separated list of element identifiers list. Each element identifiers
-     * list is colon separated. Mode 0: Not used. Mode 1-2: Siblings to reallocate
-     * for each dimension. Mode 3: Target area of transfer.
+     * list is colon separated. Type 0: Not used. Type 1-2: Siblings to reallocate
+     * for each dimension. Type 3: Target area of transfer. Type 4: Target cell of
+     * full transfer. Type 4: Target cell of full transfer.
      *
      * Jedox-Doc type: area
      */
@@ -75,8 +76,8 @@ class ApiCellGoalseek extends ApiAbstractRequest
 
     /**
      * Comma separated list of element names list. Each element names list is
-     * colon separated. Used only if area parameter is omitted. Mode 0: Not used.
-     * Mode 1-2: Siblings to reallocate for each dimension. Mode 3: Target area of
+     * colon separated. Used only if area parameter is omitted. Type 0: Not used.
+     * Type 1-2: Siblings to reallocate for each dimension. Type 3-4: Target area of
      * transfer.
      *
      * Jedox-Doc type: narea
@@ -84,7 +85,7 @@ class ApiCellGoalseek extends ApiAbstractRequest
     public ?string $name_area = null;
 
     /**
-     * Mode 0-2: The numeric value of the target cube cell. Mode 3: The numeric
+     * Type 0-2: The numeric value of the target cube cell. Type 3: The numeric
      * value to transfer from source cell to target area.
      *
      * Jedox-Doc type: double

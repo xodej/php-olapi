@@ -71,6 +71,14 @@ class ApiViewCalculate extends ApiAbstractRequest
     public ?string $view_expanders = null;
 
     /**
+     * <name>;<, separated list dimensions>;<: separated list of tuples, tuple is
+     * , separated list of elements>;<, separated list of calculations>
+     *
+     * Jedox-Doc type: string
+     */
+    public ?string $view_tuples = null;
+
+    /**
      * optional colon separated list of comma separated pairs axisid, subset
      * position in the same order as dimensions in cube. Necessary when dimension
      * is in the cube several times.
