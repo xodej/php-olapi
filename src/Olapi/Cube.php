@@ -1016,9 +1016,9 @@ class Cube implements IBase
      *
      * @throws \Exception
      *
-     * @return GenericCollection<array<string>>
+     * @return string
      */
-    public function parseRule(string $definition): GenericCollection
+    public function parseRule(string $definition): string
     {
         $request = new ApiRuleParse();
         $request->database = $this->getDatabase()->getOlapObjectId();
@@ -1026,7 +1026,7 @@ class Cube implements IBase
 
         $request->definition = $definition;
 
-        return $this->getConnection()->request($request);
+        return stream_get_contents($this->getConnection()->requestRaw('/rule/parse', $request->asArray()));
     }
 
     /**
