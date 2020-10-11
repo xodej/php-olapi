@@ -79,6 +79,20 @@ class ApiDatabaseGenerateScript extends ApiAbstractRequest
     public ?bool $show_attribute = null;
 
     /**
+     * Include local lists (default 0).
+     *
+     * Jedox-Doc type: boolean
+     */
+    public ?bool $include_local_lists = null;
+
+    /**
+     * Include global lists (default 0).
+     *
+     * Jedox-Doc type: boolean
+     */
+    public ?bool $include_global_lists = null;
+
+    /**
      * Include local subsets (default 0).
      *
      * Jedox-Doc type: boolean
