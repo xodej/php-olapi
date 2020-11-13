@@ -93,11 +93,11 @@ class Dimension implements IBase
 
         $response = $this->getConnection()->request($request);
 
-        if (null !== $parent_element) {
+        // if (null !== $parent_element) {
             // @todo Dimension::addElement() fetch parent element and append new Element to parent
             // if parent element is a Base element - do not consolidate you may loose data
             // $this->appendElement($parent_element);
-        }
+        // }
 
         return $response[0];
     }
@@ -324,7 +324,7 @@ class Dimension implements IBase
      */
     public function deleteElementBulkByIds(array $element_ids): bool
     {
-        $element_ids = \array_map(static function ($v) {
+        $element_ids = \array_map(static function ($v): int {
             if (!\is_numeric($v)) {
                 throw new \InvalidArgumentException('element list contains non numeric value '.$v);
             }
@@ -353,7 +353,7 @@ class Dimension implements IBase
      */
     public function deleteElementBulkByNames(array $element_names): bool
     {
-        $element_ids = \array_map(static function (string $e) {
+        $element_ids = \array_map(function (string $e): int {
             return $this->getElementIdFromName($e);
         }, $element_names);
 
@@ -448,10 +448,11 @@ class Dimension implements IBase
     }
 
     /**
-     * @throws \ErrorException
-     * @throws \Exception
-     *
+     * @param ApiDimensionGenerateScript|null $request
      * @return string
+     *
+     * @throws \Exception
+     * @throws \ErrorException
      */
     public function exportAsScript(?ApiDimensionGenerateScript $request = null): string
     {
@@ -702,9 +703,11 @@ class Dimension implements IBase
     }
 
     /**
-     * @throws \Exception
-     *
+     * @param bool|null $live
      * @return string
+     *
+     * @throws \Exception
+     * @throws \ErrorException
      */
     public function getDimensionToken(?bool $live = null): string
     {
@@ -813,6 +816,8 @@ class Dimension implements IBase
     /**
      * Returns element object by element ID.
      *
+     * @param string $eName
+     *
      * @throws \Exception
      * @throws \ErrorException
      *
@@ -830,6 +835,7 @@ class Dimension implements IBase
     }
 
     /**
+     * @param string $element_name
      * @throws \Exception
      *
      * @return int
@@ -879,6 +885,7 @@ class Dimension implements IBase
     }
 
     /**
+     * @param ?string $element_name
      * @throws \Exception
      *
      * @return GenericCollection<array<string>>
@@ -900,9 +907,9 @@ class Dimension implements IBase
     }
 
     /**
+     * @param string $element_name
+     * @return string[]
      * @throws \Exception
-     *
-     * @return array<string>
      */
     public function getElementListRecord(string $element_name): array
     {
@@ -1048,7 +1055,7 @@ class Dimension implements IBase
                 $conso_factor = $this->getElementById((int) $element_child_id)
                     ->getConsolidationFactor($this->getElementByName($element_name))
                 ;
-                $result[][] = [(string) $element_record[1], (string) $element_child_record[1], (float) $conso_factor];
+                $result[][] = [$element_record[1], $element_child_record[1], (float) $conso_factor];
 
                 if (Element::TYPE_CONSOLIDATED === (int) $element_child_record[6]) {
                     $result[] = $this->getParentChildListOfNode($element_child_record[1], $level + 1);
@@ -1285,7 +1292,7 @@ class Dimension implements IBase
             $request = new ApiElementReplaceBulk();
             $request->database = $this->getDatabase()->getOlapObjectId();
             $request->dimension = $this->getOlapObjectId();
-            $request->elements = \implode(',', \array_map(static function (Element $v) {
+            $request->elements = \implode(',', \array_map(static function (Element $v): int {
                 return $v->getOlapObjectId();
             }, $remove_collection->getArrayCopy()));
             $request->type = Element::TYPE_NUMERIC;
@@ -1295,7 +1302,7 @@ class Dimension implements IBase
             $request = new ApiElementDestroyBulk();
             $request->database = $this->getDatabase()->getOlapObjectId();
             $request->dimension = $this->getOlapObjectId();
-            $request->elements = \implode(',', \array_map(static function (Element $v) {
+            $request->elements = \implode(',', \array_map(static function (Element $v): int {
                 return $v->getOlapObjectId();
             }, $remove_collection->getArrayCopy()));
         }
@@ -1311,6 +1318,7 @@ class Dimension implements IBase
 
     /**
      * @param Element|string $element
+     * @param bool|null $full_path
      *
      * @throws \Exception
      *
@@ -1509,11 +1517,13 @@ class Dimension implements IBase
     }
 
     /**
-     * @param null|string[] $ancestors
-     *
-     * @throws \Exception
-     *
+     * @param Element $element
+     * @param GenericCollection|null $return
+     * @param bool|null $full_path
+     * @param int|null $level
+     * @param string[]|null $ancestors
      * @return array<string>
+     * @throws \Exception
      */
     protected function internShowParents(
         Element $element,
@@ -1558,7 +1568,7 @@ class Dimension implements IBase
     private function basifyElementList(GenericCollection $elementList): array
     {
         // remove consolidated elements
-        $element_list = \array_filter($elementList->getArrayCopy(), static function (array $e) {
+        $element_list = \array_filter($elementList->getArrayCopy(), static function (array $e): bool {
             return !(Element::TYPE_CONSOLIDATED === (int) $e[6]);
         });
 
@@ -1587,7 +1597,7 @@ class Dimension implements IBase
         $element_list = $elementList->getArrayCopy();
 
         // remove Base elements
-        $element_list = \array_filter($element_list, static function (array $e) {
+        $element_list = \array_filter($element_list, static function (array $e): bool {
             return Element::TYPE_CONSOLIDATED === (int) $e[6];
         });
 

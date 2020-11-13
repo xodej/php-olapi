@@ -53,7 +53,7 @@ class Group extends Element
             '_internal_suite' => true,
         ];
 
-        return \array_filter($user_names, static function ($v) use ($technical_user_names) {
+        return \array_filter($user_names, static function ($v) use ($technical_user_names): bool {
             return !isset($technical_user_names[$v]);
         });
     }

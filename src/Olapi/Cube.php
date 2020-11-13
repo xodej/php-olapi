@@ -189,7 +189,7 @@ class Cube implements IBase
     /**
      * Convert normal or gpu type cube to cube type (0=normal or 4=gpu type).
      *
-     * @param int $cube_type 0=normal or 4=gpu type
+     * @param ?int $cube_type 0=normal or 4=gpu type
      *
      * @throws \Exception
      *
@@ -501,7 +501,7 @@ class Cube implements IBase
         if ($show_headers) {
             $header = [];
             foreach ($dimensions as $dim_index => $dim_id) {
-                $header[] = $database->getDimensionNameFromId($dim_id);
+                $header[] = $database->getDimensionNameFromId((int) $dim_id);
             }
             $header[] = '#VALUE';
             \fputcsv($ret_stream, $header);
@@ -1113,7 +1113,7 @@ class Cube implements IBase
         $request->cube = $this->getOlapObjectId();
 
         $request->paths = \implode(':', \array_map([$this, 'buildPathFromElements'], $dims_multi));
-        $request->values = \implode(':', \array_map(static function (?string $v) {
+        $request->values = \implode(':', \array_map(static function (?string $v): string {
             return Util::strputcsv([($v ?? '')]);
         }, $values));
 

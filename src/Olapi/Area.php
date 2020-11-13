@@ -100,12 +100,12 @@ class Area
             return $v[1];
         }, $element_list);
 
-        $except_elements = \array_map(static function ($v) {
+        $except_elements = \array_map(static function ($v): string {
             return \strtolower($v);
         }, $except_elements);
         $except_elements_flipped = \array_flip($except_elements);
 
-        $element_list = \array_filter($element_list, static function ($v) use ($except_elements_flipped) {
+        $element_list = \array_filter($element_list, static function ($v) use ($except_elements_flipped): bool {
             if (isset($except_elements_flipped[\strtolower($v)])) {
                 return false;
             }
@@ -113,7 +113,6 @@ class Area
             return true;
         });
 
-        $this->area = (array) $this->area;
         $this->area[$dimension_name] = \array_flip($element_list);
 
         return $this;
@@ -144,8 +143,6 @@ class Area
      */
     protected function prepareArea(): array
     {
-        $this->area = (array) $this->area;
-
         $temp_area = [];
         foreach ($this->area as $dimension => $values) {
             $temp_area[$dimension] = \array_keys($values);

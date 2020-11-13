@@ -436,8 +436,8 @@ class Element implements IBase
             return [];
         }
 
-        return \array_map(static function (int $v) {
-            return $v;
+        return \array_map(static function ($v): int {
+            return (int) $v;
         }, \explode(',', $this->metaInfo[8]));
     }
 
@@ -503,16 +503,10 @@ class Element implements IBase
         switch ($type) {
             case self::TYPE_NUMERIC:
                 return 'numeric';
-
-                break;
             case self::TYPE_STRING:
                 return 'string';
-
-                break;
             case self::TYPE_CONSOLIDATED:
                 return 'consolidated';
-
-                break;
         }
 
         return 'unknown';

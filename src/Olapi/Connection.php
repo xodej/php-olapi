@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Xodej\Olapi;
 
 use GuzzleHttp\Client;
-use GuzzleHttp\Exception\GuzzleException;
 use Psr\Http\Message\ResponseInterface;
 use Xodej\Olapi\ApiRequestParams\ApiDatabaseCreate;
 use Xodej\Olapi\ApiRequestParams\ApiDatabaseDestroy;
@@ -31,28 +30,28 @@ class Connection
 {
     public static bool $debugMode = false;
 
-    private ?string $host = null;
-    private ?string $user = null;
-    private ?string $pass = null;
+    private ?string $host;
+    private ?string $user;
+    private ?string $pass;
 
-    private ?Client $client = null;
-    private ?string $sessionId = null;
-    private ?string $dataToken = null;
-    private ?string $secret = null;
+    private ?Client $client;
+    private ?string $sessionId;
+    private ?string $dataToken;
+    private ?string $secret;
 
-    private ?Connection $superConnection = null;
+    private ?Connection $superConnection;
 
     private DatabaseCollection $databases;
 
     /**
      * @var null|array<int,array<string>>
      */
-    private ?array $databaseLookupByID = null;
+    private ?array $databaseLookupByID;
 
     /**
      * @var null|array<string,int>
      */
-    private ?array $databaseLookupByName = null;
+    private ?array $databaseLookupByName;
 
     /**
      * Connection constructor.
@@ -62,7 +61,6 @@ class Connection
      * @param null|string $password       (Optional) Jedox password (default: admin)
      * @param null|string $sid            (Optional) session ID
      *
-     * @throws GuzzleException
      * @throws \ErrorException
      */
     public function __construct(
@@ -506,7 +504,7 @@ class Connection
     /**
      * Returns array response of /server/info API call.
      *
-     * @param ApiServerInfo $request
+     * @param ?ApiServerInfo $request
      *
      * @throws \ErrorException
      *
@@ -527,7 +525,6 @@ class Connection
      * @param null|string $password       (Optional) Jedox password (default: admin)
      * @param null|string $sid            (Optional) session ID
      *
-     * @throws GuzzleException
      * @throws \ErrorException
      *
      * @return Connection
@@ -593,7 +590,6 @@ class Connection
      *
      * @param null|string $secret (Optional) secret
      *
-     * @throws GuzzleException
      * @throws \ErrorException
      * @throws \Exception
      *
