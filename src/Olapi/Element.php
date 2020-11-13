@@ -110,6 +110,9 @@ class Element implements IBase
      */
     public function countChildren(): int
     {
+        if (!$this->hasChildren()) {
+            return 0;
+        }
         return \substr_count($this->metaInfo[10], ',') + 1;
     }
 
@@ -118,6 +121,9 @@ class Element implements IBase
      */
     public function countParents(): int
     {
+        if (!$this->hasParents()) {
+            return 0;
+        }
         return \substr_count($this->metaInfo[8], ',') + 1;
     }
 
