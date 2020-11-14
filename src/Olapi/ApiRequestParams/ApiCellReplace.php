@@ -60,7 +60,7 @@ class ApiCellReplace extends ApiAbstractRequest
      *
      * Jedox-Doc type: double/string
      */
-    public ?Any $value = null;
+    public $value = null;
 
     /**
      * Used only when mode is 0. If 0 (default), then a numeric value given is
