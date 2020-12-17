@@ -109,9 +109,9 @@ class ApiCellExport extends ApiAbstractRequest
      * 0 - all cells, 1 - skip empty, 2 - skip empty, zero and empty string
      * (default is 1).
      *
-     * Jedox-Doc type: boolean
+     * Jedox-Doc type: integer
      */
-    public ?bool $skip_empty = null;
+    public ?int $skip_empty = null;
 
     /**
      * Type of exported cells. 0=numeric and string, 1=only numeric, 2=only string
