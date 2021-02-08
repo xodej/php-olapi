@@ -38,6 +38,9 @@ class Cube implements IBase
 
     protected Database $database;
     protected bool $persistCachedValues = false;
+    /**
+     * @var DimensionCollection<Dimension>
+     */
     private DimensionCollection $dimensions;
 
     /**
@@ -113,11 +116,8 @@ class Cube implements IBase
         $row_counter = 0;
         while (false !== ($data_line = \fgetcsv($stream))) {
             ++$row_counter;
-            if (null === $data_line) {
-                continue;
-            }
 
-            $return[] = (array) $data_line;
+            $return[] = $data_line;
 
             if ($row_counter >= $max_rows) {
                 break;
@@ -509,10 +509,6 @@ class Cube implements IBase
 
         /** @var array $data_row */
         while (false !== ($data_row = \fgetcsv($data_stream, 0, ';', '"', '"'))) {
-            if (null === $data_row) {
-                continue;
-            }
-
             // split element IDs
             $elements_path = \explode(',', $data_row[3]);
 
@@ -578,7 +574,7 @@ class Cube implements IBase
             if ($show_headers) {
                 $header = [];
                 foreach ($dimensions as $dim_index => $dim_id) {
-                    $header[] = $database->getDimensionNameFromId($dim_id);
+                    $header[] = $database->getDimensionNameFromId((int) $dim_id);
                 }
                 $header[] = '#VALUE';
                 $show_headers = false; // show headers just once
@@ -588,10 +584,6 @@ class Cube implements IBase
 
             /** @var array $data_row */
             while (false !== ($data_row = \fgetcsv($data_stream, 0, ';', '"', '"'))) {
-                if (null === $data_row) {
-                    continue;
-                }
-
                 // split element IDs
                 $elements_path = \explode(',', $data_row[3]);
 
@@ -919,12 +911,12 @@ class Cube implements IBase
      */
     public function listDimensions(?bool $show_names = null): array
     {
-        return \array_map(function (int $v) use ($show_names) {
+        return \array_map(function (string $v) use ($show_names) {
             if (true === $show_names) {
-                return $this->getDatabase()->getDimensionNameFromId($v);
+                return $this->getDatabase()->getDimensionNameFromId((int) $v);
             }
 
-            return $v;
+            return (int) $v;
         }, \explode(',', $this->metaInfo[3]));
     }
 
@@ -1240,7 +1232,7 @@ class Cube implements IBase
 
         $request->use_rules ??= false;
         $request->base_only ??= true;
-        $request->skip_empty ??= true;
+        $request->skip_empty ??= 1;
         $request->type ??= 0;
         $request->show_rule ??= false;
 
@@ -1337,7 +1329,7 @@ class Cube implements IBase
         if ($use_keys) {
             $return = [];
             foreach ($dimensions as $dim_index => $dim_id) {
-                $dimension = $this->getDatabase()->getDimensionById($dim_id);
+                $dimension = $this->getDatabase()->getDimensionById((int) $dim_id);
                 $element = $dim_element_coordinates[$dimension->getName()] ?? null;
                 if (null === $element) {
                     throw new \InvalidArgumentException('element for dimension '.$dimension->getName().' missing in parameters');

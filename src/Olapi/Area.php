@@ -96,8 +96,8 @@ class Area
             return $this;
         }
 
-        $element_list = \array_map(static function ($v) {
-            return $v[1];
+        $element_list = \array_map(static function (array $v) {
+            return $v[1] ?? null;
         }, $element_list);
 
         $except_elements = \array_map(static function ($v): string {

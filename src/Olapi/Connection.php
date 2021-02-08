@@ -30,28 +30,31 @@ class Connection
 {
     public static bool $debugMode = false;
 
-    private ?string $host;
-    private ?string $user;
-    private ?string $pass;
+    private ?string $host = null;
+    private ?string $user = null;
+    private ?string $pass = null;
 
-    private ?Client $client;
-    private ?string $sessionId;
-    private ?string $dataToken;
-    private ?string $secret;
+    private ?Client $client = null;
+    private ?string $sessionId = null;
+    private ?string $dataToken = null;
+    private ?string $secret = null;
 
-    private ?Connection $superConnection;
+    private ?Connection $superConnection = null;
 
+    /**
+     * @var DatabaseCollection<Database>
+     */
     private DatabaseCollection $databases;
 
     /**
-     * @var null|array<int,array<string>>
+     * @var null|array<int, array<string>>
      */
-    private ?array $databaseLookupByID;
+    private ?array $databaseLookupByID = null;
 
     /**
      * @var null|array<string,int>
      */
-    private ?array $databaseLookupByName;
+    private ?array $databaseLookupByName = null;
 
     /**
      * Connection constructor.
@@ -69,17 +72,28 @@ class Connection
         ?string $password = null,
         ?string $sid = null
     ) {
-        $ini_host = (string) \get_cfg_var('jedox.host');
-        $ini_user = (string) \get_cfg_var('jedox.user');
-        $ini_pass = (string) \get_cfg_var('jedox.pass');
+        $ini_host = \get_cfg_var('jedox.host');
+        if (!is_string($ini_host) || '' === $ini_host) {
+            $ini_host = 'http://127.0.0.1:7777';
+        }
+
+        $ini_user = \get_cfg_var('jedox.user');
+        if (!is_string($ini_user) || '' === $ini_user) {
+            $ini_user = 'admin';
+        }
+
+        $ini_pass = \get_cfg_var('jedox.pass');
+        if (!is_string($ini_pass) || '' === $ini_pass) {
+            $ini_pass = 'admin';
+        }
 
         // Order:
         //    1. use given credentials, if not given
         //    2. use credentials from php.ini --> jedox.xxxx variables, if not existent
         //    3. use defaults admin/admin etc.
-        $this->host = $host_with_port ?? ('' === $ini_host ? 'http://127.0.0.1:7777' : $ini_host);
-        $this->user = $username ?? ('' === $ini_user ? 'admin' : $ini_user);
-        $this->pass = $password ?? ('' === $ini_pass ? 'admin' : $ini_pass);
+        $this->host = $host_with_port ?? $ini_host;
+        $this->user = $username ?? $ini_user;
+        $this->pass = $password ?? $ini_pass;
 
         // @todo check if this needs to be done in a separate login
         if (null !== $sid) {
@@ -260,15 +274,15 @@ class Connection
      * Returns database script.
      *
      * @param string                         $database_name   database name
-     * @param null|array                     $dimension_names (Optional) array of dimension names
-     * @param null|array                     $cube_names      (Optional) array of cube names
+     * @param null|string[]                  $dimension_names (Optional) array of dimension names
+     * @param null|string[]                  $cube_names      (Optional) array of cube names
      * @param null|ApiDatabaseGenerateScript $request          (Optional) array of options
      *
      * @throws \Exception
      *
-     * @return string
+     * @return null|string
      */
-    public function generateScript(string $database_name, ?array $dimension_names = null, ?array $cube_names = null, ?ApiDatabaseGenerateScript $request = null): string
+    public function generateScript(string $database_name, ?array $dimension_names = null, ?array $cube_names = null, ?ApiDatabaseGenerateScript $request = null): ?string
     {
         return $this->getDatabaseByName($database_name)
             ->generateScript($dimension_names, $cube_names, $request)
@@ -338,7 +352,11 @@ class Connection
         $server_info = $this->getInfo();
 
         // return 6th csv column of first row of server info => data token
-        return $server_info[0][6] ?? null;
+        $ret = $server_info[0][6] ?? null;
+        if (null !== $ret) {
+            return (string) $ret;
+        }
+        return null;
     }
 
     /**
@@ -439,7 +457,7 @@ class Connection
      * @throws \ErrorException
      * @throws \Exception
      *
-     * @return array
+     * @return array<string>
      *
      * @see Connection::getDatabaseListRecordByName() alias
      */
@@ -456,7 +474,7 @@ class Connection
      * @throws \InvalidArgumentException
      * @throws \Exception
      *
-     * @return array
+     * @return array<string>
      */
     public function getDatabaseListRecordById(int $database_id): array
     {
@@ -477,7 +495,7 @@ class Connection
      * @throws \ErrorException
      * @throws \Exception
      *
-     * @return array
+     * @return array<string>
      */
     public function getDatabaseListRecordByName(string $database_name): array
     {
@@ -615,7 +633,7 @@ class Connection
         $shmop_prefix_len = 5;
         $shmop_len = 37;
 
-        $shmop_key = \hexdec(\hash('crc32b', $shmop_prefix.$this->secret));
+        $shmop_key = (int) \hexdec(\hash('crc32b', $shmop_prefix.$this->secret));
         $shmop_id = \shmop_open($shmop_key, 'c', 0600, $shmop_len);
         $shmop_mask = \str_pad($this->secret, $shmop_len, $this->secret);
 
@@ -669,7 +687,7 @@ class Connection
      *
      * @throws \ErrorException
      *
-     * @return GenericCollection
+     * @return GenericCollection<string>
      */
     public function getUserInfo(): GenericCollection
     {
@@ -726,7 +744,7 @@ class Connection
      */
     public function isDebugMode(): bool
     {
-        return (bool) self::$debugMode;
+        return self::$debugMode;
     }
 
     /**
@@ -850,7 +868,10 @@ class Connection
             $this->dataToken = $response->getHeader('X-PALO-SV')[0] ?? null;
 
             if ($this->isDebugMode()) {
-                \file_put_contents('php://stderr', \print_r([\stream_get_contents($response->getBody()->detach())], true));
+                $tmp = $response->getBody()->detach();
+                if (null !== $tmp) {
+                    \file_put_contents('php://stderr', \print_r([\stream_get_contents($tmp)], true));
+                }
             }
 
             return $this->parseCsvResponse($response);
@@ -863,7 +884,7 @@ class Connection
 
     /**
      * @param string $url
-     * @param array  $params
+     * @param array<string, array<string, mixed>> $params
      *
      * @throws \ErrorException
      * @throws \Exception
@@ -992,9 +1013,9 @@ class Connection
     /**
      * Returns session ID.
      *
-     * @return string
+     * @return null|string
      */
-    private function getSessionId(): string
+    private function getSessionId(): ?string
     {
         return $this->sessionId;
     }

@@ -24,9 +24,7 @@ use Xodej\Olapi\Filter\DataFilter;
 class Dimension implements IBase
 {
     private Database $database;
-    /**
-     * @var ElementCollection<Element>
-     */
+
     private ElementCollection $elements;
 
     /**
@@ -72,7 +70,7 @@ class Dimension implements IBase
      *
      * @throws \Exception
      *
-     * @return array<string>
+     * @return string[]
      */
     public function addElement(
         string $elementName,
@@ -460,7 +458,7 @@ class Dimension implements IBase
         $request->database = $this->getDatabase()->getOlapObjectId();
         $request->dimension = $this->getOlapObjectId();
 
-        $request->complete ??= 1;
+        $request->complete ??= true;
         $request->show_attribute ??= true;
         $request->languages ??= '*';
 
@@ -1122,6 +1120,8 @@ class Dimension implements IBase
     }
 
     /**
+     * @param string $element_name
+     *
      * @return bool
      */
     public function hasElementByName(string $element_name): bool
@@ -1157,9 +1157,11 @@ class Dimension implements IBase
     }
 
     /**
-     * @throws \Exception
+     * @param bool|null $cached
+     * @param ApiDimensionElements|null $request
      *
-     * @return null|array<int,array<string>>
+     * @return array|string[][]|null
+     * @throws \ErrorException
      */
     public function listElements(?bool $cached = null, ?ApiDimensionElements $request = null): ?array
     {

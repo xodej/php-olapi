@@ -6,6 +6,7 @@ namespace Xodej\Olapi;
 
 /**
  * Class ElementCollection.
+ * @var ElementCollection<Element>
  */
 class ElementCollection extends GenericCollection
 {

@@ -78,7 +78,7 @@ class ApiServerLogin extends ApiAbstractRequest
     public ?string $external_identifier = null;
 
     /**
-     * Mode type used internally for SAML authentication.
+     * Time in seconds remaining to license expiration.
      *
      * Jedox-Doc type: integer
      */
