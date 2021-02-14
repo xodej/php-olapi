@@ -88,7 +88,7 @@ class Cube implements IBase
      *
      * @param null|ApiCellExport $params                array of request parameters
      * @param null|bool          $show_headers          if true add headers as first array element
-     * @param null|bool          $replace_special_chars if true     , \r and \n are replaced
+     * @param null|bool          $replace_special_chars if true \t, \r and \n are replaced
      * @param null|int           $max_rows              number of rows to be returned (default: 10,000)
      *
      * @throws \ErrorException
@@ -455,19 +455,11 @@ class Cube implements IBase
         $index = -1;
         foreach ($this->cache as $path_hash => $value) {
             ++$index;
-            // no value and no error
-            if ('0' === $response[$index][1]) {
-                $this->cachedValues[$path_hash] = ('2' === $response[$index][0] ?
-                    $response[$index][2] : (float) $response[$index][2]);
-                continue;
-            }
-            // error
             if ('1' !== $response[$index][1]) {
                 $this->cachedValues[$path_hash] = '#NA';
 
                 continue;
             }
-            // value no error
             $this->cachedValues[$path_hash] = ('2' === $response[$index][0] ?
                 $response[$index][2] : (float) $response[$index][2]);
         }
@@ -533,7 +525,7 @@ class Cube implements IBase
 
             // adding #VALUE column
             if ($replace_special_chars) {
-                $data_row[2] = \str_replace(["    ", "\r", "\n"], [' ', '', ' '], $data_row[2]);
+                $data_row[2] = \str_replace(["\t", "\r", "\n"], [' ', '', ' '], $data_row[2]);
             }
 
             $coordinates[] = $data_row[2];
@@ -608,7 +600,7 @@ class Cube implements IBase
 
                 // adding #VALUE column
                 if ($replace_special_chars) {
-                    $data_row[2] = \str_replace(["    ", "\r", "\n"], [' ', '', ' '], $data_row[2]);
+                    $data_row[2] = \str_replace(["\t", "\r", "\n"], [' ', '', ' '], $data_row[2]);
                 }
 
                 $coordinates[] = $data_row[2];
@@ -809,7 +801,7 @@ class Cube implements IBase
         if (!$this->cacheCollectionEnabled()) {
             // check if value is available in cache
             if (!isset($this->cachedValues[$path_hash])) {
-                    rigger_error('Exception caught! Exception: ', \E_USER_WARNING);
+                \trigger_error('Exception caught! Exception: ', \E_USER_WARNING);
 
                 return '#VALUE';
             }
