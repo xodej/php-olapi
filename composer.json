@@ -19,7 +19,7 @@
     "ext-openssl": "*",
     "ext-shmop": "*",
     "ext-simplexml": "*",
-    "guzzlehttp/guzzle": "^7.0"
+    "guzzlehttp/guzzle": "^7.2"
   },
   "suggest": {
   },
