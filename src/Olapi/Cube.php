@@ -358,7 +358,7 @@ class Cube implements IBase
     public function deleteRules(?array $rule_ids = null): bool
     {
         $request = new ApiRuleDestroy();
-        $request->database = $this->getOlapObjectId();
+        $request->database = $this->getDatabase()->getOlapObjectId();
         $request->cube = $this->getOlapObjectId();
 
         if (null !== $rule_ids && isset($rule_ids[0])) {
