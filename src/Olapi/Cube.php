@@ -361,6 +361,10 @@ class Cube implements IBase
         $request->database = $this->getDatabase()->getOlapObjectId();
         $request->cube = $this->getOlapObjectId();
 
+        if (null !== $rule_ids && !isset($rule_ids[0])) {
+            throw new \DomainException('Cube::deleteRules() requires $rule_ids to be null or a non-empty array; empty array provided');
+        }
+
         if (null !== $rule_ids && isset($rule_ids[0])) {
             $request->rule = \implode(',', $rule_ids);
         }
