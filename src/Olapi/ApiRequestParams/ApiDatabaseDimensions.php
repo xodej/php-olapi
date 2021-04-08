@@ -58,6 +58,23 @@ class ApiDatabaseDimensions extends ApiAbstractRequest
     public ?bool $show_info = null;
 
     /**
+     * Show dimensions of type virtual attribute (0=do not show virtual attribute
+     * dimensions (default), 1=show).
+     *
+     * Jedox-Doc type: identifier
+     */
+    public ?bool $show_virtual_attribute = null;
+
+    /**
+     * If 1 then the identifier of the dimension's source dimension and a list of
+     * derived virtual attribute dimensions' identifiers are returned (optional,
+     * default is 0)
+     *
+     * Jedox-Doc type: boolean
+     */
+    public ?bool $show_virtual = null;
+
+    /**
      * If 1 then additional information about the user's permission on dimension
      * is returned (optional, default is 0).
      *
@@ -87,6 +104,21 @@ class ApiDatabaseDimensions extends ApiAbstractRequest
      * Jedox-Doc type: boolean
      */
     public ?bool $show_count_by_type = null;
+
+    /**
+     * Cube identifier. Return only dimensions of this cube.
+     *
+     * Jedox-Doc type: identifier
+     */
+    public ?int $cube = null;
+
+    /**
+     * Cube name. Return only dimensions of this cube. Used only if cube parameter
+     * is omitted.
+     *
+     * Jedox-Doc type: string
+     */
+    public ?string $name_cube = null;
 
     public function url(): ?string
     {

@@ -40,6 +40,15 @@ class ApiDimensionInfo extends ApiAbstractRequest
     public ?string $name_dimension = null;
 
     /**
+     * If 1 then the identifier of the dimension's source dimension and a list of
+     * derived virtual attribute dimensions' identifiers are returned (optional,
+     * default is 0)
+     *
+     * Jedox-Doc type: boolean
+     */
+    public ?bool $show_virtual = null;
+
+    /**
      * If 1 then additional information about the user's permission on dimension
      * is returned (optional, default is 0).
      *

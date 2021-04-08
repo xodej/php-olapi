@@ -67,6 +67,14 @@ class ApiDatabaseInfo extends ApiAbstractRequest
      */
     public ?bool $show_error = null;
 
+    /**
+     * If 1 and show_count_by_type=1 then return the count of virtual attribute
+     * dimensions (number_virtual_dimensions)
+     *
+     * Jedox-Doc type: boolean
+     */
+    public ?bool $show_virtual = null;
+
     public function url(): ?string
     {
         return '/database/info';

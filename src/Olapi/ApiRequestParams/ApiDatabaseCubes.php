@@ -77,6 +77,14 @@ class ApiDatabaseCubes extends ApiAbstractRequest
      */
     public ?bool $show_audit = null;
 
+    /**
+     * If 1 then number_dimensions and dimensions contain also virtual attribute
+     * dimensions (optional, default is 0)
+     *
+     * Jedox-Doc type: boolean
+     */
+    public ?bool $show_virtual = null;
+
     public function url(): ?string
     {
         return '/database/cubes';
