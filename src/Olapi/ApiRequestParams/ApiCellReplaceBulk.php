@@ -108,6 +108,50 @@ class ApiCellReplaceBulk extends ApiAbstractRequest
      */
     public ?bool $wait = null;
 
+    /**
+     * If 1 use add_array, splash_array, locked_paths_array, event_processor_array
+     * instead of add, splash, locked_paths, event_processor, always wait and
+     * return values of the changed cells.
+     *
+     * Jedox-Doc type: integer
+     */
+    public ?int $mode = null;
+
+    /**
+     * Comma separated list of add parameters for each cell (mode 1).
+     *
+     * Jedox-Doc type: boolean
+     */
+    public ?string $add_array = null;
+
+    /**
+     * Comma separated list of splash parameters for each cell (mode 1).
+     *
+     * Jedox-Doc type: integer
+     */
+    public ?string $splash_array = null;
+
+    /**
+     * Semicolon separated list of locked_paths parameters for each cell (mode 1).
+     *
+     * Jedox-Doc type: path
+     */
+    public ?string $locked_paths_array = null;
+
+    /**
+     * Comma separated list of event_processor parameters for each cell (mode 1).
+     *
+     * Jedox-Doc type: boolean
+     */
+    public ?string $event_processor_array = null;
+
+    /**
+     * Comma separated list of mode parameters for each cell (mode 1).
+     *
+     * Jedox-Doc type: integer
+     */
+    public ?string $mode_array = null;
+
     public function url(): ?string
     {
         return '/cell/replace_bulk';
