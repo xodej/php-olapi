@@ -1252,7 +1252,9 @@ class Cube implements IBase
 
         // use the path as offset only for
         // subsequent runs not the first run
-        $request->path ??= $coord_path;
+        if ($coord_path !== null) {
+            $request->path = $coord_path;
+        }
 
         // make the API call and fetch the response as stream resource
         $stream = $this->getConnection()->requestRaw($request->url(), $request->asArray());
