@@ -66,9 +66,8 @@ class ApiCellGoalseek extends ApiAbstractRequest
 
     /**
      * Comma separated list of element identifiers list. Each element identifiers
-     * list is colon separated. Type 0: Not used. Type 1-2: Siblings to reallocate
-     * for each dimension. Type 3: Target area of transfer. Type 4: Target cell of
-     * full transfer. Type 4: Target cell of full transfer.
+     * list is colon separated. Types 0, 4: Not used. Type 1-2: Siblings to
+     * reallocate for each dimension. Type 3: Target area of transfer.                     
      *
      * Jedox-Doc type: area
      */
@@ -76,13 +75,29 @@ class ApiCellGoalseek extends ApiAbstractRequest
 
     /**
      * Comma separated list of element names list. Each element names list is
-     * colon separated. Used only if area parameter is omitted. Type 0: Not used.
-     * Type 1-2: Siblings to reallocate for each dimension. Type 3-4: Target area of
-     * transfer.
+     * colon separated. Used only if area parameter is omitted. Types 0, 4: Not
+     * used. Type 1-2: Siblings to reallocate for each dimension. Type 3: Target
+     * area of transfer.
      *
      * Jedox-Doc type: narea
      */
     public ?string $name_area = null;
+
+    /**
+     * Comma separated list of element identifiers. Type 4 only: Target cell of
+     * full transfer.
+     *
+     * Jedox-Doc type: path
+     */
+    public ?string $path_to = null;
+
+    /**
+     * Comma separated list of element names. Used only if path_to parameter is
+     * omitted. Type 4 only: Target cell of full transfer.
+     *
+     * Jedox-Doc type: npath
+     */
+    public ?string $name_path_to = null;
 
     /**
      * Type 0-2: The numeric value of the target cube cell. Type 3: The numeric
