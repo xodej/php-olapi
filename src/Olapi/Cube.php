@@ -824,6 +824,16 @@ class Cube implements IBase
             return $this->cachedValues[$path_hash];
         }
 
+        if (isset($this->cache[$path_hash]) || isset($this->cachedValues[$path_hash])) {
+            return '#NA';
+        }
+
+        if (count($this->cache) > 10000) {
+            $this->persistCachedValues = true;
+            $this->endCache();
+            $this->startCache();
+        }
+
         // still in caching mode
         $this->cache[$path_hash] = $this->buildPathFromElements($dims, $use_keys);
 

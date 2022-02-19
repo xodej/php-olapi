@@ -876,7 +876,7 @@ class Connection
 
             return $this->parseCsvResponse($response);
         } catch (\Exception $exception) {
-            \file_put_contents('php://stderr', $exception->getMessage().PHP_EOL.\implode("\n", $exception->getTrace()));
+            \file_put_contents('php://stderr', $exception->getMessage().PHP_EOL.print_r($exception->getTrace(), true));
         }
 
         return new GenericCollection();
