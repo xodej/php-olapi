@@ -525,7 +525,7 @@ class Element implements IBase
      *
      * @return null|float
      */
-    public function getWeight(Element $parent = null): ?float
+    public function getWeight(?Element $parent = null): ?float
     {
         if (null === $parent) {
             $parents = $this->getParents();
